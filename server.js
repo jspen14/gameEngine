@@ -21,7 +21,6 @@ let roundNumber = 1;
 
 app.get('/api/p1roundEarnings',(req,res) => {
   res.send(playerOneRoundEarnings);
-  console.log("in p1roundEarningsround");
 });
 
 app.get('/api/p1totalEarnings',(req,res) => {
@@ -49,6 +48,7 @@ app.put('/api/p1RoundOption', (req,res) => {
       computeRoundOutcome();
     }
   }
+  res.send(playerOneStatus);
 });
 
 app.get('/api/p1coachChat',(req,res) => {
@@ -100,6 +100,7 @@ app.put('/api/p2RoundOption', (req,res) => {
       computeRoundOutcome();
     }
   }
+  res.send(playerTwoStatus);
 });
 
 app.get('/api/p2coachChat',(req,res) => {
@@ -118,8 +119,8 @@ function computeRoundOutcome(){
   console.log("in computeRoundOutcome");
 
   if(playerOneOption == "1" && playerTwoOption == "1"){
-    playerOneRoundEarnings = ".1";
-    playerTwoRoundEarnings = ".1";
+    playerOneRoundEarnings = ".10";
+    playerTwoRoundEarnings = ".10";
   }
   else if(playerOneOption == "1" && playerTwoOption == "2"){
     playerOneRoundEarnings = "-.02";
@@ -134,11 +135,11 @@ function computeRoundOutcome(){
     playerTwoRoundEarnings = ".05";
   }
 
-  playerOneTotalEarnings = computeTotalEarnings(playerOneRoundEarnings, playerOneTotalEarnings).toString();
-  playerTwoTotalEarnings = computeTotalEarnings(playerTwoRoundEarnings, playerTwoTotalEarnings).toString();
+  playerOneTotalEarnings = computeTotalEarnings(playerOneRoundEarnings, playerOneTotalEarnings);
+  playerTwoTotalEarnings = computeTotalEarnings(playerTwoRoundEarnings, playerTwoTotalEarnings);
 
-  playerOneAverageEarnings = computeAverageEarnings(roundNumber, playerOneTotalEarnings).toString();
-  playerTwoAverageEarnings = computeAverageEarnings(roundNumber, playerTwoTotalEarnings).toString();
+  playerOneAverageEarnings = computeAverageEarnings(roundNumber, playerOneTotalEarnings);
+  playerTwoAverageEarnings = computeAverageEarnings(roundNumber, playerTwoTotalEarnings);
 
   playerOneStatus = "open";
   playerTwoStatus = "open";
@@ -148,11 +149,12 @@ function computeRoundOutcome(){
 function computeTotalEarnings(roundEarnings, totalEarnings){
 
   totalEarnings = parseFloat(totalEarnings) + parseFloat(roundEarnings);
-  return totalEarnings;
+  return (totalEarnings.toFixed(2)).toString();
 }
 
 function computeAverageEarnings(roundNumber, totalEarnings){
-  return parseFloat(totalEarnings)/roundNumber;
+  console.log("AE" + ((parseFloat(totalEarnings)/roundNumber).toFixed(2)).toString());
+  return ((parseFloat(totalEarnings)/roundNumber).toFixed(2)).toString();
 }
 
 app.listen(3000, () => console.log("Server listening on port 3000!"));

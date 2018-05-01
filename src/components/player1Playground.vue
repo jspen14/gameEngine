@@ -95,7 +95,7 @@
             <div>
               <div class = "row">
                 <div class = "col-lg-2 col-md-2 col-sm-2 col-xs-2 boardRow" >
-                  <button class="btn btn-success" v-on:click="submitOption1"><h2>1</h2></button>
+                  <button class="btn btn-success" v-on:click="submitOption(1)"><h2>1</h2></button>
                 </div>
 
                 <div class = "col-lg-5 col-md-5 col-sm-5 col-xs-5 boardRow">
@@ -114,7 +114,7 @@
               <div class = "row">
                 <div class = "col-lg-2 col-md-2 col-sm-5 col-xs-5 boardRow" >
 
-                  <button class="btn btn-success" v-on:click="submitOption2"><h2>2</h2></button>
+                  <button class="btn btn-success" v-on:click="submitOption(2)"><h2>2</h2></button>
                 </div>
 
                 <div class = "col-lg-5 col-md-5 col-sm-5 col-xs-5 boardRow">
@@ -158,10 +158,10 @@
               <h4>  ${{roundEarnings}}</h4>
             </div>
             <div class="col-lg-4 col-md-4 boardHeader">
-              <h4> ${{getAverageEarnings()}} </h4>
+              <h4> ${{averageEarnings}} </h4>
             </div>
             <div class="col-lg-4 col-md-4 boardHeader">
-              <h4> ${{getTotalEarnings()}}</h4>
+              <h4> ${{totalEarnings}}</h4>
             </div>
           </div>
       </div>
@@ -178,9 +178,9 @@ import axios from 'axios'
     data () {
       return {
         roundNumber: 1,
-        rndEarnings: 0,
-        avgEarnings: 0,
-        totEarnings: 0,
+        roundEarnings: 0,
+        averageEarnings: 0,
+        totalEarnings: 0,
         playerOption: '',
         msgText: '',
         messages: [],
@@ -188,55 +188,53 @@ import axios from 'axios'
 
       }
     },
+    created: function() {
+      this.getChatMsgs();
+      this.getRoundEarnings();
+      this.getAverageEarnings();
+      this.getTotalEarnings();
+    },
     computed: {
-      created: function() {
-        this.getChatMsgs();
-        this.getRoundEarnings();
-      },
       chatMsgs: function(){
         this.getChatMsgs();
         return this.messages;
       },
-      roundEarnings: function(){
-        this.getRoundEarnings();
-        return this.rndEarnings;
-      },
-      averageEarnings: function(){
-        this.getAverageEarnings();
-        return this.avgEarnings;
-      },
-      totalEarnings: function(){
-        this.getTotalEarnings();
-        return this.totEarnings;
-      },
+
     },
     methods: {
-      submitOption1: function(){
+      submitOption: function(param){
+      console.log(param);
         axios.put('/api/p1roundOption',{
-          roundOption: "1",
+          roundOption: param,
         });
-      },
-
-      submitOption2: function(){
-        axios.put('/api/p1roundOption',{
-          roundOption: "2",
-        });
+        this.getRoundEarnings();
+        this.getAverageEarnings();
+        this.getTotalEarnings();
       },
 
       getRoundEarnings: function(){
         axios.get('/api/p1roundEarnings').then(response => {
-          this.rndEarnings = response.data;
+          this.roundEarnings = response.data;
           return true;
-        }).catch (err => {
         });
+        //.catch (err => {});
       },
 
       getAverageEarnings: function(){
-        return "0.9";
+        axios.get('/api/p1averageEarnings').then(response => {
+          this.averageEarnings = response.data.toFixed(2);
+          return true;
+        });
+        //.catch (err => {});
       },
 
       getTotalEarnings: function(){
-        return "0.7"
+        axios.get('/api/p1totalEarnings').then(response => {
+          this.totalEarnings = response.data;
+          this.totalEarnings = this.totalEarnings.toFixed(2);
+          return true;
+        });
+        //.catch (err => {});
       },
 
       getChatMsgs: function(){

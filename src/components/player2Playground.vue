@@ -95,7 +95,7 @@
             <div>
               <div class = "row">
                 <div class = "col-lg-2 col-md-2 col-sm-2 col-xs-2 boardRow" >
-                  <button class="btn btn-success" v-on:click="submitOption1"><h2>1</h2></button>
+                  <button class="btn btn-success" v-on:click="submitOption(1)"><h2>1</h2></button>
                 </div>
 
                 <div class = "col-lg-5 col-md-5 col-sm-5 col-xs-5 boardRow">
@@ -114,7 +114,7 @@
               <div class = "row">
                 <div class = "col-lg-2 col-md-2 col-sm-5 col-xs-5 boardRow" >
 
-                  <button class="btn btn-success" v-on:click="submitOption2"><h2>2</h2></button>
+                  <button class="btn btn-success" v-on:click="submitOption(2)"><h2>2</h2></button>
                 </div>
 
                 <div class = "col-lg-5 col-md-5 col-sm-5 col-xs-5 boardRow">
@@ -182,38 +182,59 @@ import axios from 'axios'
         averageEarnings: 0,
         totalEarnings: 0,
         playerOption: '',
-        computerOption: '',
-        computerOptionSet:
-          ['1','2','2','1','1','2','1','1','2','1',
-           '1','2','1','1','2','1','1','2','1','2'],
         msgText: '',
         messages: [],
         role: 'Player',
 
       }
     },
+    created: function() {
+      this.getChatMsgs();
+      this.getRoundEarnings();
+      this.getAverageEarnings();
+      this.getTotalEarnings();
+    },
     computed: {
-      created: function() {
-        this.getChatMsgs();
-      },
       chatMsgs: function(){
         this.getChatMsgs();
         return this.messages;
       },
+
     },
     methods: {
-
-
-      submitOption1: function(){
+      submitOption: function(param){
+      console.log(param);
         axios.put('/api/p2roundOption',{
-          roundOption: "1",
+          roundOption: param,
         });
+        this.getRoundEarnings();
+        this.getAverageEarnings();
+        this.getTotalEarnings();
       },
 
-      submitOption2: function(){
-        axios.put('/api/p2roundOption',{
-          roundOption: "2",
+      getRoundEarnings: function(){
+        axios.get('/api/p2roundEarnings').then(response => {
+          this.roundEarnings = response.data;
+          return true;
         });
+        //.catch (err => {});
+      },
+
+      getAverageEarnings: function(){
+        axios.get('/api/p2averageEarnings').then(response => {
+          this.averageEarnings = response.data.toFixed(2);
+          return true;
+        });
+        //.catch (err => {});
+      },
+
+      getTotalEarnings: function(){
+        axios.get('/api/p2totalEarnings').then(response => {
+          this.totalEarnings = response.data;
+          this.totalEarnings = this.totalEarnings.toFixed(2);
+          return true;
+        });
+        //.catch (err => {});
       },
 
       getChatMsgs: function(){
