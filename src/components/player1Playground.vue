@@ -100,14 +100,14 @@
 
                 <div class = "col-lg-5 col-md-5 col-sm-5 col-xs-5 boardRow">
                   <br>
-                  <h5>You: + $.10</h5>
-                  <h5> Opponent: + $.10</h5>
+                  <h5>You: {{p1payout[0]}}</h5>
+                  <h5> Opponent: {{p2payout[0]}}</h5>
                 </div>
 
                 <div class = "col-lg-5 col-md-5 col-sm-5 col-xs-5 boardRow">
                   <br>
-                  <h5>You: - $.02</h5>
-                  <h5> Opponent: + $.07</h5>
+                  <h5>You: {{p1payout[1]}}</h5>
+                  <h5> Opponent: {{p2payout[1]}}</h5>
                 </div>
               </div>
 
@@ -119,14 +119,14 @@
 
                 <div class = "col-lg-5 col-md-5 col-sm-5 col-xs-5 boardRow">
                   <br>
-                  <h5>You: + $.07</h5>
-                  <h5> Opponent: - $.02</h5>
+                  <h5>You: {{p1payout[2]}}</h5>
+                  <h5> Opponent: {{p2payout[2]}}</h5>
                 </div>
 
                 <div class = "col-lg-5 col-md-5 col-sm-5 col-xs-5 boardRow">
                   <br>
-                  <h5>You: + $.05</h5>
-                  <h5> Opponent: + $.05</h5>
+                  <h5>You: {{p1payout[3]}}</h5>
+                  <h5> Opponent: {{p2payout[3]}}</h5>
                 </div>
               </div>
             </div>
@@ -185,8 +185,13 @@ import axios from 'axios'
         msgText: '',
         messages: [],
         role: 'Player',
+        p1payout: [1,2,3,4],
+        p2payout: [5,6,7,8],
 
       }
+    },
+    created: function(){
+      this.getRandomPayouts();
     },
     computed: {
       created: function() {
@@ -257,7 +262,25 @@ import axios from 'axios'
           return true;
         }).catch(err => {
         });
-      }
-    },
+      },
+
+      getRandomPayouts: function() {
+       axios.post("/api/payouts", {}).then(response => {
+      this.p1payout=response.data[0];
+      this.p2payout=response.data[1];
+
+      return true;
+       }).catch(err => {
+       });
+     },
+      getPayouts: function() {
+             axios.get("/api/payouts/1").then(response => {
+         this.p1payout= response.data;
+             }).then(response => {
+              this.p2payout=response.data;
+             }).catch(err => { console.log("error: getPayoutsj failed!")
+             });
+          },
   }
+}
 </script>

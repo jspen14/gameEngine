@@ -18,6 +18,8 @@ let roundNumber = 1;
   let playerOneRoundEarnings = '0';
   let playerOneTotalEarnings = '0';
   let playerOneAverageEarnings = '0';
+  let p1Payouts=[];
+  let p2Payouts=[];
 
 app.get('/api/p1roundEarnings',(req,res) => {
   res.send(playerOneRoundEarnings);
@@ -112,7 +114,37 @@ app.post('/api/p2coachChat', (req,res) => {
   chatFeedTwo.unshift(chatMsg);
   res.send(chatMsg);
 });
-
+//Clears and Genterates random payouts
+app.post('/api/payouts',(req,res) =>{
+  console.log("Payouts");
+  let i;
+  //clears payouts
+  p1Payouts=[];
+  p2Payouts=[];
+  //genterates new semetric values for payouts
+  for(i=0;i<4;i++ ){
+    let p1randInt=Math.floor(Math.random()*10);
+    let p2randInt=Math.floor(Math.random()*10);
+    if(i==2){
+      p1Payouts.push(p1Payouts[1]);
+      p2Payouts.push(p2Payouts[1]);
+    }
+    else{
+      p1Payouts.push(p1randInt);
+      p2Payouts.push(p2randInt);
+    }
+  }
+  console.log([p1Payouts,p2Payouts]);
+  res.send([p1Payouts,p2Payouts]);
+});
+//Gets Payouts for P1
+app.get('/api/payouts/1', (req,res)=> {
+  res.send(p1Payouts);
+});
+//Gets Payouts for P2
+app.get('/api/payouts/2', (req,res)=>{
+  res.send(p2Payouts);
+});
 // Non-Endpoint Functions
 function computeRoundOutcome(){
   console.log("in computeRoundOutcome");
