@@ -3,12 +3,12 @@
 module.exports = {
 
   development: {
-    client: 'mysql',
+    client: 'mariasql', // do this matter?
     connection: {
       host: '127.0.0.1',
       user: 'root',
       password: '',
-      db: 'aiCoach1',
+      db: 'gameEngine',
       charset: 'utf8',
     }
   },

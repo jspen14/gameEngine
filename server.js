@@ -7,42 +7,30 @@ app.use(bodyParser.urlencoded({extended: false}));
 
 app.use(express.static('public')); // I'm not sure exactly what this is supposed to do.
 
-// Shared Variables
-let roundNumber = 1;
 
-//C1P1 Communication API Endpoints
-  let chatFeedOne = [];
-  let msgIdOne = 0;
-  let playerOneStatus = "open";
-  let playerOneOption = '1';
-  let playerOneRoundEarnings = '0';
-  let playerOneTotalEarnings = '0';
-  let playerOneAverageEarnings = '0';
-  let p1Payouts=[];
-  let p2Payouts=[];
 
-app.get('/api/p1roundEarnings',(req,res) => {
+app.get('/api/roundEarnings',(req,res) => {
   res.send(playerOneRoundEarnings);
 });
 
-app.get('/api/p1totalEarnings',(req,res) => {
+app.get('/api/totalEarnings',(req,res) => {
   res.send(playerOneTotalEarnings);
 });
 
-app.get('/api/p1averageEarnings',(req,res) => {
+app.get('/api/averageEarnings',(req,res) => {
   res.send(playerOneAverageEarnings);
 });
 
-app.get('/api/p1roundOption',(req,res) => {
+app.get('/api/roundOption',(req,res) => {
   res.send(playerOneOption);
 });
 
-app.get('/api/p1submissionStatus',(req,res) => {
+app.get('/api/submissionStatus',(req,res) => {
   res.send(playerOneStatus);
 });
 
-app.put('/api/p1RoundOption', (req,res) => {
-  console.log("in p1roundOption");
+app.post('/api/roundOption', (req,res) => {
+  console.log("in roundOption");
   if (playerOneStatus == "open"){
     playerOneOption = req.body.roundOption;
     playerOneStatus = "closed";
@@ -53,68 +41,19 @@ app.put('/api/p1RoundOption', (req,res) => {
   res.send(playerOneStatus);
 });
 
-app.get('/api/p1coachChat',(req,res) => {
+app.get('/api/coachChat/:playerID',(req,res) => {
+  let id= parseInt(req.params.playerID);
+  knex('game')
   res.send(chatFeedOne);
 });
 
-app.post('/api/p1coachChat', (req,res) => {
-  msgIdOne = msgIdOne + 1;
-  let chatMsg = {id:msgIdOne, text:req.body.text, role:req.body.role};
+app.post('/api/coachChat', (req,res) => {
+  msgId = msgId + 1;
+  let chatMsg = {id:msgIdOne, text:req.body.text, role:req.body.role};//include when created
   chatFeedOne.unshift(chatMsg);
   res.send(chatMsg);
 });
 
-//C2P2 Communication API Enpoints
-  let chatFeedTwo = [];
-  let msgIdTwo = 0;
-  let playerTwoStatus = "closed";
-  let playerTwoOption = '1';
-  let playerTwoRoundEarnings = '0';
-  let playerTwoTotalEarnings = '0';
-  let playerTwoAverageEarnings = '0';
-
-app.get('/api/p2roundEarnings',(req,res) => {
-  res.send(playerTwoRoundEarnings);
-});
-
-app.get('/api/p2totalEarnings',(req,res) => {
-  res.send(playerTwoTotalEarnings);
-});
-
-app.get('/api/p2averageEarnings',(req,res) => {
-  res.send(playerTwoAverageEarnings);
-});
-
-app.get('/api/p2roundOption',(req,res) => {
-  res.send(playerTwoOption);
-});
-
-app.get('/api/p2submissionStatus',(req,res) => {
-  res.send(playerTwoStatus);
-});
-
-app.put('/api/p2RoundOption', (req,res) => {
-  console.log("in p2roundOption");
-  if (playerTwoStatus == "open"){
-    playerTwoOption = req.body.roundOption;
-    playerTwoStatus = "closed";
-    if (playerOneStatus == "closed" && playerTwoStatus == "closed"){
-      computeRoundOutcome();
-    }
-  }
-  res.send(playerTwoStatus);
-});
-
-app.get('/api/p2coachChat',(req,res) => {
-  res.send(chatFeedTwo);
-});
-
-app.post('/api/p2coachChat', (req,res) => {
-  msgIdTwo = msgIdTwo + 1;
-  let chatMsg = {id:msgIdTwo, text:req.body.text, role:req.body.role};
-  chatFeedTwo.unshift(chatMsg);
-  res.send(chatMsg);
-});
 //Clears and Genterates random payouts
 app.post('/api/payouts',(req,res) =>{
   console.log("Payouts");
