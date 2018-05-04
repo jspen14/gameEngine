@@ -8,6 +8,11 @@ app.use(bodyParser.urlencoded({extended: false}));
 app.use(express.static('public')); // I'm not sure exactly what this is supposed to do.
 
 
+// Knex Setup
+const env = process.env.NODE_ENV || 'development';
+const config = require('./knexfile')[env];  
+const knex = require('knex')(config);
+
 
 app.get('/api/roundEarnings',(req,res) => {
   res.send(playerOneRoundEarnings);
@@ -85,6 +90,18 @@ app.get('/api/payouts/1', (req,res)=> {
 app.get('/api/payouts/2', (req,res)=>{
   res.send(p2Payouts);
 });
+
+app.get('/api/matrix/:id', (req,res)=> {
+  let id=parseInt(req.params.id);
+  console.log(id);
+  knex('matrices').where('id',id).select('type', 'matrix').then(matrix => {
+    res.status(200).json({matrix:matrix});
+  }).catch(error =>{
+    res.status(500).json({error});
+  });
+ 
+});
+
 // Non-Endpoint Functions
 function computeRoundOutcome(){
   console.log("in computeRoundOutcome");

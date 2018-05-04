@@ -52,7 +52,7 @@ export default new Vuex.Store({
     },
     setCoachID (state, coachID){
       state.coachID = coachID
-    }
+    },
     setRoundOption (state, roundOption){
       state.roundOption = roundOption;
     },
@@ -100,6 +100,78 @@ export default new Vuex.Store({
         context.commit('setFeed',response.data.posts);
       }).catch(err => {
         console.log("getFeed Failed: ", err);
+      });
+    },
+    //matrixID is temporary will grab the game from the round
+    getMatrix(context, matrixID){
+      axios.get("/api/matrix/" + matrixID).then(response => {
+        console.log("matrix");
+        let data= response.data.matrix[0];
+        let mx=data.matrix;
+
+        let type= data.type;
+        console.log(mx);
+        console.log(type);
+        let dimensions= type.split('x');
+        for(let i=0; i<dimensions.length;i++)
+        {
+          dimensions[i]=parseInt(dimensions[i]);
+        }
+        let rows=dimensions[0];
+        let cols=dimensions[1];
+                //extract values
+        let index=0;
+        let temparray=[]
+        //console.log(mx.length);
+        while(index<mx.length)
+        {
+
+          if(isNaN(mx[index]))
+          {
+            index++;
+          }
+          else{
+            
+            let temp=index;
+            console.log(mx[index]);
+            while(!isNaN(mx[temp]))
+            {
+              temp++;
+            }
+            let k=parseInt(mx.substring(index,temp));
+
+            index=temp;
+            temparray.push(k);
+
+          }
+        }
+        let matrix=[]
+        //Initialize matrix
+        let arrayIndex=0;
+        for(let y =0; y<rows;y++)
+        {
+          let row=[]
+          for(let x=0; x<cols;x++)
+          {
+            let option=[]
+            for(let i=0;i<2;i++)
+            {
+              option.push(temparray[arrayIndex]);
+              arrayIndex++;
+            }
+            row.push(option);
+          }
+          matrix.push(row);
+        }
+
+
+        console.log(temparray);
+        console.log(matrix);
+        console.log("done");
+        context.commit('setMatrix', matrix);
+      }).catch(err => {
+        console.log("getMatrix Failed:", err);
+
       });
     },
 

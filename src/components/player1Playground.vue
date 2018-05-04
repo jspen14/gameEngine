@@ -100,14 +100,14 @@
 
                 <div class = "col-lg-5 col-md-5 col-sm-5 col-xs-5 boardRow">
                   <br>
-                  <h5>You: {{p1payout[0]}}</h5>
-                  <h5> Opponent: {{p2payout[0]}}</h5>
+                  <h5>You: {{$store.getters.matrix[0][0][0]}}</h5>
+                  <h5> Opponent: {{$store.getters.matrix[0][0][1]}}</h5>
                 </div>
 
                 <div class = "col-lg-5 col-md-5 col-sm-5 col-xs-5 boardRow">
                   <br>
-                  <h5>You: {{p1payout[1]}}</h5>
-                  <h5> Opponent: {{p2payout[1]}}</h5>
+                  <h5>You: {{$store.getters.matrix[0][1][0]}}</h5>
+                  <h5> Opponent: {{$store.getters.matrix[0][1][1]}}</h5>
                 </div>
               </div>
 
@@ -119,14 +119,14 @@
 
                 <div class = "col-lg-5 col-md-5 col-sm-5 col-xs-5 boardRow">
                   <br>
-                  <h5>You: {{p1payout[2]}}</h5>
-                  <h5> Opponent: {{p2payout[2]}}</h5>
+                  <h5>You: {{$store.getters.matrix[1][0][0]}}</h5>
+                  <h5> Opponent: {{$store.getters.matrix[1][0][1]}}</h5>
                 </div>
 
                 <div class = "col-lg-5 col-md-5 col-sm-5 col-xs-5 boardRow">
                   <br>
-                  <h5>You: {{p1payout[3]}}</h5>
-                  <h5> Opponent: {{p2payout[3]}}</h5>
+                  <h5>You: {{$store.getters.matrix[1][1][0]}}</h5>
+                  <h5> Opponent: {{$store.getters.matrix[1][1][1]}}</h5>
                 </div>
               </div>
             </div>
@@ -197,6 +197,7 @@ import axios from 'axios'
       this.getAverageEarnings();
       this.getTotalEarnings();
       this.getRandomPayouts();
+      this.getMatrix();
 
     },
     computed: {
@@ -270,6 +271,11 @@ import axios from 'axios'
       return true;
        }).catch(err => {
        });
+     },
+     //getMatrix is hardcoded for now
+     getMatrix: function(){
+      this.$store.dispatch('getMatrix',3);
+      console.log(this.$store.getters.matrix);
      },
       getPayouts: function() {
              axios.get("/api/payouts/1").then(response => {
