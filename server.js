@@ -8,6 +8,11 @@ app.use(bodyParser.urlencoded({extended: false}));
 app.use(express.static('public')); // I'm not sure exactly what this is supposed to do.
 
 
+// Knex Setup
+const env = process.env.NODE_ENV || 'development';
+const config = require('./knexfile')[env];  
+const knex = require('knex')(config);
+
 
 app.get('/api/roundEarnings',(req,res) => {
   res.send(playerOneRoundEarnings);
@@ -54,37 +59,17 @@ app.post('/api/coachChat', (req,res) => {
   res.send(chatMsg);
 });
 
-//Clears and Genterates random payouts
-app.post('/api/payouts',(req,res) =>{
-  console.log("Payouts");
-  let i;
-  //clears payouts
-  p1Payouts=[];
-  p2Payouts=[];
-  //genterates new semetric values for payouts
-  for(i=0;i<4;i++ ){
-    let p1randInt=Math.floor(Math.random()*10);
-    let p2randInt=Math.floor(Math.random()*10);
-    if(i==2){
-      p1Payouts.push(p1Payouts[1]);
-      p2Payouts.push(p2Payouts[1]);
-    }
-    else{
-      p1Payouts.push(p1randInt);
-      p2Payouts.push(p2randInt);
-    }
-  }
-  console.log([p1Payouts,p2Payouts]);
-  res.send([p1Payouts,p2Payouts]);
+app.get('/api/matrix/:id', (req,res)=> {
+  let id=parseInt(req.params.id);
+  knex('matrices').where('id',id).select('type', 'matrix').then(matrix => {
+    res.status(200).json({matrix:matrix});
+  }).catch(error =>{
+    res.status(500).json({error});
+  });
+ 
 });
-//Gets Payouts for P1
-app.get('/api/payouts/1', (req,res)=> {
-  res.send(p1Payouts);
-});
-//Gets Payouts for P2
-app.get('/api/payouts/2', (req,res)=>{
-  res.send(p2Payouts);
-});
+
+
 // Non-Endpoint Functions
 function computeRoundOutcome(){
   console.log("in computeRoundOutcome");

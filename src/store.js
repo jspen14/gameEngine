@@ -7,10 +7,10 @@ Vue.use(Vuex);
 
 export default new Vuex.Store({
   state: {
-    roundID: '',
-    gameID: '',
-    playerID: '',
-    coachID: '',
+    roundID: 1,
+    gameID: 1,
+    playerID: 1,
+    coachID: 2,
     roundOption: '',
     submissionStatus: '',
     roundEarnings: '',
@@ -38,6 +38,8 @@ export default new Vuex.Store({
     role: state => state.role,
     coachChatMsgs: state => state.coachChatMsgs,
     playerChatMsgs: state => state.playerChatMsgs,
+    rows: state => state.rows,
+    cols: state => state.cols,
 
   },
   mutations: {
@@ -52,7 +54,7 @@ export default new Vuex.Store({
     },
     setCoachID (state, coachID){
       state.coachID = coachID
-    }
+    },
     setRoundOption (state, roundOption){
       state.roundOption = roundOption;
     },
@@ -81,6 +83,12 @@ export default new Vuex.Store({
     setPlayerChatMsgs (state, playerChatMsgs){
       state.playerChatMsgs = playerChatMsgs;
     },
+    setRows (state, rows){
+      state.rows = rows;
+    },
+    setCols (state, cols){
+      state.cols = cols;
+    }
 
   },
   actions: {
@@ -100,6 +108,79 @@ export default new Vuex.Store({
         context.commit('setFeed',response.data.posts);
       }).catch(err => {
         console.log("getFeed Failed: ", err);
+      });
+    },
+    //matrixID is temporary will grab the game from the round
+    submitChoice(context, choice)
+    {
+      console.log("roundID: ", context.state.roundID);
+      console.log("playerID: ", context.state.playerID);
+      axios.post("/api/round/"+context.state.roundID+'/'+context.state.playerID, choice).then(response =>{
+        console.log(response.data);
+      }).catch(err => {
+        console.log("submitChoice Failed: ", err);
+      });
+    },
+    getMatrix(context, matrixID){
+      axios.get("/api/matrix/" + matrixID).then(response => {
+        let data= response.data.matrix[0];
+        let mx=data.matrix;
+
+        let type= data.type;
+        let dimensions= type.split('x');
+        for(let i=0; i<dimensions.length;i++)
+        {
+          dimensions[i]=parseInt(dimensions[i]);
+        }
+        let rows=dimensions[0];
+        let cols=dimensions[1];
+                //extract values
+        let index=0;
+        let temparray=[]
+        while(index<mx.length)
+        {
+
+          if(isNaN(mx[index]))
+          {
+            index++;
+          }
+          else{
+            
+            let temp=index;
+
+            while(!isNaN(mx[temp]))
+            {
+              temp++;
+            }
+            let k=parseInt(mx.substring(index,temp));
+
+            index=temp;
+            temparray.push(k);
+
+          }
+        }
+        let matrix=[]
+        //Initialize matrix
+        let arrayIndex=0;
+        for(let y =0; y<rows;y++)
+        {
+          let row=[]
+          for(let x=0; x<cols;x++)
+          {
+            let option=[]
+            for(let i=0;i<2;i++)
+            {
+              option.push(temparray[arrayIndex]);
+              arrayIndex++;
+            }
+            row.push(option);
+          }
+          matrix.push(row);
+        }
+        context.commit('setMatrix', matrix);
+      }).catch(err => {
+        console.log("getMatrix Failed:", err);
+
       });
     },
 
