@@ -26,67 +26,6 @@
       <div class="col-lg-2 col-md-2 col-sm-2 col-xs-2"></div>
 
       <div class='col-lg-5 col-md-5 col-sm-5 col-xs-5'>
-<<<<<<< HEAD:src/components/player1Playground.vue
-=======
-          <br>
-          <h2>Game Board</h2>
-        
-          <hr>
-          <div class = "row">
-            <div class = "col-lg-2 col-md-2 col-sm-2 col-xs-2 boardHeader" >
-
-            </div>
-
-            <div class = "col-lg-5 col-md-5 col-sm-5 col-xs-5 boardHeader">
-              <h2>A</h2>
-            </div>
-
-            <div class = "col-lg-5 col-md-5 col-sm-5 col-xs-5 boardHeader">
-              <h2>B</h2>
-            </div>
-          </div>
-
-
-            <div>
-              <div class = "row">
-                <div class = "col-lg-2 col-md-2 col-sm-2 col-xs-2 boardRow" >
-                  <button class="btn btn-success" v-on:click="submitOption(1)"><h2>1</h2></button>
-                </div>
-
-                <div class = "col-lg-5 col-md-5 col-sm-5 col-xs-5 boardRow">
-                  <br>
-                  <h5>You: {{p1payout[0]}}</h5>
-                  <h5> Opponent: {{p2payout[0]}}</h5>
-                </div>
-
-                <div class = "col-lg-5 col-md-5 col-sm-5 col-xs-5 boardRow">
-                  <br>
-                  <h5>You: {{p1payout[1]}}</h5>
-                  <h5> Opponent: {{p2payout[1]}}</h5>
-                </div>
-              </div>
-
-              <div class = "row">
-                <div class = "col-lg-2 col-md-2 col-sm-5 col-xs-5 boardRow" >
-
-                  <button class="btn btn-success" v-on:click="submitOption(2)"><h2>2</h2></button>
-                </div>
-
-                <div class = "col-lg-5 col-md-5 col-sm-5 col-xs-5 boardRow">
-                  <br>
-                  <h5>You: {{p1payout[2]}}</h5>
-                  <h5> Opponent: {{p2payout[2]}}</h5>
-                </div>
-
-                <div class = "col-lg-5 col-md-5 col-sm-5 col-xs-5 boardRow">
-                  <br>
-                  <h5>You: {{p1payout[3]}}</h5>
-                  <h5> Opponent: {{p2payout[3]}}</h5>
-                </div>
-              </div>
-            </div>
-
->>>>>>> jspencer1:src/components/playerPlayground.vue
 
           <game-board></game-board>
           <earnings></earnings>
@@ -114,7 +53,6 @@ import Earnings from './Earnings'
         playerOption: '',
         msgText: '',
         messages: [],
-<<<<<<< HEAD:src/components/player1Playground.vue
         role: 'Player',
 
       }
@@ -129,18 +67,15 @@ import Earnings from './Earnings'
 
 
     },
-=======
         p1payout: [1,2,3,4],
         p2payout: [5,6,7,8],
 
       }
     },
->>>>>>> jspencer1:src/components/playerPlayground.vue
     computed: {
 
     },
     methods: {
-<<<<<<< HEAD:src/components/player1Playground.vue
       submitOption: function(param){
       console.log(param);
         axios.put('/api/p1roundOption',{
@@ -201,25 +136,7 @@ import Earnings from './Earnings'
       },
 
 
-=======
-      getRandomPayouts: function() {
-       axios.post("/api/payouts", {}).then(response => {
-      this.p1payout=response.data[0];
-      this.p2payout=response.data[1];
 
-      return true;
-       }).catch(err => {
-       });
-     },
-      getPayouts: function() {
-             axios.get("/api/payouts/1").then(response => {
-         this.p1payout= response.data;
-             }).then(response => {
-              this.p2payout=response.data;
-             }).catch(err => { console.log("error: getPayoutsj failed!")
-             });
-          },
->>>>>>> jspencer1:src/components/playerPlayground.vue
   }
 }
 </script>
