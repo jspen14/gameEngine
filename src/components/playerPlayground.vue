@@ -67,10 +67,10 @@ import Earnings from './Earnings'
 
 
     },
-        p1payout: [1,2,3,4],
-        p2payout: [5,6,7,8],
+    data(){
 
-      }
+
+      
     },
     computed: {
 
