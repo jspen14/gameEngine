@@ -7,53 +7,74 @@ app.use(bodyParser.urlencoded({extended: false}));
 
 app.use(express.static('public')); // I'm not sure exactly what this is supposed to do.
 
-
+// Knex Setup
+const env = process.env.NODE_ENV || 'development';
+const config = require('./knexfile')[env];
+const knex = require('knex')(config);
 
 app.get('/api/roundEarnings',(req,res) => {
-  res.send(playerOneRoundEarnings);
+  res.send("rE");
 });
 
 app.get('/api/totalEarnings',(req,res) => {
-  res.send(playerOneTotalEarnings);
+  res.send("tE");
 });
 
 app.get('/api/averageEarnings',(req,res) => {
-  res.send(playerOneAverageEarnings);
+  res.send("aE");
 });
 
 app.get('/api/roundOption',(req,res) => {
-  res.send(playerOneOption);
+  res.send("rO-GET");
 });
 
 app.get('/api/submissionStatus',(req,res) => {
-  res.send(playerOneStatus);
+  res.send('sS');
 });
 
 app.post('/api/roundOption', (req,res) => {
   console.log("in roundOption");
-  if (playerOneStatus == "open"){
-    playerOneOption = req.body.roundOption;
-    playerOneStatus = "closed";
-    if (playerOneStatus == "closed" && playerTwoStatus == "closed"){
-      computeRoundOutcome();
-    }
-  }
-  res.send(playerOneStatus);
+  res.send('rO-POST');
 });
 
-app.get('/api/coachChat/:playerID',(req,res) => {
-  let id= parseInt(req.params.playerID);
-  knex('game')
-  res.send(chatFeedOne);
+app.get('/api/coachChat/',(req,res) => {
+  let id = parseInt(req.params.playerID);
+  res.send([{role: "coach", text: "Hi"},{role: "player", text: "How are you?"},{role: "coach", text: "I am doing well, thanks! How are you?"},
+                    {role: "player", text: "Great. Just ready to win some money!"},{role: "player", text: "Can you help me with that?"},
+                    {role: "coach", text: "I sure can!"},{role: "player", text: "Perfect. Just tell me what I should do."},
+                    {role: "coach", text: "Okay. Let's start out by playing our personal best. Choose X"},{role: "player", text: "Okay"}]);
+});
+
+app.post('/api/userRegister',(req,res) => {
+  return knex('users').insert({role: req.body.role, coachType: req.body.coachType, name: req.body.name})
+    .then(ids => {
+      console.log(ids[0]);
+      knex('users').where({id: ids[0]}).first();
+      res.status(200).json({playerID:ids[0]});
+    }).catch(error => {
+      console.log(error);
+      res.status(500).json({error})
+    });
 });
 
 app.post('/api/coachChat', (req,res) => {
-  msgId = msgId + 1;
-  let chatMsg = {id:msgIdOne, text:req.body.text, role:req.body.role};//include when created
-  chatFeedOne.unshift(chatMsg);
-  res.send(chatMsg);
+  // Use unshift to put messages at the top instead of the bottom
+
+  knex('users').insert({role: "player", coachType: "N/A"})
+    .catch(error => {
+      console.log(error);
+      res.status(500).json({error});
+    });
+
+  res.send([]);
 });
 
+app.post('/api/createGame', (req,res) =>{
+  console.log(req.body);
+
+
+  res.status(200).json({gameID:0}); // TODO update this zero so that it actually returns the gameID
+})
 //Clears and Genterates random payouts
 app.post('/api/payouts',(req,res) =>{
   console.log("Payouts");
@@ -89,43 +110,14 @@ app.get('/api/payouts/2', (req,res)=>{
 function computeRoundOutcome(){
   console.log("in computeRoundOutcome");
 
-  if(playerOneOption == "1" && playerTwoOption == "1"){
-    playerOneRoundEarnings = ".10";
-    playerTwoRoundEarnings = ".10";
-  }
-  else if(playerOneOption == "1" && playerTwoOption == "2"){
-    playerOneRoundEarnings = "-.02";
-    playerTwoRoundEarnings = ".07";
-  }
-  else if(playerOneOption == "2" && playerTwoOption == "1"){
-    playerOneRoundEarnings = ".07";
-    playerTwoRoundEarnings = "-.02";
-  }
-  else{
-    playerOneRoundEarnings = ".05";
-    playerTwoRoundEarnings = ".05";
-  }
-
-  playerOneTotalEarnings = computeTotalEarnings(playerOneRoundEarnings, playerOneTotalEarnings);
-  playerTwoTotalEarnings = computeTotalEarnings(playerTwoRoundEarnings, playerTwoTotalEarnings);
-
-  playerOneAverageEarnings = computeAverageEarnings(roundNumber, playerOneTotalEarnings);
-  playerTwoAverageEarnings = computeAverageEarnings(roundNumber, playerTwoTotalEarnings);
-
-  playerOneStatus = "open";
-  playerTwoStatus = "open";
-  roundNumber++;
 }
 
 function computeTotalEarnings(roundEarnings, totalEarnings){
 
-  totalEarnings = parseFloat(totalEarnings) + parseFloat(roundEarnings);
-  return (totalEarnings.toFixed(2)).toString();
 }
 
 function computeAverageEarnings(roundNumber, totalEarnings){
-  console.log("AE" + ((parseFloat(totalEarnings)/roundNumber).toFixed(2)).toString());
-  return ((parseFloat(totalEarnings)/roundNumber).toFixed(2)).toString();
+
 }
 
 app.listen(3000, () => console.log("Server listening on port 3000!"));

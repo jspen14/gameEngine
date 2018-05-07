@@ -29,7 +29,7 @@
 
 <template>
   <div class = "container">
-    <h1>Coach 2, Welcome to the Strata</h1>
+    <h1>Coach 1, Welcome to the Strata</h1>
     <h6>Objective: Coach your player to win as much money as possible</h6>
     <hr>
 
@@ -78,7 +78,7 @@ import axios from 'axios'
     },
     methods: {
       getChatMsgs: function(){
-        axios.get('/api/p2coachChat').then(response => {
+        axios.get('/api/coachChat').then(response => {
           this.messages = response.data;
           return true;
         }).catch (err => {
@@ -87,7 +87,7 @@ import axios from 'axios'
 
       addChatMsg: function(){
         console.log('in add');
-        axios.post('/api/p2coachChat', {
+        axios.post('/api/coachChat', {
           text: this.msgText,
           role: this.role,
         }).then(response => {
