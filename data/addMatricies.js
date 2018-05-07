@@ -16,12 +16,6 @@ for(let i=0; i<temp.numGames; i++)
 
 }
 
-/*matrices=[
-{type: "2x2", matrix: [[[4,4],[2,10]],[[10,2],[0,0]]]}
-//{type: "2x2", matrix: [[[1,2],[2,3]],[[2,1],[3,0]]]}
-]*/
-console.log("matrices");
-console.log(matrices);
 
 let deleteMatrices = () => {
   return knex('matrices').del();

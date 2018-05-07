@@ -7,10 +7,10 @@ Vue.use(Vuex);
 
 export default new Vuex.Store({
   state: {
-    roundID: '',
-    gameID: '',
-    playerID: '',
-    coachID: '',
+    roundID: 1,
+    gameID: 1,
+    playerID: 1,
+    coachID: 2,
     roundOption: '',
     submissionStatus: '',
     roundEarnings: '',
@@ -38,6 +38,8 @@ export default new Vuex.Store({
     role: state => state.role,
     coachChatMsgs: state => state.coachChatMsgs,
     playerChatMsgs: state => state.playerChatMsgs,
+    rows: state => state.rows,
+    cols: state => state.cols,
 
   },
   mutations: {
@@ -81,6 +83,12 @@ export default new Vuex.Store({
     setPlayerChatMsgs (state, playerChatMsgs){
       state.playerChatMsgs = playerChatMsgs;
     },
+    setRows (state, rows){
+      state.rows = rows;
+    },
+    setCols (state, cols){
+      state.cols = cols;
+    }
 
   },
   actions: {
@@ -103,15 +111,22 @@ export default new Vuex.Store({
       });
     },
     //matrixID is temporary will grab the game from the round
+    submitChoice(context, choice)
+    {
+      console.log("roundID: ", context.state.roundID);
+      console.log("playerID: ", context.state.playerID);
+      axios.post("/api/round/"+context.state.roundID+'/'+context.state.playerID, choice).then(response =>{
+        console.log(response.data);
+      }).catch(err => {
+        console.log("submitChoice Failed: ", err);
+      });
+    },
     getMatrix(context, matrixID){
       axios.get("/api/matrix/" + matrixID).then(response => {
-        console.log("matrix");
         let data= response.data.matrix[0];
         let mx=data.matrix;
 
         let type= data.type;
-        console.log(mx);
-        console.log(type);
         let dimensions= type.split('x');
         for(let i=0; i<dimensions.length;i++)
         {
@@ -122,7 +137,6 @@ export default new Vuex.Store({
                 //extract values
         let index=0;
         let temparray=[]
-        //console.log(mx.length);
         while(index<mx.length)
         {
 
@@ -133,7 +147,7 @@ export default new Vuex.Store({
           else{
             
             let temp=index;
-            console.log(mx[index]);
+
             while(!isNaN(mx[temp]))
             {
               temp++;
@@ -163,11 +177,6 @@ export default new Vuex.Store({
           }
           matrix.push(row);
         }
-
-
-        console.log(temparray);
-        console.log(matrix);
-        console.log("done");
         context.commit('setMatrix', matrix);
       }).catch(err => {
         console.log("getMatrix Failed:", err);

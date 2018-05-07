@@ -5,7 +5,7 @@ import store from './store';
 
 
 Vue.config.productionTip = false
-
+Vue.component('game-board')
 /* eslint-disable no-new */
 new Vue({
   el: '#app',

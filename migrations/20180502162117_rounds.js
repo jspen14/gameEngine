@@ -3,7 +3,8 @@ exports.up = function(knex, Promise) {
       table.increments('id').primary();
       table.integer('gameID').unsigned().notNullable().references('id').inTable("games");
       table.integer('matrixID').unsigned().notNullable().references('id').inTable("matrices");
-      table.string('result');
+      table.integer('player1choice');
+      table.integer('player2choice');
     })
 
 };
@@ -13,6 +14,7 @@ exports.down = function(knex, Promise) {
     table.dropColumn('id');
     table.dropColumn('gameID');
     table.dropColumn('matrixID');
-    table.dropColumn('result');
+    table.dropColumn('player1choice');
+    table.dropColumn('player2choice');
   })
 };
