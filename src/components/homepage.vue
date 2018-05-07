@@ -1,4 +1,9 @@
 <style scoped>
+a:hover{
+  text-decoration: none;
+}
+
+
 .header{
   font-size: 5vh;
 }
@@ -8,6 +13,7 @@
 .roleOptions{
   font-size: 3vh;
 }
+
 </style>
 
 <template>
@@ -17,35 +23,28 @@
     <hr>
   </div>
   <div class = "subHeader">
-    Select Your User:
-  </div>
-
-  <div class = "row">
-    <div class="col-lg-5 col-md-5 roleOptions">
-      <router-link to="player1Playground">Player 1 </router-link>
-      <hr>
-    </div>
-
-    <div class="col-lg-2 col-md-2"></div>
-
-    <div class="col-lg-5 col-md-5 roleOptions">
-      <router-link to="player2Playground">Player 2</router-link>
-      <hr>
-    </div>
+    Select Your User
+    <router-link to="admin" class="subHeader" style="color:black">* </router-link>
+    :
   </div>
 
   <br>
 
   <div class = "row">
-  <div class="col-lg-5 col-md-5 roleOptions">
-    <router-link to="coach1Playground">Coach 1 </router-link>
-  </div>
+    <div class="col-lg-5 col-md-5 roleOptions">
+      <router-link to="playerLogin" class="subHeader">Player </router-link>
+
+    </div>
 
     <div class="col-lg-2 col-md-2"></div>
 
     <div class="col-lg-5 col-md-5 roleOptions">
-      <router-link to="coach2Playground">Coach 2</router-link>
+      <router-link to="coachLogin" class="subHeader">Coach</router-link>
+
     </div>
   </div>
+
+  <br>
+
 </div>
 </template>

@@ -50,6 +50,7 @@ export default new Vuex.Store({
       state.gameID = gameID;
     },
     setPlayerID (state, playerID){
+      console.log("in setPlayerID " + playerID.playerID);
       state.playerID = playerID;
     },
     setCoachID (state, coachID){
@@ -92,6 +93,18 @@ export default new Vuex.Store({
 
   },
   actions: {
+
+
+    register(context,info){
+        console.log(info);
+        axios.post('/api/userRegister',info).then(response => {
+          context.commit('setPlayerID',response.data);
+        }).catch(error => {
+          console.log(error)
+          context.commit('setPlayerID', '');
+          context.commit('setRole','');
+        });
+    },
 
     addChatMsg(context,post) {
       axios.post("/api/users/" + context.state.user.user_id + "/posts",post).then(response => {

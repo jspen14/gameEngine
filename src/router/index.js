@@ -1,12 +1,11 @@
 import Vue from 'vue'
 import Router from 'vue-router'
 import homepage from '@/components/homepage.vue'
-import player1Playground from '@/components/player1Playground.vue'
-import coach1Playground from '@/components/coach1Playground.vue'
-import player2Playground from '@/components/player2Playground.vue'
-import coach2Playground from '@/components/coach2Playground.vue'
-
-
+import playerPlayground from '@/components/playerPlayground'
+import coachPlayground from '@/components/coachPlayground'
+import playerLogin from '@/components/playerLogin'
+import coachLogin from '@/components/coachLogin'
+import admin from '@/components/admin'
 
 Vue.use(Router)
 
@@ -18,24 +17,30 @@ export default new Router({
       component: homepage,
     },
     {
-      path: '/player1Playground',
-      name: 'player1Playground',
-      component: player1Playground,
+      path: '/playerPlayground',
+      name: 'playerPlayground',
+      component: playerPlayground,
     },
     {
-      path: '/coach1Playground',
-      name: 'coach1Playground',
-      component: coach1Playground,
+      path: '/coachPlayground',
+      name: 'coachPlayground',
+      component: coachPlayground,
     },
     {
-      path: '/player2Playground',
-      name: 'player2Playground',
-      component: player2Playground,
+      path: '/playerLogin',
+      name: 'playerLogin',
+      component: playerLogin,
     },
     {
-      path: '/coach2Playground',
-      name: 'coach2Playground',
-      component: coach2Playground,
+      path: '/coachLogin',
+      name: 'coachLogin',
+      component: coachLogin,
     },
+    {
+      path: '/admin',
+      name: 'admin',
+      component: admin,
+    }
+
   ]
 })
