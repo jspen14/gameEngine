@@ -23,7 +23,6 @@
     overflow-y: scroll;
     height: 65vh;
   }
-
 </style>
 
 

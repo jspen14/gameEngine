@@ -14,7 +14,5 @@ exports.down = function(knex, Promise) {
     table.dropColumn('id');
     table.dropColumn('role');
     table.dropColumn('coachType');
-
   })
 };
-

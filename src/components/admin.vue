@@ -126,7 +126,6 @@ export default{
       selectedCoach1: '', // This should eventually be a playerID that will go to the server and return a name
       selectedPlayer2: '', // This should eventually be a playerID that will go to the server and return a name
       selectedCoach2: '', // This should eventually be a playerID that will go to the server and return a name
-
     }
   },
   computed: {
@@ -183,18 +182,20 @@ export default{
     },
     createGame: function(){
       //STEPS:
-      if (this.selectedPlayer1 == '' || this.selectedPlayer2 == '' || this.selectedCoach1 == '' || this.selectedCoach2 == ''){
+      if (this.selectedPlayer1 == '' || this.selectedPlayer2 == '' ||
+          this.selectedCoach1 == '' || this.selectedCoach2 == ''){
         swal("Enter all fields.","Please enter users for both players and coaches.","warning")
       }
       else{
         //Axios call
+        // For this to work properly, we need to get the playerID's from the Database
         axios.post('/api/createGame',{
-          player1: this.selectedPlayer1,
-          coach1: this.selectedCoach1,
-          player2: this.selectedPlayer2,
-          coach2: this.selectedCoach2,
-        }).then(resetFields => {
-          //Receive a game index from the server so that we can view the game's progress
+          player1ID: 1,
+          coach1ID: 2,
+          player2ID: 3,
+          coach2ID: 4,
+        }).then(response => {
+        
           this.selectedPlayer1 = '';
           this.selectedCoach1 = '';
           this.selectedPlayer2 = '';

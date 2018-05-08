@@ -14,7 +14,17 @@ const config = require('./knexfile')[env];
 const knex = require('knex')(config);
 
 
-app.get('/api/roundEarnings',(req,res) => {
+// Data
+let currentGames = [];
+
+// Endpoint Functions
+app.get('/api/currentGames', (req,res) =>{
+  console.log(currentGames);
+  res.send(currentGames);
+});
+
+app.get('/api/roundEarnings:gameID',(req,res) => {
+
   res.send("rE");
 });
 
@@ -81,27 +91,44 @@ app.get('/api/matrix/:id', (req,res)=> {
  
 
 app.post('/api/createGame', (req,res) =>{
-  console.log(req.body);
-
-
-  res.status(200).json({gameID:0}); // TODO update this zero so that it actually returns the gameID
+ // We need to have the player IDs
+  return knex('games').insert({player1ID:req.body.player1ID, coach1ID:req.body.coach1ID, player2ID:req.body.player2ID, coach2ID:req.body.coach2ID})
+    .then(ids => {
+      // Put game into currentGames array
+      let game = {roundNum:0, gameID:ids[0], player1:req.body.player1ID, coach1:req.body.coach1ID,
+                  player2:req.body.player2ID, coach2:req.body.coach2ID};
+      currentGames.push(game);
+      // Send gameID to admin so he can view game progress
+      knex('games').where({id: ids[0]}).first();
+      res.status(200).json({gameID:ids[0]});
+    }).catch(error => {
+      console.log(error);
+      res.status(500).json({error})
+    });
+});
+//Clears and Genterates random payouts
+app.post('/api/payouts',(req,res) =>{
+  console.log("Payouts");
+  let i;
+  //clears payouts
+  p1Payouts=[];
+  p2Payouts=[];
+  //genterates new semetric values for payouts
+  for(i=0;i<4;i++ ){
+    let p1randInt=Math.floor(Math.random()*10);
+    let p2randInt=Math.floor(Math.random()*10);
+    if(i==2){
+      p1Payouts.push(p1Payouts[1]);
+      p2Payouts.push(p2Payouts[1]);
+    }
+    else{
+      p1Payouts.push(p1randInt);
+      p2Payouts.push(p2randInt);
+    }
+  }
+  console.log([p1Payouts,p2Payouts]);
+  res.send([p1Payouts,p2Payouts]);
 });
 
-});
-
-
-// Non-Endpoint Functions
-function computeRoundOutcome(){
-  console.log("in computeRoundOutcome");
-
-}
-
-function computeTotalEarnings(roundEarnings, totalEarnings){
-
-}
-
-function computeAverageEarnings(roundNumber, totalEarnings){
-
-}
 
 app.listen(3000, () => console.log("Server listening on port 3000!"));
