@@ -2,7 +2,6 @@
   ul {
     list-style: none;
   }
-
   li {
     background: #fff;
     width: 500px;
@@ -13,7 +12,6 @@
     display: flex;
     align-items: center;
   }
-
   .header{
     font-size: 5vh;
   }

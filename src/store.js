@@ -1,6 +1,5 @@
 import Vue from 'vue';
 import Vuex from 'vuex';
-
 import axios from 'axios';
 
 Vue.use(Vuex);
@@ -9,9 +8,10 @@ export default new Vuex.Store({
   state: {
     roundID: 1,
     gameID: 1,
-    playerID: 1,
+    userID: 1,
     name: '',
     role: '',
+    inGame: 'false',
     coachID: 2,
     roundOption: '',
     submissionStatus: '',
@@ -22,14 +22,14 @@ export default new Vuex.Store({
     matrix: [],
     coachChatMsgs: [],
     playerChatMsgs: [],
-
   },
   getters: {
     roundID: state => state.roundID,
     gameID: state => state.gameID,
-    playerID: state => state.playerID,
+    userID: state => state.userID,
     name: state => state.name,
     role: state => state.role,
+    inGame: state => state.inGame,
     coachID: state => state.coachID,
     roundOption: state => state.roundOption,
     submissionStatus: state => state.submissionStatus,
@@ -51,15 +51,18 @@ export default new Vuex.Store({
     setGameID (state, gameID){
       state.gameID = gameID;
     },
-    setPlayerID (state, playerID){
-      console.log("in setPlayerID " + playerID.playerID);
-      state.playerID = playerID;
+    setUserID (state, userID){
+      console.log("in setUserID " + userID.userID);
+      state.userID = userID;
     },
     setName (state, name){
       state.name = name;
     },
     setRole (state, role){
       state.role = role;
+    },
+    setInGame (state, inGame){
+      state.inGame = inGame;
     },
     setCoachID (state, coachID){
       state.coachID = coachID
@@ -98,15 +101,21 @@ export default new Vuex.Store({
 
   },
   actions: {
+    updateData(context){
+      let timerID = setInterval(() => {
+        // This will allow me to make regular calls to the server to check things
+        console.log("in updateData in store" + context.state.userID);
+        axios.get('/api/inGame/' + context.state.userID)
+      }, 1500);
+    },
 
     register(context,info){
-        console.log("from register action in store" + info.name);
           context.commit('setName', info.name);
         axios.post('/api/userRegister',info).then(response => {
-          context.commit('setPlayerID',response.data);
+          context.commit('setUserID',response.data);
         }).catch(error => {
           console.log(error)
-          context.commit('setPlayerID', '');
+          context.commit('setUserID', '');
           context.commit('setRole','');
         });
     },
@@ -132,8 +141,8 @@ export default new Vuex.Store({
     submitChoice(context, choice)
     {
       console.log("roundID: ", context.state.roundID);
-      console.log("playerID: ", context.state.playerID);
-      axios.post("/api/round/"+context.state.roundID+'/'+context.state.playerID, choice).then(response =>{
+      console.log("userID: ", context.state.userID);
+      axios.post("/api/round/"+context.state.roundID+'/'+context.state.userID, choice).then(response =>{
         console.log(response.data);
       }).catch(err => {
         console.log("submitChoice Failed: ", err);

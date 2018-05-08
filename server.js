@@ -16,7 +16,8 @@ const knex = require('knex')(config);
 
 // Data
 let currentGames = [];
-let availableUsers = [];
+let availableUsers = [{role: "coach", userID: 17, name: "Joe"}, {role: "coach", userID: 18, name: "Jon"},
+                      {role: "player", userID: 19, name: "Josh"}, {role: "player", userID: 20, name: "Chad"}];
 
 // Endpoint Functions
 app.get('/api/availableUsers',(req,res) => {
@@ -26,6 +27,18 @@ app.get('/api/availableUsers',(req,res) => {
 
 app.get('/api/currentGames',(req,res) =>{
   res.send(currentGames);
+});
+
+app.get('/api/inGame/:id', (req,res)=>{
+  let id=parseInt(req.params.id);
+ // pick up from here tomorrow ... get the ID from the current game and send it back to the store
+  for (let i = 0; i < currentGames.length; i++){
+    if (id == currentGames[i].player1ID || id == currentGames[i].coach1ID ||
+        id == currentGames[i].player2ID || id = currentGames[i].coach2ID){
+          res.send({inGameStatus: "true", gameID: currentGames[i].gameID})
+
+        }
+  }
 });
 
 app.get('/api/roundEarnings:gameID',(req,res) => {
@@ -67,11 +80,11 @@ app.post('/api/userRegister',(req,res) => {
 
   return knex('users').insert({role: req.body.role, coachType: req.body.coachType, name: req.body.name})
     .then(ids => {
-      user = {name: req.body.name, playerID: ids[0], role: req.body.role};
+      user = {name: req.body.name, userID: ids[0], role: req.body.role};
       availableUsers.push(user);
-      
+
       knex('users').where({id: ids[0]}).first();
-      res.status(200).json({playerID:ids[0]});
+      res.status(200).json({userID:ids[0]});
     }).catch(error => {
       console.log(error);
       res.status(500).json({error})
@@ -102,6 +115,7 @@ app.get('/api/matrix/:id', (req,res)=> {
 
 app.post('/api/createGame', (req,res) =>{
  // We need to have the player IDs
+  console.log(req.body)
   return knex('games').insert({player1ID:req.body.player1ID, coach1ID:req.body.coach1ID, player2ID:req.body.player2ID, coach2ID:req.body.coach2ID})
     .then(ids => {
       // Put game into currentGames array

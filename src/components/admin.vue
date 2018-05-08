@@ -44,7 +44,7 @@
       <hr>
       <ul>
         <li v-for="player in players">
-          <button class="btn btn-primary" v-on:click="setPlayer(player.name)">
+          <button class="btn btn-primary" v-on:click="setPlayer(player)">
             <h5>
               {{player.name}}
             </h5>
@@ -62,7 +62,7 @@
       <hr>
       <ul>
         <li v-for="coach in coaches">
-          <button class="btn btn-primary" v-on:click="setCoach(coach.name)">
+          <button class="btn btn-primary" v-on:click="setCoach(coach)">
             <h5>{{coach.name}}</h5>
           </button>
         </li>
@@ -81,8 +81,8 @@
         <h4>Selected Players</h4>
 
 
-          <h5 class="selectedUsers">Player 1: {{selectedPlayer1}}</h5>
-          <h5 class="selectedUsers">Player 2: {{selectedPlayer2}}</h5>
+          <h5 class="selectedUsers">Player 1: {{selectedPlayer1.name}}</h5>
+          <h5 class="selectedUsers">Player 2: {{selectedPlayer2.name}}</h5>
 
       </div>
 
@@ -99,8 +99,8 @@
         <h4>Selected Coaches</h4>
 
 
-          <h5 class="selectedUsers">Coach 1: {{selectedCoach1}}</h5>
-          <h5 class="selectedUsers"> Coach 2: {{selectedCoach2}}</h5>
+          <h5 class="selectedUsers">Coach 1: {{selectedCoach1.name}}</h5>
+          <h5 class="selectedUsers"> Coach 2: {{selectedCoach2.name}}</h5>
 
       </div>
 
@@ -118,10 +118,10 @@ export default{
     return {
       title: 'Admin Page',
       users: [],
-      selectedPlayer1: '', // This should eventually be a playerID that will go to the server and return a name
-      selectedCoach1: '', // This should eventually be a playerID that will go to the server and return a name
-      selectedPlayer2: '', // This should eventually be a playerID that will go to the server and return a name
-      selectedCoach2: '', // This should eventually be a playerID that will go to the server and return a name
+      selectedPlayer1: '',
+      selectedCoach1: '',
+      selectedPlayer2: '',
+      selectedCoach2: '',
     }
   },
   computed: {
@@ -145,29 +145,31 @@ export default{
     },
   },
   methods: {
-    setPlayer: function(playerName){
-      if(playerName == this.selectedPlayer1 || playerName == this.selectedPlayer2){
+    setPlayer: function(player){
+      console.log(player);
+      if(player == this.selectedPlayer1 || player == this.selectedPlayer2){
         return;
       }
 
       if (this.selectedPlayer1 === ''){
-        this.selectedPlayer1 = playerName;
+        this.selectedPlayer1 = player;
       }
       else{
-        this.selectedPlayer2 = playerName;
+        this.selectedPlayer2 = player;
       }
     },
-    setCoach: function(coachName){
-      if(coachName != 'No Coach'){
-        if(coachName == this.selectedCoach1 || coachName == this.selectedCoach2){
+    setCoach: function(coach){
+      console.log(coach);
+      if(coach.name != 'No Coach'){
+        if(coach == this.selectedCoach1 || coach == this.selectedCoach2){
           return;
         }
       }
       if (this.selectedCoach1 === ''){
-        this.selectedCoach1 = coachName;
+        this.selectedCoach1 = coach;
       }
       else{
-        this.selectedCoach2 = coachName;
+        this.selectedCoach2 = coach;
       }
     },
     resetSelection: function(){
@@ -180,23 +182,23 @@ export default{
       //STEPS:
       if (this.selectedPlayer1 == '' || this.selectedPlayer2 == '' ||
           this.selectedCoach1 == '' || this.selectedCoach2 == ''){
-        swal("Enter all fields.","Please enter users for both players and coaches.","warning")
+        swal("Error","Please enter users for all player and coach fields.","warning")
       }
       else{
         //Axios call
-        // For this to work properly, we need to get the playerID's from the Database
         axios.post('/api/createGame',{
-          player1ID: 1,
-          coach1ID: 2,
-          player2ID: 3,
-          coach2ID: 4,
+          // Use the calls to get these players' ids
+          player1ID: this.selectedPlayer1.userID,
+          coach1ID: this.selectedCoach1.userID,
+          player2ID: this.selectedPlayer2.userID,
+          coach2ID: this.selectedCoach2.userID,
         }).then(response => {
-
           this.selectedPlayer1 = '';
           this.selectedCoach1 = '';
           this.selectedPlayer2 = '';
           this.selectedCoach2 = '';
         }).catch(error => {
+          swal("Error","Please update users then try again.","warning");
           console.log('createGame failed: ', error);
         });
       }

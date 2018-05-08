@@ -6,7 +6,8 @@
 <template>
 <div class="container">
   <h1>{{name}}, please wait while you are being paired. Thanks! </h1>
-      {{playerID}}
+      {{userID.userID}}
+      {{inGame}}
 
 </div>
 </template>
@@ -15,18 +16,31 @@
 export default{
   data() {
     return {
-
+      inGame: 'false',
     }
   },
+  created: function(){
+    this.updateData();
+    this.$store.dispatch('updateData');
+  },
   computed: {
-    playerID: function(){
-      return this.$store.getters.playerID;
+    userID: function(){
+      return this.$store.getters.userID;
     },
     name: function(){
       return this.$store.getters.name;
-    }
+    },
+
   },
   methods: {
+    updateData: function(){
+      let timerID = setInterval(() => {
+        this.inGame = this.$store.getters.inGame;
+          if(this.inGame == "true"){
+            console.log("success");
+          }
+      }, 1500);
+    },
 
   },
 
