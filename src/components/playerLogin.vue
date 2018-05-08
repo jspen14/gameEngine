@@ -52,7 +52,6 @@ import axios from 'axios'
 export default{
   data() {
     return {
-      title: 'Player Login',
       name: '',
       role: 'player',
     }

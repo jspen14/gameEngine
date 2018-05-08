@@ -64,11 +64,12 @@ app.get('/api/coachChat/',(req,res) => {
 
 app.post('/api/userRegister',(req,res) => {
   console.log("in userRegister");
-  user = {name: req.body.name, role: req.body.role};
-  availableUsers.push(user);
+
   return knex('users').insert({role: req.body.role, coachType: req.body.coachType, name: req.body.name})
     .then(ids => {
-      console.log(ids[0]);
+      user = {name: req.body.name, playerID: ids[0], role: req.body.role};
+      availableUsers.push(user);
+      
       knex('users').where({id: ids[0]}).first();
       res.status(200).json({playerID:ids[0]});
     }).catch(error => {

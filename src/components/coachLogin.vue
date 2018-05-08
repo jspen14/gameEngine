@@ -14,83 +14,56 @@
     align-items: center;
   }
 
-  .noBorder{
-    border: 0;
-    box-shadow: none;
+  .header{
+    font-size: 5vh;
   }
-
-  .msgsBox{
-    overflow-y: scroll;
-    height: 65vh;
-
+  .subHeader{
+    font-size: 4vh;
   }
 </style>
 
 <template>
-  <div>
-    <h3> Objective: As a player/coach team, win as much money as possible. </h3>
-
-    <form v-on:submit.prevent="addChatMsg" class="form-control noBorder">
-
-      <div class="input-group mb-3">
-        <div class="input-group-prepend">
-          <button class="btn btn-success" type="submit">Submit</button>
-        </div>
-        <input type="text" v-model="msgText" class="form-control" placeholder="Your Message" aria-describedby="basic-addon1">
-      </div>
+  <div class="container">
+    <div class='header'>
+      <h3>Objective: As a player/coach team, win as much money as possible.</h3>
       <hr>
+    </div>
 
-    </form>
+    <div class = "subHeader">
+      Enter Your Name:
 
-    <div class = "msgsBox">
-      <ul>
-        <li v-for="msg in chatMsgs">
-          {{msg.role}}: {{msg.text}}
-        </li>
-      </ul>
+    </div>
+
+    <br>
+
+    <div class="input-group input-group-lg">
+      <div class="input-group-prepend">
+        <router-link to='/waitingPage'><button class="btn btn-success" v-on:click="login">Submit</button></router-link>
+      </div>
+      <input v-model="name" type="text" class="form-control" aria-label="Large" aria-describedby="inputGroup-sizing-sm">
     </div>
 
   </div>
 </template>
+
 
 <script>
 import axios from 'axios'
 export default{
   data() {
     return {
-      title: 'Chat Display',
-      msgText: '',
-      messages: [],
+      name: '',
       role: 'coach',
     }
   },
   computed: {
-    chatMsgs: function(){
-      this.getChatMsgs();
-      return this.messages;
-    },
+
   },
   methods: {
-  getChatMsgs: function(){
-    axios.get('/api/coachChat').then(response => {
-      this.messages = response.data;
-      return true;
-    }).catch (err => {
-    });
+    login: function() {
+      this.$store.dispatch('register', {name: this.name, role: this.role});
+    },
   },
-
-  addChatMsg: function(){
-    axios.post('/api/coachChat/', {
-      text: this.msgText,
-      role: this.role,
-    }).then(response => {
-      this.msgText = '',
-      this.getChatMsgs();
-      return true;
-    }).catch(err => {
-    });
-  },
-  },
-
 }
+
 </script>
