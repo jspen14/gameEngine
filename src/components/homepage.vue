@@ -19,7 +19,7 @@ a:hover{
 <template>
 <div class = "container">
   <div class='header'>
-    Welcome to the Strata
+    <h3>Objective: As a player/coach team, win as much money as possible.</h3>
     <hr>
   </div>
   <div class = "subHeader">

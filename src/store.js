@@ -10,6 +10,8 @@ export default new Vuex.Store({
     roundID: 1,
     gameID: 1,
     playerID: 1,
+    name: '',
+    role: '',
     coachID: 2,
     roundOption: '',
     submissionStatus: '',
@@ -18,7 +20,6 @@ export default new Vuex.Store({
     totalEarnings: '',
     //TODO think about how to show the winningBox
     matrix: [],
-    role: '',
     coachChatMsgs: [],
     playerChatMsgs: [],
 
@@ -27,6 +28,8 @@ export default new Vuex.Store({
     roundID: state => state.roundID,
     gameID: state => state.gameID,
     playerID: state => state.playerID,
+    name: state => state.name,
+    role: state => state.role,
     coachID: state => state.coachID,
     roundOption: state => state.roundOption,
     submissionStatus: state => state.submissionStatus,
@@ -35,7 +38,6 @@ export default new Vuex.Store({
     totalEarnings: state => state.totalEarnings,
     //TODO put in a getter for the winningBox variable
     matrix: state => state.matrix,
-    role: state => state.role,
     coachChatMsgs: state => state.coachChatMsgs,
     playerChatMsgs: state => state.playerChatMsgs,
     rows: state => state.rows,
@@ -52,6 +54,12 @@ export default new Vuex.Store({
     setPlayerID (state, playerID){
       console.log("in setPlayerID " + playerID.playerID);
       state.playerID = playerID;
+    },
+    setName (state, name){
+      state.name = name;
+    },
+    setRole (state, role){
+      state.role = role;
     },
     setCoachID (state, coachID){
       state.coachID = coachID
@@ -75,9 +83,6 @@ export default new Vuex.Store({
     setMatrix (state, matrix){
       state.matrix = matrix;
     },
-    setRole (state, role){
-      state.role = role;
-    },
     setCoachChatMsgs (state, coachChatMsgs){
       state.coachChatMsgs = coachChatMsgs;
     },
@@ -94,9 +99,9 @@ export default new Vuex.Store({
   },
   actions: {
 
-
     register(context,info){
-        console.log(info);
+        console.log("from register action in store" + info.name);
+          context.commit('setName', info.name);
         axios.post('/api/userRegister',info).then(response => {
           context.commit('setPlayerID',response.data);
         }).catch(error => {
@@ -158,7 +163,7 @@ export default new Vuex.Store({
             index++;
           }
           else{
-            
+
             let temp=index;
 
             while(!isNaN(mx[temp]))

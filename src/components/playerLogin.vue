@@ -25,7 +25,7 @@
 <template>
   <div class="container">
     <div class='header'>
-      Welcome to the Strata
+      <h3>Objective: As a player/coach team, win as much money as possible.</h3>
       <hr>
     </div>
 
@@ -38,7 +38,7 @@
 
     <div class="input-group input-group-lg">
       <div class="input-group-prepend">
-        <router-link to='/playerPlayground'><button class="btn btn-success" v-on:click="login">Submit</button></router-link>
+        <router-link to='/waitingPage'><button class="btn btn-success" v-on:click="login">Submit</button></router-link>
       </div>
       <input v-model="name" type="text" class="form-control" aria-label="Large" aria-describedby="inputGroup-sizing-sm">
     </div>

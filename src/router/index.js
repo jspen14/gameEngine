@@ -6,6 +6,7 @@ import coachPlayground from '@/components/coachPlayground'
 import playerLogin from '@/components/playerLogin'
 import coachLogin from '@/components/coachLogin'
 import admin from '@/components/admin'
+import waitingPage from '@/components/waitingPage'
 
 Vue.use(Router)
 
@@ -40,6 +41,11 @@ export default new Router({
       path: '/admin',
       name: 'admin',
       component: admin,
+    },
+    {
+      path: '/waitingPage',
+      name: 'waitingPage',
+      component: waitingPage,
     }
 
   ]

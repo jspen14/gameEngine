@@ -10,16 +10,21 @@ app.use(express.static('public')); // I'm not sure exactly what this is supposed
 
 // Knex Setup
 const env = process.env.NODE_ENV || 'development';
-const config = require('./knexfile')[env];  
+const config = require('./knexfile')[env];
 const knex = require('knex')(config);
 
 
 // Data
 let currentGames = [];
+let availableUsers = [];
 
 // Endpoint Functions
-app.get('/api/currentGames', (req,res) =>{
-  console.log(currentGames);
+app.get('/api/availableUsers',(req,res) => {
+  console.log(availableUsers);
+  res.send(availableUsers);
+});
+
+app.get('/api/currentGames',(req,res) =>{
   res.send(currentGames);
 });
 
@@ -58,6 +63,9 @@ app.get('/api/coachChat/',(req,res) => {
 });
 
 app.post('/api/userRegister',(req,res) => {
+  console.log("in userRegister");
+  user = {name: req.body.name, role: req.body.role};
+  availableUsers.push(user);
   return knex('users').insert({role: req.body.role, coachType: req.body.coachType, name: req.body.name})
     .then(ids => {
       console.log(ids[0]);
@@ -89,7 +97,7 @@ app.get('/api/matrix/:id', (req,res)=> {
     res.status(500).json({error});
   });
 });
- 
+
 
 app.post('/api/createGame', (req,res) =>{
  // We need to have the player IDs

@@ -28,7 +28,7 @@
 
 <template>
   <div>
-    <h2> {{title}} </h2>
+    <h3> Objective: As a player/coach team, win as much money as possible. </h3>
 
     <form v-on:submit.prevent="addChatMsg" class="form-control noBorder">
 
