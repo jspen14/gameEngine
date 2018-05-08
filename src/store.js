@@ -114,21 +114,13 @@ export default new Vuex.Store({
       });
     },
 
-    getPosts(context){
-      console.log("Am i in the store getPosts?");
-      return axios.get('/api/posts').then(response => {
-
-        context.commit('setFeed',response.data.posts);
-      }).catch(err => {
-        console.log("getFeed Failed: ", err);
-      });
-    },
-    //matrixID is temporary will grab the game from the round
     submitChoice(context, choice)
     {
-      console.log("roundID: ", context.state.roundID);
+    
       console.log("playerID: ", context.state.playerID);
-      axios.post("/api/round/"+context.state.roundID+'/'+context.state.playerID, choice).then(response =>{
+      console.log("roundID: ", context.state.roundID);
+
+      axios.post("/api/game/"+context.state.gameID, choice).then(response =>{
         console.log(response.data);
       }).catch(err => {
         console.log("submitChoice Failed: ", err);

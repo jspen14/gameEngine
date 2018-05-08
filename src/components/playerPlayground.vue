@@ -76,7 +76,7 @@ import Earnings from './Earnings'
 
     },
     methods: {
-      submitOption: function(param){
+      submitChoice: function(param){
       console.log(param);
         axios.put('/api/p1roundOption',{
           roundOption: param,
