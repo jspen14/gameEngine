@@ -88,6 +88,7 @@ app.get('/api/matrix/:id', (req,res)=> {
   }).catch(error =>{
     res.status(500).json({error});
   });
+});
  
 
 app.post('/api/createGame', (req,res) =>{
@@ -129,6 +130,5 @@ app.post('/api/payouts',(req,res) =>{
   console.log([p1Payouts,p2Payouts]);
   res.send([p1Payouts,p2Payouts]);
 });
-
 
 app.listen(3000, () => console.log("Server listening on port 3000!"));
