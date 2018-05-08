@@ -12,7 +12,16 @@ const env = process.env.NODE_ENV || 'development';
 const config = require('./knexfile')[env];
 const knex = require('knex')(config);
 
-app.get('/api/roundEarnings',(req,res) => {
+// Data
+let currentGames = [];
+
+// Endpoint Functions
+app.get('/api/currentGames', (req,res) =>{
+  console.log(currentGames);
+  res.send(currentGames);
+});
+
+app.get('/api/roundEarnings:gameID',(req,res) => {
   res.send("rE");
 });
 
@@ -70,11 +79,21 @@ app.post('/api/coachChat', (req,res) => {
 });
 
 app.post('/api/createGame', (req,res) =>{
-  console.log(req.body);
-
-
-  res.status(200).json({gameID:0}); // TODO update this zero so that it actually returns the gameID
-})
+ // We need to have the player IDs
+  return knex('games').insert({player1ID:req.body.player1ID, coach1ID:req.body.coach1ID, player2ID:req.body.player2ID, coach2ID:req.body.coach2ID})
+    .then(ids => {
+      // Put game into currentGames array
+      let game = {roundNum:0, gameID:ids[0], player1:req.body.player1ID, coach1:req.body.coach1ID,
+                  player2:req.body.player2ID, coach2:req.body.coach2ID};
+      currentGames.push(game);
+      // Send gameID to admin so he can view game progress
+      knex('games').where({id: ids[0]}).first();
+      res.status(200).json({gameID:ids[0]});
+    }).catch(error => {
+      console.log(error);
+      res.status(500).json({error})
+    });
+});
 //Clears and Genterates random payouts
 app.post('/api/payouts',(req,res) =>{
   console.log("Payouts");
@@ -106,6 +125,7 @@ app.get('/api/payouts/1', (req,res)=> {
 app.get('/api/payouts/2', (req,res)=>{
   res.send(p2Payouts);
 });
+
 // Non-Endpoint Functions
 function computeRoundOutcome(){
   console.log("in computeRoundOutcome");
