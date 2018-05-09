@@ -5,22 +5,56 @@ const app = express();
 app.use(bodyParser.json());
 app.use(bodyParser.urlencoded({extended: false}));
 
-app.use(express.static('public')); // I'm not sure exactly what this is supposed to do.
+
 
 
 // Knex Setup
 const env = process.env.NODE_ENV || 'development';
-const config = require('./knexfile')[env];  
+const config = require('./knexfile')[env];
 const knex = require('knex')(config);
+// bcrypt setup
+let bcrypt = require('bcrypt');
+const saltRounds = 10;
 
+// jwt setup
+const jwt = require('jsonwebtoken');
+let jwtSecret = process.env.jwtSecret;
+if (jwtSecret === undefined) {
+  console.log("You need to define a jwtSecret environment variable to continue.");
+  knex.destroy();
+  process.exit();
+}
 
 // Data
 let currentGames = [];
 
+let availableUsers = [{role: "Coach", userID: 17, name: "Joe"}, {role: "Coach", userID: 18, name: "Jon"},
+                      {role: "Player", userID: 19, name: "Josh"}, {role: "Player", userID: 20, name: "Chad"}];
+
+
 // Endpoint Functions
-app.get('/api/currentGames', (req,res) =>{
-  console.log(currentGames);
+app.get('/api/availableUsers',(req,res) => {
+
+  res.send(availableUsers);
+});
+
+app.get('/api/currentGames',(req,res) =>{
   res.send(currentGames);
+});
+
+app.get('/api/inGameStatus/:id', (req,res)=>{
+  let id = parseInt(req.params.id);
+
+ // pick up from here tomorrow ... get the ID from the current game and send it back to the store
+  for (let i = 0; i < currentGames.length; i++){
+    if (id == currentGames[i].player1ID || id == currentGames[i].coach1ID ||
+        id == currentGames[i].player2ID || id == currentGames[i].coach2ID){
+
+          res.status(200).json({inGameStatus: true, gameID: currentGames[i].gameID});
+          return;
+        }
+  }
+  res.status(200).json({inGameStatus: false});
 });
 
 app.get('/api/roundEarnings:gameID',(req,res) => {
@@ -57,18 +91,6 @@ app.get('/api/coachChat/',(req,res) => {
                     {role: "coach", text: "Okay. Let's start out by playing our personal best. Choose X"},{role: "player", text: "Okay"}]);
 });
 
-app.post('/api/userRegister',(req,res) => {
-  return knex('users').insert({role: req.body.role, coachType: req.body.coachType, name: req.body.name})
-    .then(ids => {
-      console.log(ids[0]);
-      knex('users').where({id: ids[0]}).first();
-      res.status(200).json({playerID:ids[0]});
-    }).catch(error => {
-      console.log(error);
-      res.status(500).json({error})
-    });
-});
-
 app.post('/api/coachChat', (req,res) => {
   // Use unshift to put messages at the top instead of the bottom
 
@@ -89,15 +111,16 @@ app.get('/api/matrix/:id', (req,res)=> {
     res.status(500).json({error});
   });
 });
- 
 
 app.post('/api/createGame', (req,res) =>{
  // We need to have the player IDs
+  console.log("in createGame on server: " + req.body);
+  console.log(req.body.player1ID, req.body.player2ID, req.body.coach1ID, req.body.coach2ID)
   return knex('games').insert({player1ID:req.body.player1ID, coach1ID:req.body.coach1ID, player2ID:req.body.player2ID, coach2ID:req.body.coach2ID})
     .then(ids => {
       // Put game into currentGames array
-      let game = {roundNum:0, gameID:ids[0], player1:req.body.player1ID, coach1:req.body.coach1ID,
-                  player2:req.body.player2ID, coach2:req.body.coach2ID};
+      let game = {roundNum:0, gameID:parseInt(ids[0]), player1ID:parseInt(req.body.player1ID), coach1ID:parseInt(req.body.coach1ID),
+                  player2ID:parseInt(req.body.player2ID), coach2ID:parseInt(req.body.coach2ID)};
       currentGames.push(game);
       // Send gameID to admin so he can view game progress
       knex('games').where({id: ids[0]}).first();
@@ -107,28 +130,91 @@ app.post('/api/createGame', (req,res) =>{
       res.status(500).json({error})
     });
 });
-//Clears and Genterates random payouts
-app.post('/api/payouts',(req,res) =>{
-  console.log("Payouts");
-  let i;
-  //clears payouts
-  p1Payouts=[];
-  p2Payouts=[];
-  //genterates new semetric values for payouts
-  for(i=0;i<4;i++ ){
-    let p1randInt=Math.floor(Math.random()*10);
-    let p2randInt=Math.floor(Math.random()*10);
-    if(i==2){
-      p1Payouts.push(p1Payouts[1]);
-      p2Payouts.push(p2Payouts[1]);
+
+const verifyToken = (req, res, next) => {
+  const token = req.headers['authorization'];
+  if (!token)
+    return res.status(403).send({ error: 'No token provided.' });
+  jwt.verify(token, jwtSecret, function(err, decoded) {
+    if (err)
+      return res.status(500).send({ error: 'Failed to authenticate token.' });
+    // if everything good, save to request for use in other routes
+    req.userID = decoded.id;
+    next();
+  });
+}
+
+// Login
+app.post('/api/login', (req, res) => {
+
+  if (!req.body.name || !req.body.password)
+    return res.status(400).send();
+  knex('users').where('name',req.body.name).first().then(user => {
+    if (user === undefined) {
+      res.status(403).send("Invalid credentials");
+      throw new Error('abort');
     }
-    else{
-      p1Payouts.push(p1randInt);
-      p2Payouts.push(p2randInt);
+    return [bcrypt.compare(req.body.password, user.hash),user];
+  }).spread((result,user) => {
+        if (result) {
+       let token = jwt.sign({ id: user.id }, jwtSecret, {
+        expiresIn: 86400 // expires in 24 hours
+       });
+
+       //Add to availableUsers here
+      availableUsers.push(user);
+
+      res.status(200).json({user:{name:user.name,id:user.id,role:user.role},token:token});
     }
-  }
-  console.log([p1Payouts,p2Payouts]);
-  res.send([p1Payouts,p2Payouts]);
+    else
+    {
+      res.status(403).send("Invalid credentials");
+    }
+    return;
+  }).catch(error => {
+    if (error.message !== 'abort') {
+      console.log(error);
+      res.status(500).json({ error });
+    }
+  });
+});
+
+//Register
+app.post('/api/users', (req, res) => {
+if ( !req.body.password || !req.body.name)
+    return res.status(400).send();
+knex('users').where('name',req.body.name).first().then(user => {
+    console.log(user);
+    if (user !== undefined) {
+      res.status(409).send("User name already exists");
+      throw new Error('abort');
+    }
+    return bcrypt.hash(req.body.password, saltRounds);
+  }).then(hash => {
+    return knex('users').insert({hash: hash, role:req.body.role,
+         name:req.body.name});
+  }).then(ids => {
+    return knex('users').where('id',ids[0]).first().select('name','id','role');
+  }).then(user => {
+    let token = jwt.sign({ id: user.id }, jwtSecret, {
+      expiresIn: 86400 // expires in 24 hours
+    });
+    availableUsers.push(user);
+    res.status(200).json({user:user,token:token});
+    return;
+  }).catch(error => {
+    if (error.message !== 'abort') {
+      console.log(error);
+      res.status(500).json({ error });
+    }
+  });
+});
+app.get('/api/me', verifyToken, (req,res) => {
+  knex('users').where('id',req.userID).first().select('name','id','role').then(user => {
+    res.status(200).json({user:user});
+  }).catch(error => {
+    res.status(500).json({ error });
+  });
 });
 
 app.listen(3000, () => console.log("Server listening on port 3000!"));

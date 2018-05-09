@@ -15,9 +15,6 @@
   .btn2:hover{
     background: #eee;
   }
-  .layoutTest{
-    border: solid black 1px;
-  }
   .userDisplay{
     max-height: 55vh;
     min-height: 55vh;
@@ -42,12 +39,12 @@
   <div class="row">
           <div class='col-lg-1 col-md-1 col-sm-1 col-xs-1'></div>
 
-    <div class="col-lg-4 col-md-4 col-sm-4 col-xs-4 userDisplay layoutTest">
+    <div class="col-lg-4 col-md-4 col-sm-4 col-xs-4 userDisplay ">
       <h3>Available Players</h3>
       <hr>
       <ul>
         <li v-for="player in players">
-          <button class="btn btn-primary" v-on:click="setPlayer(player.name)">
+          <button class="btn btn-primary" v-on:click="setPlayer(player)">
             <h5>
               {{player.name}}
             </h5>
@@ -56,14 +53,16 @@
       </ul>
     </div>
 
-          <div class='col-lg-2 col-md-2 col-sm-2 col-xs-2 userDisplay'></div>
+    <div class='col-lg-2 col-md-2 col-sm-2 col-xs-2 userDisplay'>
+      <button class="btn btn-warning" v-on:click="updateAvailableUsers()">Update Users</button>
+    </div>
 
-    <div class="col-lg-4 col-md-4 col-sm-4 col-xs-4 userDisplay layoutTest">
+    <div class="col-lg-4 col-md-4 col-sm-4 col-xs-4 userDisplay ">
       <h3>Available Coaches</h3>
       <hr>
       <ul>
         <li v-for="coach in coaches">
-          <button class="btn btn-primary" v-on:click="setCoach(coach.name)">
+          <button class="btn btn-primary" v-on:click="setCoach(coach)">
             <h5>{{coach.name}}</h5>
           </button>
         </li>
@@ -72,18 +71,18 @@
 
           <div class='col-lg-1 col-md-1 col-sm-1 col-xs-1'></div>
   </div>
-
+    <hr>
   <div class="vertSpacer1"></div>
 
   <div class="row">
           <div class='col-lg-1 col-md-1 col-sm-1 col-xs-1'></div>
 
-      <div class='col-lg-4 col-md-4 col-sm-4 col-xs-4 layoutTest'>
+      <div class='col-lg-4 col-md-4 col-sm-4 col-xs-4 '>
         <h4>Selected Players</h4>
 
 
-          <h5 class="selectedUsers">Player 1: {{selectedPlayer1}}</h5>
-          <h5 class="selectedUsers">Player 2: {{selectedPlayer2}}</h5>
+          <h5 class="selectedUsers">Player 1: {{selectedPlayer1.name}}</h5>
+          <h5 class="selectedUsers">Player 2: {{selectedPlayer2.name}}</h5>
 
       </div>
 
@@ -96,12 +95,12 @@
 
           </div>
 
-      <div class='col-lg-4 col-md-4 col-sm-4 col-xs-4 layoutTest'>
+      <div class='col-lg-4 col-md-4 col-sm-4 col-xs-4 '>
         <h4>Selected Coaches</h4>
 
 
-          <h5 class="selectedUsers">Coach 1: {{selectedCoach1}}</h5>
-          <h5 class="selectedUsers"> Coach 2: {{selectedCoach2}}</h5>
+          <h5 class="selectedUsers">Coach 1: {{selectedCoach1.name}}</h5>
+          <h5 class="selectedUsers"> Coach 2: {{selectedCoach2.name}}</h5>
 
       </div>
 
@@ -118,21 +117,18 @@ export default{
   data() {
     return {
       title: 'Admin Page',
-      users: [{name: "No Coach", role: "coach"},{name: "Trump", role: "player"},{name: "Vince Lombardi", role: "coach"},
-        {name: "Carnegie", role: "player"},{name: "Joe Paterno", role: "coach"},
-        {name: "LaVell Edwards", role: "coach"},{name: "Thumper", role: "player"},
-        {name: "Spock", role: "player"}],
-      selectedPlayer1: '', // This should eventually be a playerID that will go to the server and return a name
-      selectedCoach1: '', // This should eventually be a playerID that will go to the server and return a name
-      selectedPlayer2: '', // This should eventually be a playerID that will go to the server and return a name
-      selectedCoach2: '', // This should eventually be a playerID that will go to the server and return a name
+      users: [],
+      selectedPlayer1: '',
+      selectedCoach1: '',
+      selectedPlayer2: '',
+      selectedCoach2: '',
     }
   },
   computed: {
     coaches: function(){
       let coachArray = [];
       for(let i = 0; i < this.users.length; i++){
-        if(this.users[i].role == "coach"){
+        if(this.users[i].role == "Coach"){
           coachArray.push(this.users[i]);
         }
       }
@@ -141,7 +137,7 @@ export default{
     players: function(){
       let playerArray = [];
       for(let i = 0; i < this.users.length; i++){
-        if(this.users[i].role == "player"){
+        if(this.users[i].role == "Player"){
           playerArray.push(this.users[i]);
         }
       }
@@ -149,29 +145,31 @@ export default{
     },
   },
   methods: {
-    setPlayer: function(playerName){
-      if(playerName == this.selectedPlayer1 || playerName == this.selectedPlayer2){
+    setPlayer: function(player){
+      console.log(player);
+      if(player == this.selectedPlayer1 || player == this.selectedPlayer2){
         return;
       }
 
       if (this.selectedPlayer1 === ''){
-        this.selectedPlayer1 = playerName;
+        this.selectedPlayer1 = player;
       }
       else{
-        this.selectedPlayer2 = playerName;
+        this.selectedPlayer2 = player;
       }
     },
-    setCoach: function(coachName){
-      if(coachName != 'No Coach'){
-        if(coachName == this.selectedCoach1 || coachName == this.selectedCoach2){
+    setCoach: function(coach){
+      console.log(coach);
+      if(coach.name != 'No Coach'){
+        if(coach == this.selectedCoach1 || coach == this.selectedCoach2){
           return;
         }
       }
       if (this.selectedCoach1 === ''){
-        this.selectedCoach1 = coachName;
+        this.selectedCoach1 = coach;
       }
       else{
-        this.selectedCoach2 = coachName;
+        this.selectedCoach2 = coach;
       }
     },
     resetSelection: function(){
@@ -184,29 +182,37 @@ export default{
       //STEPS:
       if (this.selectedPlayer1 == '' || this.selectedPlayer2 == '' ||
           this.selectedCoach1 == '' || this.selectedCoach2 == ''){
-        swal("Enter all fields.","Please enter users for both players and coaches.","warning")
+
+        swal("Error","Please enter users for all player and coach fields.","warning")
       }
       else{
         //Axios call
-        // For this to work properly, we need to get the playerID's from the Database
+                console.log("createGame:",this.selectedPlayer1.id, this.selectedPlayer2.id, this.selectedCoach1.id, this.selectedCoach2.id);
         axios.post('/api/createGame',{
-          player1ID: 1,
-          coach1ID: 2,
-          player2ID: 3,
-          coach2ID: 4,
+          // Use the calls to get these players' ids
+          player1ID: this.selectedPlayer1.id,
+          coach1ID: this.selectedCoach1.id,
+          player2ID: this.selectedPlayer2.id,
+          coach2ID: this.selectedCoach2.id,
         }).then(response => {
-        
           this.selectedPlayer1 = '';
           this.selectedCoach1 = '';
           this.selectedPlayer2 = '';
           this.selectedCoach2 = '';
         }).catch(error => {
+          swal("Error","Please update users then try again.","warning");
           console.log('createGame failed: ', error);
         });
-
-
       }
-
+    },
+    updateAvailableUsers: function(){
+      axios.get('/api/availableUsers').then(response => {
+        console.log("from admin: " + response.data[0].role);
+        this.users =  response.data;
+        console.log (this.users);
+      }).catch(err => {
+        console.log(err);
+      })
     },
 
   },

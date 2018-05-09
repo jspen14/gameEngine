@@ -1,3 +1,28 @@
+<template>
+<div class = "container">
+  <div v-if="loggedIn">
+    <waiting-page/>
+  </div>
+  <div v-else>
+    <login-register/>
+  </div>
+</div>
+</template>
+<script>
+  import axios from 'axios'
+  import loginRegister from './loginRegister'
+  import waitingPage from './waitingPage'
+export default{
+  name: 'homepage',
+  components: {loginRegister,waitingPage},
+  computed: {
+    loggedIn:function () {
+      return this.$store.getters.loggedIn;
+    }
+  },
+
+}
+</script>
 <style scoped>
 a:hover{
   text-decoration: none;
@@ -15,36 +40,3 @@ a:hover{
 }
 
 </style>
-
-<template>
-<div class = "container">
-  <div class='header'>
-    Welcome to the Strata
-    <hr>
-  </div>
-  <div class = "subHeader">
-    Select Your User
-    <router-link to="admin" class="subHeader" style="color:black">* </router-link>
-    :
-  </div>
-
-  <br>
-
-  <div class = "row">
-    <div class="col-lg-5 col-md-5 roleOptions">
-      <router-link to="playerLogin" class="subHeader">Player </router-link>
-
-    </div>
-
-    <div class="col-lg-2 col-md-2"></div>
-
-    <div class="col-lg-5 col-md-5 roleOptions">
-      <router-link to="coachLogin" class="subHeader">Coach</router-link>
-
-    </div>
-  </div>
-
-  <br>
-
-</div>
-</template>

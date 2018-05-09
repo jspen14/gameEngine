@@ -8,7 +8,6 @@
     min-height: 10vh;
     border: solid 1px black;
   }
-
 </style>
 
 <template>
@@ -70,7 +69,7 @@ import Earnings from './Earnings'
     data(){
 
 
-      
+
     },
     computed: {
 
