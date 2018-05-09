@@ -16,7 +16,9 @@
     "knex": "^0.14.6",
     "mariasql": "^0.2.6",
     "mysql": "^2.15.0",
+
     "postcss-load-options": "^1.2.0",
+
     "sweetalert": "^2.1.0",
     "vue": "^2.5.2",
     "vue-router": "^3.0.1",

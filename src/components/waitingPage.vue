@@ -6,7 +6,7 @@
 <template>
 <div class="container">
   <h1>{{name}}, please wait while you are being paired. Thanks! </h1>
-      {{userID.userID}}
+      {{userID}}
 
       <div v-if="inGameStatus == true">
         <!-- If we need to pass things to new component, we can send parameters in router-link -->
@@ -21,6 +21,11 @@
       </div>
 
       {{inGameStatus}}
+
+  <br>
+  <img src="/static/images/ajax-loader.gif"/>
+  <br>
+  <button v-on:click="logout()" class="btn btn-primary">Log out</button>
 
 </div>
 </template>
@@ -37,11 +42,11 @@ export default{
     this.$store.dispatch('updateData');
   },
   computed: {
-    userID: function(){
-      return this.$store.getters.userID;
-    },
     name: function(){
-      return this.$store.getters.name;
+      return this.$store.getters.user.name;
+    },
+    userID: function(){
+      return this.$store.getters.user.id;
     },
     inGame: function(){
       if(this.$store.getters.inGameStatus == true){
@@ -58,6 +63,17 @@ export default{
 
       }, 3000);
     },
+
+
+    playerID: function(){
+      return this.$store.getters.user.id;
+    },
+
+  },
+  methods: {
+    logout: function(){
+      this.$store.dispatch('logout');
+    }
 
   },
 

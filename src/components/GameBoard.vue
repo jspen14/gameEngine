@@ -81,7 +81,7 @@
 	   methods: {
 			submitChoice: function(choice){
         console.log("selected ",choice);
-
+        
         this.$store.dispatch("submitChoice", choice);
 				
 			},
