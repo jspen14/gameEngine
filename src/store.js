@@ -1,6 +1,5 @@
 import Vue from 'vue';
 import Vuex from 'vuex';
-
 import axios from 'axios';
 
 Vue.use(Vuex);
@@ -21,6 +20,7 @@ export default new Vuex.Store({
     user: {},
     loginError: '',
     registerError: '',
+    token: '',
     //coachID: 2,
     roundOption: '',
     //submissionStatus: '',
@@ -31,7 +31,7 @@ export default new Vuex.Store({
     matrix: [],
     coachChatMsgs: [],
     playerChatMsgs: [],
-    token: '',
+    
   },
   getters: {
     currentRound: state=> state.currentRound,
@@ -118,9 +118,9 @@ export default new Vuex.Store({
     setToken (state, token) {
       state.token = token;
       if (token === '')
- localStorage.removeItem('token');
+          localStorage.removeItem('token');
       else
- localStorage.setItem('token', token)
+          localStorage.setItem('token', token)
     },
     setLoginError (state, message) {
       state.loginError = message;
@@ -132,11 +132,12 @@ export default new Vuex.Store({
   },
   actions: {
 
-  initialize(context) {
+  // Initialize //
+    initialize(context) {
       let token = localStorage.getItem('token');
       if (token) {
-      // see if we can use the token to get my user account
-    axios.get("/api/me",getAuthHeader()).then(response => {
+  // see if we can use the token to get my user account
+  axios.get("/api/me",getAuthHeader()).then(response => {
     context.commit('setToken',token);
     context.commit('setUser',response.data.user);
   }).catch(err => {

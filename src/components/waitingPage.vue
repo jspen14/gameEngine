@@ -9,6 +9,8 @@
       {{playerID}}
   <br>
   <img src="/static/images/ajax-loader.gif"/>
+  <br>
+  <button v-on:click="logout()" class="btn btn-primary">Log out</button>
 </div>
 </template>
 
@@ -28,7 +30,9 @@ export default{
     }
   },
   methods: {
-
+    logout: function(){
+      this.$store.dispatch('logout');
+    }
   },
 
 

@@ -5,7 +5,7 @@ const app = express();
 app.use(bodyParser.json());
 app.use(bodyParser.urlencoded({extended: false}));
 
-app.use(express.static('public')); // I'm not sure exactly what this is supposed to do.
+
 
 
 // Knex Setup
@@ -185,7 +185,7 @@ knex('users').where('name',req.body.name).first().then(user => {
   });
 });
 app.get('/api/me', verifyToken, (req,res) => {
-  knex('users').where('id',req.userID).first().select('username','name','id').then(user => {
+  knex('users').where('id',req.userID).first().select('name','id','role').then(user => {
     res.status(200).json({user:user});
   }).catch(error => {
     res.status(500).json({ error });
