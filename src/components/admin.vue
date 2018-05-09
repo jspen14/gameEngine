@@ -128,7 +128,7 @@ export default{
     coaches: function(){
       let coachArray = [];
       for(let i = 0; i < this.users.length; i++){
-        if(this.users[i].role == "coach"){
+        if(this.users[i].role == "Coach"){
           coachArray.push(this.users[i]);
         }
       }
@@ -137,7 +137,7 @@ export default{
     players: function(){
       let playerArray = [];
       for(let i = 0; i < this.users.length; i++){
-        if(this.users[i].role == "player"){
+        if(this.users[i].role == "Player"){
           playerArray.push(this.users[i]);
         }
       }

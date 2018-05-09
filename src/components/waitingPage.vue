@@ -63,19 +63,11 @@ export default{
 
       }, 3000);
     },
-
-
-    playerID: function(){
-      return this.$store.getters.user.id;
-    },
-
-  },
-  methods: {
     logout: function(){
       this.$store.dispatch('logout');
     }
-
   },
+  
 
 
 }

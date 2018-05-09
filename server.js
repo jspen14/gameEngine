@@ -28,8 +28,8 @@ if (jwtSecret === undefined) {
 // Data
 let currentGames = [];
 
-let availableUsers = [{role: "coach", userID: 17, name: "Joe"}, {role: "coach", userID: 18, name: "Jon"},
-                      {role: "player", userID: 19, name: "Josh"}, {role: "player", userID: 20, name: "Chad"}];
+let availableUsers = [{role: "Coach", userID: 17, name: "Joe"}, {role: "Coach", userID: 18, name: "Jon"},
+                      {role: "Player", userID: 19, name: "Josh"}, {role: "Player", userID: 20, name: "Chad"}];
 
 
 // Endpoint Functions
@@ -92,22 +92,6 @@ app.get('/api/coachChat/',(req,res) => {
                     {role: "coach", text: "Okay. Let's start out by playing our personal best. Choose X"},{role: "player", text: "Okay"}]);
 });
 
-
-/*
-  return knex('users').insert({role: req.body.role, coachType: req.body.coachType, name: req.body.name})
-    .then(ids => {
-      user = {name: req.body.name, userID: parseInt(ids[0]), role: req.body.role};
-      availableUsers.push(user);
-
-      knex('users').where({id: ids[0]}).first();
-      res.status(200).json({userID:ids[0]});
-    }).catch(error => {
-      console.log(error);
-      res.status(500).json({error})
-    });
-});
-*/
-
 app.post('/api/coachChat', (req,res) => {
   // Use unshift to put messages at the top instead of the bottom
 
@@ -129,10 +113,9 @@ app.get('/api/matrix/:id', (req,res)=> {
   });
 });
 
-
 app.post('/api/createGame', (req,res) =>{
  // We need to have the player IDs
-  console.log(req.body)
+  console.log("in createGame on server: " + req.body);
   return knex('games').insert({player1ID:req.body.player1ID, coach1ID:req.body.coach1ID, player2ID:req.body.player2ID, coach2ID:req.body.coach2ID})
     .then(ids => {
       // Put game into currentGames array
@@ -161,7 +144,9 @@ const verifyToken = (req, res, next) => {
   });
 }
 
+// Login
 app.post('/api/login', (req, res) => {
+
   if (!req.body.name || !req.body.password)
     return res.status(400).send();
   knex('users').where('name',req.body.name).first().then(user => {
@@ -175,9 +160,13 @@ app.post('/api/login', (req, res) => {
        let token = jwt.sign({ id: user.id }, jwtSecret, {
         expiresIn: 86400 // expires in 24 hours
        });
+
+       //Add to availableUsers here
+      availableUsers.push(user);
+
       res.status(200).json({user:{name:user.name,id:user.id,role:user.role},token:token});
     }
-    else 
+    else
     {
       res.status(403).send("Invalid credentials");
     }
@@ -189,7 +178,8 @@ app.post('/api/login', (req, res) => {
     }
   });
 });
-//Log in
+
+//Register
 app.post('/api/users', (req, res) => {
 if ( !req.body.password || !req.body.name)
     return res.status(400).send();
@@ -209,6 +199,7 @@ knex('users').where('name',req.body.name).first().then(user => {
     let token = jwt.sign({ id: user.id }, jwtSecret, {
       expiresIn: 86400 // expires in 24 hours
     });
+    availableUsers.push(user);
     res.status(200).json({user:user,token:token});
     return;
   }).catch(error => {
