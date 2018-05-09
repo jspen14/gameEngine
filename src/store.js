@@ -10,13 +10,8 @@ const getAuthHeader = () => {
 
 export default new Vuex.Store({
   state: {
-    roundID: 1,
-    gameID: 1,
-    userID: 1,
-    name: '',
-    role: '',
+
     inGameStatus: 'false',
-    coachID: 2,
     user: {},
     loginError: '',
     registerError: '',
@@ -24,36 +19,17 @@ export default new Vuex.Store({
     currentRound: 1,
     currentGame: '',
     roundOption: '',
-    //submissionStatus: '',
-    //roundEarnings: '',
-    //averageEarnings: '',
-    //totalEarnings: '',
-    //TODO think about how to show the winningBox
     matrix: [],
     coachChatMsgs: [],
     playerChatMsgs: [],
   },
   getters: {
-    roundID: state => state.roundID,
-    gameID: state => state.gameID,
-    userID: state => state.userID,
-    name: state => state.name,
-    role: state => state.role,
     inGameStatus: state => state.inGameStatus,
-    coachID: state => state.coachID,
-    roundOption: state => state.roundOption,
-    submissionStatus: state => state.submissionStatus,
-    roundEarnings: state => state.roundEarnings,
-    averageEarnings: state => state.averageEarnings,
-    totalEarnings: state => state.totalEarnings,
-    //merged getters from simmons1
     currentRound: state=> state.currentRound,
     currentGame: state=> state.currentGame,
     user: state=>state.user,
     playerID: state => state.user.id,
     name: state => state.user.name,
-
-    //TODO put in a getter for the winningBox variable
     matrix: state => state.matrix,
     coachChatMsgs: state => state.coachChatMsgs,
     playerChatMsgs: state => state.playerChatMsgs,
@@ -72,22 +48,7 @@ export default new Vuex.Store({
 
   },
   mutations: {
-    setRoundID (state, roundID){
-      state.roundID = roundID;
-    },
-    setGameID (state, gameID){
-      state.gameID = gameID;
-    },
-    setUserID (state, userID){
-      console.log("in setUserID " + userID.userID);
-      state.userID = userID;
-    },
-    setName (state, name){
-      state.name = name;
-    },
-    setRole (state, role){
-      state.role = role;
-    },
+
     setInGameStatus (state, inGameStatus){
       state.inGameStatus = inGameStatus;
     },
@@ -97,19 +58,6 @@ export default new Vuex.Store({
     setRoundOption (state, roundOption){
       state.roundOption = roundOption;
     },
-    setSubmissionStatus (state, submissionStatus){
-      state.submissionStatus = submissionStatus;
-    },
-    setRoundEarnings (state, roundEarnings){
-      state.roundEarnings = roundEarnings;
-    },
-    setAverageEarnings (state, averageEarnings){
-      state.averageEarnings = averageEarnings;
-    },
-    setTotalEarnings (state, totalEarnings){
-      state.totalEarnings = totalEarnings;
-    },
-    //TODO mutator for winningBox
     setMatrix (state, matrix){
       state.matrix = matrix;
     },
@@ -141,8 +89,8 @@ export default new Vuex.Store({
   actions: {
     updateData(context){
       let timerID = setInterval(() => {
-        console.log("in updateData in store: " + context.state.userID.userID);
-        axios.get('/api/inGameStatus/' + context.state.userID.userID).then(response => {
+        //console.log("in updateData in store: " + context.state.userID.userID);
+        axios.get('/api/inGameStatus/' + context.state.user.id).then(response => {
           console.log(response.data.gameID + " - " + response.data.inGameStatus);
           if(response.data.inGameStatus == true){
             console.log("one small step for man");
@@ -224,26 +172,7 @@ export default new Vuex.Store({
       });
     },
 
-    getPosts(context){
-      console.log("Am i in the store getPosts?");
-      return axios.get('/api/posts').then(response => {
 
-        context.commit('setFeed',response.data.posts);
-      }).catch(err => {
-        console.log("getFeed Failed: ", err);
-      });
-    },
-    //matrixID is temporary will grab the game from the round
-    submitChoice(context, choice)
-    {
-      console.log("roundID: ", context.state.roundID);
-      console.log("userID: ", context.state.userID);
-      axios.post("/api/round/"+context.state.roundID+'/'+context.state.userID, choice).then(response =>{
-        console.log(response.data);
-      }).catch(err => {
-        console.log("submitChoice Failed: ", err);
-      });
-    },
     getMatrix(context, matrixID){
       axios.get("/api/matrix/" + matrixID).then(response => {
         let data= response.data.matrix[0];

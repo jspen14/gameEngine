@@ -34,7 +34,7 @@ let availableUsers = [{role: "Coach", userID: 17, name: "Joe"}, {role: "Coach", 
 
 // Endpoint Functions
 app.get('/api/availableUsers',(req,res) => {
-  console.log(availableUsers);
+
   res.send(availableUsers);
 });
 
@@ -44,8 +44,7 @@ app.get('/api/currentGames',(req,res) =>{
 
 app.get('/api/inGameStatus/:id', (req,res)=>{
   let id = parseInt(req.params.id);
-  console.log("inGameStatus: " + id);
-  console.log(currentGames[0]);
+
  // pick up from here tomorrow ... get the ID from the current game and send it back to the store
   for (let i = 0; i < currentGames.length; i++){
     if (id == currentGames[i].player1ID || id == currentGames[i].coach1ID ||
@@ -116,6 +115,7 @@ app.get('/api/matrix/:id', (req,res)=> {
 app.post('/api/createGame', (req,res) =>{
  // We need to have the player IDs
   console.log("in createGame on server: " + req.body);
+  console.log(req.body.player1ID, req.body.player2ID, req.body.coach1ID, req.body.coach2ID)
   return knex('games').insert({player1ID:req.body.player1ID, coach1ID:req.body.coach1ID, player2ID:req.body.player2ID, coach2ID:req.body.coach2ID})
     .then(ids => {
       // Put game into currentGames array

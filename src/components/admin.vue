@@ -182,16 +182,18 @@ export default{
       //STEPS:
       if (this.selectedPlayer1 == '' || this.selectedPlayer2 == '' ||
           this.selectedCoach1 == '' || this.selectedCoach2 == ''){
+
         swal("Error","Please enter users for all player and coach fields.","warning")
       }
       else{
         //Axios call
+                console.log("createGame:",this.selectedPlayer1.id, this.selectedPlayer2.id, this.selectedCoach1.id, this.selectedCoach2.id);
         axios.post('/api/createGame',{
           // Use the calls to get these players' ids
-          player1ID: this.selectedPlayer1.userID,
-          coach1ID: this.selectedCoach1.userID,
-          player2ID: this.selectedPlayer2.userID,
-          coach2ID: this.selectedCoach2.userID,
+          player1ID: this.selectedPlayer1.id,
+          coach1ID: this.selectedCoach1.id,
+          player2ID: this.selectedPlayer2.id,
+          coach2ID: this.selectedCoach2.id,
         }).then(response => {
           this.selectedPlayer1 = '';
           this.selectedCoach1 = '';
