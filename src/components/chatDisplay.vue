@@ -141,19 +141,18 @@ export default{
         return true;
       }).catch (err => {
       });
-      console.log("hey" + this.messages);
+
     },
 
     addChatMsg: function(){
-      axios.post('/api/coachChat/', {
+      this.$store.dispatch('addChatMsg', {
         text: this.msgText,
-        role: this.role,
-      }).then(response => {
-        this.msgText = '',
-        this.getChatMsgs();
-        return true;
-      }).catch(err => {
+        chatID: 0,
+        userID: 1,
       });
+      this.msgText = '';
+      this.getChatMsgs();
+
     },
   },
 

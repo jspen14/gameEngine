@@ -48,7 +48,6 @@ export default new Vuex.Store({
 
   },
   mutations: {
-
     setInGameStatus (state, inGameStatus){
       state.inGameStatus = inGameStatus;
     },
@@ -106,16 +105,16 @@ export default new Vuex.Store({
       let token = localStorage.getItem('token');
       if (token) {
   // see if we can use the token to get my user account
-  axios.get("/api/me",getAuthHeader()).then(response => {
-    context.commit('setToken',token);
-    context.commit('setUser',response.data.user);
-  }).catch(err => {
-    // remove token and user from state
-    context.commit('setUser',{}); 
-    context.commit('setToken','');
-  });
-}
-},
+        axios.get("/api/me",getAuthHeader()).then(response => {
+          context.commit('setToken',token);
+          context.commit('setUser',response.data.user);
+        }).catch(err => {
+          // remove token and user from state
+          context.commit('setUser',{});
+          context.commit('setToken','');
+        });
+      }
+    },
   // Registration, Login //
 
     login(context,user) {
@@ -152,7 +151,7 @@ export default new Vuex.Store({
       context.commit('setLoginError',"");
           }).catch(error => {
       context.commit('setLoginError',"");
-      context.commit('setUser',{});   
+      context.commit('setUser',{});
       context.commit('setToken','');
       if (error.response) {
         if (error.response.status === 409)
@@ -164,14 +163,18 @@ export default new Vuex.Store({
 
     },
 
-    addChatMsg(context,post) {
-      axios.post("/api/users/" + context.state.user.user_id + "/posts",post).then(response => {
-      	return context.dispatch('getPosts');
+  // Send chat messages
+    addChatMsg(context, msgInfo){
+      axios.post('/api/coachChat/', {
+        text: msgInfo.text,
+        chatID: msgInfo.chatID, // I need to eventually update this with the actual chatID
+        userID: msgInfo.userID, // I need to eventually update this with the actual userID
+      }).then(response => {
+        //possibly call getChatMsgs from 
+        return true;
       }).catch(err => {
-      	console.log("addPost failed:",err);
       });
     },
-
 
     getMatrix(context, matrixID){
       axios.get("/api/matrix/" + matrixID).then(response => {

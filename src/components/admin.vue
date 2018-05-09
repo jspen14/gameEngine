@@ -27,6 +27,9 @@
     float: left;
     clear: left;
   }
+  .selectedUsersOutline{
+    border: 1px solid black;
+  }
 </style>
 
 <template>
@@ -44,7 +47,7 @@
       <hr>
       <ul>
         <li v-for="player in players">
-          <button class="btn btn-primary" v-on:click="setPlayer(player)">
+          <button class="btn btn-primary btn-block" v-on:click="setPlayer(player)">
             <h5>
               {{player.name}}
             </h5>
@@ -54,7 +57,7 @@
     </div>
 
     <div class='col-lg-2 col-md-2 col-sm-2 col-xs-2 userDisplay'>
-      <button class="btn btn-warning" v-on:click="updateAvailableUsers()">Update Users</button>
+      <button class="btn btn-warning btn-block" v-on:click="updateAvailableUsers()">Update Users</button>
     </div>
 
     <div class="col-lg-4 col-md-4 col-sm-4 col-xs-4 userDisplay ">
@@ -62,7 +65,7 @@
       <hr>
       <ul>
         <li v-for="coach in coaches">
-          <button class="btn btn-primary" v-on:click="setCoach(coach)">
+          <button class="btn btn-primary btn-block" v-on:click="setCoach(coach)">
             <h5>{{coach.name}}</h5>
           </button>
         </li>
@@ -77,7 +80,7 @@
   <div class="row">
           <div class='col-lg-1 col-md-1 col-sm-1 col-xs-1'></div>
 
-      <div class='col-lg-4 col-md-4 col-sm-4 col-xs-4 '>
+      <div class='col-lg-4 col-md-4 col-sm-4 col-xs-4 selectedUsersOutline'>
         <h4>Selected Players</h4>
 
 
@@ -88,14 +91,14 @@
 
           <div class='col-lg-2 col-md-2 col-sm-2 col-xs-2'>
             <br>
-            <button type="button" class="btn btn-danger" v-on:click="resetSelection()">Reset Selection</button>
+            <button type="button" class="btn btn-danger btn-block" v-on:click="resetSelection()">Reset Selection</button>
             <br><br>
-            <button type="button" class="btn btn-success" v-on:click="createGame()">Create Game</button>
+            <button type="button" class="btn btn-success btn-block" v-on:click="createGame()">Create Game</button>
 
 
           </div>
 
-      <div class='col-lg-4 col-md-4 col-sm-4 col-xs-4 '>
+      <div class='col-lg-4 col-md-4 col-sm-4 col-xs-4 selectedUsersOutline '>
         <h4>Selected Coaches</h4>
 
 

@@ -6,26 +6,40 @@
 <template>
 <div class="container">
   <h1>{{name}}, please wait while you are being paired. Thanks! </h1>
-      {{userID}}
+  <br><br>
 
-      <div v-if="inGameStatus == true">
-        <!-- If we need to pass things to new component, we can send parameters in router-link -->
-        <router-link to="/playerPlayground">
-          <button class="btn btn-lg btn-success">
-            Continue to Game!
-          </button>
+  <div v-if="inGameStatus == true">
+    <!-- If we need to pass things to new component, we can send parameters in router-link -->
+    <div v-if="role == 'Player'">
+      <router-link to="/playerPlayground">
+        <button class="btn btn-success btn-block">
+          Continue to Game
+        </button>
 
-        </router-link>
+      </router-link>
+    </div>
+
+    <div v-if="role == 'Coach'">
+      <router-link to="/coachPlayground">
+        <button class="btn btn-success btn-block">
+          Continue to Game
+        </button>
+
+      </router-link>
+    </div>
+
+  </div>
 
 
-      </div>
-
-      {{inGameStatus}}
-
+  <div v-if="inGameStatus != true">
+    <br>
+    <br>
+    <img src="/static/images/ajax-loader.gif"/>
+  </div>
   <br>
-  <img src="/static/images/ajax-loader.gif"/>
   <br>
-  <button v-on:click="logout()" class="btn btn-primary">Log out</button>
+
+  <button v-on:click="logout()" class="btn btn-danger btn-block">Log out</button>
 
 </div>
 </template>
@@ -48,6 +62,9 @@ export default{
     userID: function(){
       return this.$store.getters.user.id;
     },
+    role: function(){
+      return this.$store.getters.user.role
+    },
     inGame: function(){
       if(this.$store.getters.inGameStatus == true){
         return true;
@@ -67,7 +84,7 @@ export default{
       this.$store.dispatch('logout');
     }
   },
-  
+
 
 
 }

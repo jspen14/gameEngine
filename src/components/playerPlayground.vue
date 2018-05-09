@@ -13,7 +13,7 @@
 <template>
 
   <div class="container">
-    <h1> Objective: Win as much money as possible </h1>
+    <h3> Objective: Win as much money as possible. </h3>
     <hr>
     <div class="row">
 
@@ -26,7 +26,7 @@
 
       <div class='col-lg-5 col-md-5 col-sm-5 col-xs-5'>
 
-          <game-board></game-board>
+          <gameBoard></gameBoard>
           <earnings></earnings>
 
       </div>
@@ -38,11 +38,10 @@
 
 <script>
 import axios from 'axios'
-import GameBoard from './GameBoard'
-import Earnings from './Earnings'
+
   export default {
     name: 'playerPlayground',
-    components: {GameBoard, Earnings},
+
     data () {
       return {
         roundNumber: 1,

@@ -28,9 +28,14 @@ if (jwtSecret === undefined) {
 // Data
 let currentGames = [];
 
-let availableUsers = [{role: "Coach", userID: 17, name: "Joe"}, {role: "Coach", userID: 18, name: "Jon"},
-                      {role: "Player", userID: 19, name: "Josh"}, {role: "Player", userID: 20, name: "Chad"}];
+let availableUsers = [{role: "Coach", id: 1, name: "Joe"}, {role: "Coach", id: 2, name: "Jon"},
+                      {role: "Player", id: 3, name: "Josh"}, {role: "Player", id: 4, name: "Chad"}];
 
+//
+let msgs = [{role: "Coach", text: "Hi"},{role: "Player", text: "How are you?"},{role: "Coach", text: "I am doing well, thanks! How are you?"},
+                  {role: "Player", text: "Great. Just ready to win some money!"},{role: "Player", text: "Can you help me with that?"},
+                  {role: "Coach", text: "I sure can!"},{role: "Player", text: "Perfect. Just tell me what I should do."},
+                  {role: "Coach", text: "Okay. Let's start out by playing our personal best. Choose X"},{role: "Player", text: "Okay"}];
 
 // Endpoint Functions
 app.get('/api/availableUsers',(req,res) => {
@@ -85,10 +90,7 @@ app.post('/api/roundOption', (req,res) => {
 
 app.get('/api/coachChat/',(req,res) => {
   let id = parseInt(req.params.playerID);
-  res.send([{role: "coach", text: "Hi"},{role: "player", text: "How are you?"},{role: "coach", text: "I am doing well, thanks! How are you?"},
-                    {role: "player", text: "Great. Just ready to win some money!"},{role: "player", text: "Can you help me with that?"},
-                    {role: "coach", text: "I sure can!"},{role: "player", text: "Perfect. Just tell me what I should do."},
-                    {role: "coach", text: "Okay. Let's start out by playing our personal best. Choose X"},{role: "player", text: "Okay"}]);
+  res.send();
 });
 
 app.post('/api/coachChat', (req,res) => {
@@ -116,7 +118,11 @@ app.post('/api/createGame', (req,res) =>{
  // We need to have the player IDs
   console.log("in createGame on server: " + req.body);
   console.log(req.body.player1ID, req.body.player2ID, req.body.coach1ID, req.body.coach2ID)
-  return knex('games').insert({player1ID:req.body.player1ID, coach1ID:req.body.coach1ID, player2ID:req.body.player2ID, coach2ID:req.body.coach2ID})
+  return knex('games').insert({
+    player1ID:req.body.player1ID, //knex('users').where('id', req.body.player1ID).select('id')
+    coach1ID:req.body.coach1ID,
+    player2ID:req.body.player2ID,
+    coach2ID:req.body.coach2ID})
     .then(ids => {
       // Put game into currentGames array
       let game = {roundNum:0, gameID:parseInt(ids[0]), player1ID:parseInt(req.body.player1ID), coach1ID:parseInt(req.body.coach1ID),

@@ -27,27 +27,24 @@
 </style>
 
 <template>
-  <div>
-    <h3> Objective: As a player/coach team, win as much money as possible. </h3>
+  <div class="container">
+    <h3> Objective: Coach your player to win as much money as possible. </h3>
+    <hr>
 
-    <form v-on:submit.prevent="addChatMsg" class="form-control noBorder">
+    <div class="row">
 
-      <div class="input-group mb-3">
-        <div class="input-group-prepend">
-          <button class="btn btn-success" type="submit">Submit</button>
-        </div>
-        <input type="text" v-model="msgText" class="form-control" placeholder="Your Message" aria-describedby="basic-addon1">
+
+      <div class="col-lg-5 col-md-5 col-sm-5 col-xs-5">
+        <chatDisplay></chatDisplay>
       </div>
-      <hr>
 
-    </form>
+      <div class="col-lg-2 col-md-2 col-sm-2 col-xs-2"></div>
 
-    <div class = "msgsBox">
-      <ul>
-        <li v-for="msg in chatMsgs">
-          {{msg.role}}: {{msg.text}}
-        </li>
-      </ul>
+      <div class='col-lg-5 col-md-5 col-sm-5 col-xs-5'>
+
+          <earnings></earnings>
+
+      </div>
     </div>
 
   </div>
