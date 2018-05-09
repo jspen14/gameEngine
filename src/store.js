@@ -11,7 +11,7 @@ export default new Vuex.Store({
     userID: 1,
     name: '',
     role: '',
-    inGame: 'false',
+    inGameStatus: 'false',
     coachID: 2,
     roundOption: '',
     submissionStatus: '',
@@ -29,7 +29,7 @@ export default new Vuex.Store({
     userID: state => state.userID,
     name: state => state.name,
     role: state => state.role,
-    inGame: state => state.inGame,
+    inGameStatus: state => state.inGameStatus,
     coachID: state => state.coachID,
     roundOption: state => state.roundOption,
     submissionStatus: state => state.submissionStatus,
@@ -61,8 +61,8 @@ export default new Vuex.Store({
     setRole (state, role){
       state.role = role;
     },
-    setInGame (state, inGame){
-      state.inGame = inGame;
+    setInGameStatus (state, inGameStatus){
+      state.inGameStatus = inGameStatus;
     },
     setCoachID (state, coachID){
       state.coachID = coachID
@@ -103,10 +103,17 @@ export default new Vuex.Store({
   actions: {
     updateData(context){
       let timerID = setInterval(() => {
-        // This will allow me to make regular calls to the server to check things
-        console.log("in updateData in store" + context.state.userID);
-        axios.get('/api/inGame/' + context.state.userID)
-      }, 1500);
+        console.log("in updateData in store: " + context.state.userID.userID);
+        axios.get('/api/inGameStatus/' + context.state.userID.userID).then(response => {
+          console.log(response.data.gameID + " - " + response.data.inGameStatus);
+          if(response.data.inGameStatus == true){
+            console.log("one small step for man");
+          }
+          context.commit('setInGameStatus',response.data.inGameStatus);
+
+        });
+
+      }, 3000);
     },
 
     register(context,info){
