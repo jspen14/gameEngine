@@ -10,6 +10,7 @@
     "build": "node build/build.js"
   },
   "dependencies": {
+    "ajv": "^6.5.0",
     "axios": "^0.18.0",
     "body-parser": "^1.18.2",
     "express": "^4.16.3",
