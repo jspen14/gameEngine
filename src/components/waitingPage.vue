@@ -7,7 +7,8 @@
 <div class="container">
   <h1>{{name}}, please wait while you are being paired. Thanks! </h1>
       {{playerID}}
-
+  <br>
+  <img src="/static/images/ajax-loader.gif"/>
 </div>
 </template>
 
@@ -20,10 +21,10 @@ export default{
   },
   computed: {
     playerID: function(){
-      return this.$store.getters.playerID;
+      return this.$store.getters.user.id;
     },
     name: function(){
-      return this.$store.getters.name;
+      return this.$store.getters.user.name;
     }
   },
   methods: {
