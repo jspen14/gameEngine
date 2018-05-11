@@ -10,32 +10,32 @@ const getAuthHeader = () => {
 
 export default new Vuex.Store({
   state: {
-
     inGameStatus: 'false',
-    user: {},
-    loginError: '',
-    registerError: '',
-    token: '',
     currentRound: 1,
     currentGame: '',
-    roundOption: '',
+    user: {},
+    coachChatID: '',
+    partnerChatID: '',
     matrix: [],
     coachChatMsgs: [],
-    playerChatMsgs: [],
+    partnerChatMsgs: [],
+
+    token: '',
+    loginError: '',
+    registerError: '',
   },
   getters: {
     inGameStatus: state => state.inGameStatus,
-    currentRound: state=> state.currentRound,
-    currentGame: state=> state.currentGame,
-    user: state=>state.user,
-    playerID: state => state.user.id,
-    name: state => state.user.name,
+    currentRound: state => state.currentRound,
+    currentGame: state => state.currentGame,
+    user: state => state.user,
+    coachChatID: state => state.coachChatID,
+    partnerChatID: state => state.partnerChatID,
     matrix: state => state.matrix,
     coachChatMsgs: state => state.coachChatMsgs,
-    playerChatMsgs: state => state.playerChatMsgs,
+    partnerChatMsgs: state => state.partnerChatMsgs,
 
     //added for registration
-    user: state => state.user,
     getToken: state => state.token,
     loggedIn: state => {
       if (state.token === '')
@@ -44,27 +44,26 @@ export default new Vuex.Store({
     },
     loginError: state => state.loginError,
     registerError: state => state.registerError,
-
-
   },
   mutations: {
     setInGameStatus (state, inGameStatus){
       state.inGameStatus = inGameStatus;
     },
-    setCoachID (state, coachID){
-      state.coachID = coachID
-    },
-    setRoundOption (state, roundOption){
-      state.roundOption = roundOption;
+    setCurrentGame (state, currentGame){
+      state.currentGame = currentGame;
     },
     setMatrix (state, matrix){
       state.matrix = matrix;
     },
+    setCoachChatID (state, coachChatID){
+      state.coachChatID = coachChatID;
+    },
     setCoachChatMsgs (state, coachChatMsgs){
       state.coachChatMsgs = coachChatMsgs;
+      console.log('mutations: ' + state.coachChatMsgs[0].message);
     },
-    setPlayerChatMsgs (state, playerChatMsgs){
-      state.playerChatMsgs = playerChatMsgs;
+    setPartnerChatMsgs (state, partnerChatMsgs){
+      state.partnerChatMsgs = partnerChatMsgs;
     },
     //added for login and registration
     setUser (state, user) {
@@ -88,15 +87,15 @@ export default new Vuex.Store({
   actions: {
     updateData(context){
       let timerID = setInterval(() => {
-        //console.log("in updateData in store: " + context.state.userID.userID);
+        // We will eventually need to set conditionals on these functions to conserve power
         axios.get('/api/inGameStatus/' + context.state.user.id).then(response => {
-          console.log(response.data.gameID + " - " + response.data.inGameStatus);
-          if(response.data.inGameStatus == true){
-            console.log("one small step for man");
-          }
           context.commit('setInGameStatus',response.data.inGameStatus);
-
+          context.commit('setCurrentGame',response.data.gameID);
+        }).catch(err => {
+          console.log("GET in updataData store side Failed: " + err);
         });
+
+
 
       }, 3000);
     },
@@ -119,21 +118,21 @@ export default new Vuex.Store({
 
     login(context,user) {
       return axios.post("/api/login",user).then(response => {
-  context.commit('setUser', response.data.user);
-   context.commit('setToken',response.data.token);
-  context.commit('setRegisterError',"");
-  context.commit('setLoginError',"");
+        context.commit('setUser', response.data.user);
+        context.commit('setToken',response.data.token);
+        context.commit('setRegisterError',"");
+        context.commit('setLoginError',"");
       }).catch(error => {
         context.commit('setUser',{});
-      context.commit('setToken','');
-  context.commit('setRegisterError',"");
-  if (error.response) {
-    if (error.response.status === 403 || error.response.status === 400)
-      context.commit('setLoginError',"Invalid login.");
-    context.commit('setRegisterError',"");
-    return;
-  }
-  context.commit('setLoginError',"Sorry, your request failed. We will look into it.");
+        context.commit('setToken','');
+        context.commit('setRegisterError',"");
+        if (error.response) {
+          if (error.response.status === 403 || error.response.status === 400)
+          context.commit('setLoginError',"Invalid login.");
+          context.commit('setRegisterError',"");
+          return;
+        }
+        context.commit('setLoginError',"Sorry, your request failed. We will look into it.");
       });
     },
 
@@ -143,7 +142,6 @@ export default new Vuex.Store({
     },
 
     register(context,user) {
-      console.log(user);
       return axios.post("/api/users",user).then(response => {
       context.commit('setUser', response.data.user);
       context.commit('setToken',response.data.token);
@@ -163,18 +161,45 @@ export default new Vuex.Store({
 
     },
 
-  // Send chat messages
-    addChatMsg(context, msgInfo){
-      axios.post('/api/coachChat/', {
-        text: msgInfo.text,
-        chatID: msgInfo.chatID, // I need to eventually update this with the actual chatID
-        userID: msgInfo.userID, // I need to eventually update this with the actual userID
-      }).then(response => {
-        //possibly call getChatMsgs from 
-        return true;
+//START JSPENCER CHAT STUFF
+    getCoachChatID(context){
+      console.log(context.state.currentGame);
+      axios.get('/api/coachChatID/'+ context.state.user.id +'/'+ context.state.currentGame).then(response => { // context.state.user.id/context.state.currentGame
+        console.log("(in store) response.data.id: " + response.data.id);
+        context.commit('setCoachChatID', response.data.id);
+        console.log("coachChatID: " + context.state.coachChatID)
       }).catch(err => {
+        console.log("getCoachChatID Failed: " + err);
+
       });
     },
+
+    addChatMsg(context, msgInfo){
+      console.log(msgInfo.text + " - " + context.state.coachChatID + " - " + context.state.user.id)
+      axios.post('/api/coachChatMsgs', {
+        text: msgInfo.text,
+        chatID: context.state.coachChatID,
+        userID: context.state.user.id, //msgInfo.userID
+      }).then(response => {
+        //possibly call getChatMsgs from
+        return true;
+      }).catch(err => {
+        console.log("error from addChatMsg: " + err);
+      });
+    },
+
+    getCoachChatMsgs(context){
+      axios.get('/api/coachChatMsgs/' + context.state.coachChatID).then(response => {
+        console.log(response.data);
+        context.commit('setCoachChatMsgs',response.data.messages);
+        return true;
+      }).catch(err => {
+        console.log("STORE: getCoachChatMsgs: " + err);
+      });
+    },
+
+
+//END JSPENCER CHAT STUFF
 
     getMatrix(context, matrixID){
       axios.get("/api/matrix/" + matrixID).then(response => {

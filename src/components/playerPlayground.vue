@@ -13,7 +13,7 @@
 <template>
 
   <div class="container">
-    <h3> Objective: Win as much money as possible. </h3>
+    <h3> {{name}} Objective: Win as much money as possible. </h3>
     <hr>
     <div class="row">
 
@@ -26,7 +26,7 @@
 
       <div class='col-lg-5 col-md-5 col-sm-5 col-xs-5'>
 
-          <gameBoard></gameBoard>
+          <!-- <gameBoard></gameBoard> -->
           <earnings></earnings>
 
       </div>
@@ -51,62 +51,27 @@ import axios from 'axios'
         playerOption: '',
         msgText: '',
         messages: [],
-        role: 'Player',
 
       }
     },
 
     created: function() {
-      //this.getChatMsgs();
-      //this.getRoundEarnings();
-      //this.getAverageEarnings();
-      //this.getTotalEarnings();
       this.getMatrix();
-
-
+      this.updateData();
     },
-    data(){
 
-
-
-    },
     computed: {
-
+      name: function(){
+        return this.$store.getters.user.name;
+      }
     },
+
     methods: {
-      submitOption: function(param){
-      console.log(param);
-        axios.put('/api/p1roundOption',{
-          roundOption: param,
-        });
-        this.getRoundEarnings();
-        this.getAverageEarnings();
-        this.getTotalEarnings();
-      },
+      updateData: function(){
+        let timerID = setInterval(() => {
+          //Poll the store to see if there are any new messages
 
-      getRoundEarnings: function(){
-        axios.get('/api/p1roundEarnings').then(response => {
-          this.roundEarnings = response.data;
-          return true;
-        });
-        //.catch (err => {});
-      },
-
-      getAverageEarnings: function(){
-        axios.get('/api/p1averageEarnings').then(response => {
-          this.averageEarnings = response.data.toFixed(2);
-          return true;
-        });
-        //.catch (err => {});
-      },
-
-      getTotalEarnings: function(){
-        axios.get('/api/p1totalEarnings').then(response => {
-          this.totalEarnings = response.data;
-          this.totalEarnings = this.totalEarnings.toFixed(2);
-          return true;
-        });
-        //.catch (err => {});
+        }, 3000);
       },
 
       getChatMsgs: function(){

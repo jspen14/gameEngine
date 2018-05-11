@@ -12,7 +12,7 @@
     <!-- If we need to pass things to new component, we can send parameters in router-link -->
     <div v-if="role == 'Player'">
       <router-link to="/playerPlayground">
-        <button class="btn btn-success btn-block">
+        <button class="btn btn-success">
           Continue to Game
         </button>
 
@@ -21,7 +21,7 @@
 
     <div v-if="role == 'Coach'">
       <router-link to="/coachPlayground">
-        <button class="btn btn-success btn-block">
+        <button class="btn btn-success">
           Continue to Game
         </button>
 
@@ -39,7 +39,7 @@
   <br>
   <br>
 
-  <button v-on:click="logout()" class="btn btn-danger btn-block">Log out</button>
+  <button v-on:click="logout()" class="btn btn-danger ">Log out</button>
 
 </div>
 </template>
@@ -65,7 +65,7 @@ export default{
     role: function(){
       return this.$store.getters.user.role
     },
-    inGame: function(){
+    inGame: function(){ // this might be an un-used function
       if(this.$store.getters.inGameStatus == true){
         return true;
       }

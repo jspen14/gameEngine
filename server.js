@@ -31,11 +31,6 @@ let currentGames = [];
 let availableUsers = [{role: "Coach", id: 1, name: "Joe"}, {role: "Coach", id: 2, name: "Jon"},
                       {role: "Player", id: 3, name: "Josh"}, {role: "Player", id: 4, name: "Chad"}];
 
-//
-let msgs = [{role: "Coach", text: "Hi"},{role: "Player", text: "How are you?"},{role: "Coach", text: "I am doing well, thanks! How are you?"},
-                  {role: "Player", text: "Great. Just ready to win some money!"},{role: "Player", text: "Can you help me with that?"},
-                  {role: "Coach", text: "I sure can!"},{role: "Player", text: "Perfect. Just tell me what I should do."},
-                  {role: "Coach", text: "Okay. Let's start out by playing our personal best. Choose X"},{role: "Player", text: "Okay"}];
 
 // Endpoint Functions
 app.get('/api/availableUsers',(req,res) => {
@@ -62,48 +57,94 @@ app.get('/api/inGameStatus/:id', (req,res)=>{
   res.status(200).json({inGameStatus: false});
 });
 
-app.get('/api/roundEarnings:gameID',(req,res) => {
+// START JSPENCER CHAT STUFF
+app.post('/api/coachChatID',(req,res) => {
+  var coachID;
 
-  res.send("rE");
-});
-
-app.get('/api/totalEarnings',(req,res) => {
-  res.send("tE");
-});
-
-app.get('/api/averageEarnings',(req,res) => {
-  res.send("aE");
-});
-
-app.get('/api/roundOption',(req,res) => {
-  res.send("rO-GET");
-});
-
-app.get('/api/submissionStatus',(req,res) => {
-  res.send('sS');
-});
-
-app.post('/api/roundOption', (req,res) => {
-  console.log("in roundOption");
-  res.send('rO-POST');
-});
-
-app.get('/api/coachChat/',(req,res) => {
-  let id = parseInt(req.params.playerID);
-  res.send();
-});
-
-app.post('/api/coachChat', (req,res) => {
-  // Use unshift to put messages at the top instead of the bottom
-
-  knex('users').insert({role: "player", coachType: "N/A"})
-    .catch(error => {
-      console.log(error);
-      res.status(500).json({error});
+  knex('games').where('id',req.body.gameID).then(response => {
+    if (req.body.userID == response[0].player1ID){
+      coachID = response[0].coach1ID;
+    }
+    else if (req.body.userID == response[0].player2ID){
+      coachID = response[0].coach2ID;
+    }
+    else {
+      res.status(500);
+      return;
+    }
+  }).then(query => {
+    return knex('chatID').insert({
+      gameID: req.body.gameID,
+      user1: req.body.userID,
+      user2: coachID,
+      chatType: 'P/C'
+    }).then(chatID => {
+      res.status(200).json({id: chatID[0]});
+    }).catch(err => {
+      console.log("Error in /api/coachChatID: " + err)
+      res.status(500);
     });
 
-  res.send([]);
+  }).catch(err => {
+    console.log("Error in /api/coachChatID: " + err)
+  });
 });
+
+app.get('/api/coachChatID/:userID/:gameID',(req,res) => {
+  console.log("in coachChatID: (userID - gameID): " + req.params.userID + " - " + req.params.gameID);
+
+  knex('chatID').where({
+    gameID: req.params.gameID,
+    user1: req.params.userID,
+    chatType: 'P/C',
+  }).orWhere({
+    gameID: req.params.gameID,
+    user2: req.params.userID,
+    chatType: 'P/C',
+  }).then(response => {
+    console.log("this is from the server: " + response[0].id)
+    res.status(200).json({id: response[0].id});
+    return;
+  });
+
+});
+
+app.post('/api/coachChatMsgs', (req,res) => {
+  console.log(req.body);
+
+  knex('chats').insert({
+    chatID: req.body.chatID,
+    userID: req.body.userID,
+    message: req.body.text,
+  }).then(response => {
+    // I might want to have a return here, but I'm not sure yet
+    res.status(200);
+    return;
+  }).catch(err => {
+    console.log("POST /api/coachChat Failed: " + err);
+    res.status(500);
+    return;
+  });
+
+});
+
+app.get('/api/coachChatMsgs/:chatID',(req,res) => {
+  // I will have this retrieve all the information from all the chats with a matching chatID
+  let chatID = parseInt(req.params.chatID);
+
+  console.log("Server: " + chatID);
+
+  knex('chats').where('chatID',chatID).then(response => {
+    console.log("response from /api/coachChat: " + response[0].message);
+    res.status(200).json({messages: response});
+  }).catch(err => {
+    console.log("GET /api/coachChat/:chatID Failed: " + err);
+    res.status(500);
+  })
+
+});
+
+// END JSPENCER CHAT STUFF
 
 app.get('/api/matrix/:id', (req,res)=> {
   let id=parseInt(req.params.id);
@@ -115,9 +156,7 @@ app.get('/api/matrix/:id', (req,res)=> {
 });
 
 app.post('/api/createGame', (req,res) =>{
- // We need to have the player IDs
-  console.log("in createGame on server: " + req.body);
-  console.log(req.body.player1ID, req.body.player2ID, req.body.coach1ID, req.body.coach2ID)
+
   return knex('games').insert({
     player1ID:req.body.player1ID, //knex('users').where('id', req.body.player1ID).select('id')
     coach1ID:req.body.coach1ID,
@@ -128,8 +167,10 @@ app.post('/api/createGame', (req,res) =>{
       let game = {roundNum:0, gameID:parseInt(ids[0]), player1ID:parseInt(req.body.player1ID), coach1ID:parseInt(req.body.coach1ID),
                   player2ID:parseInt(req.body.player2ID), coach2ID:parseInt(req.body.coach2ID)};
       currentGames.push(game);
-      // Send gameID to admin so he can view game progress
-      knex('games').where({id: ids[0]}).first();
+
+      // Send gameID to admin so we can view game progress
+      knex('games').where({id: ids[0]}).first(); // I'm pretty sure that this isn't doing anything
+      console.log("on server in createGame: " + ids[0]);
       res.status(200).json({gameID:ids[0]});
     }).catch(error => {
       console.log(error);
@@ -190,7 +231,6 @@ app.post('/api/users', (req, res) => {
 if ( !req.body.password || !req.body.name)
     return res.status(400).send();
 knex('users').where('name',req.body.name).first().then(user => {
-    console.log(user);
     if (user !== undefined) {
       res.status(409).send("User name already exists");
       throw new Error('abort');
@@ -215,6 +255,7 @@ knex('users').where('name',req.body.name).first().then(user => {
     }
   });
 });
+
 app.get('/api/me', verifyToken, (req,res) => {
   knex('users').where('id',req.userID).first().select('name','id','role').then(user => {
     res.status(200).json({user:user});

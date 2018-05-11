@@ -60,22 +60,25 @@
 <template>
   <div>
     <br>
-    <h2> {{title}} </h2>
+    <h2>{{name}}'s {{title}} </h2>
+
     <hr>
 
     <div class = "msgsBox">
       <div v-for="msg in chatMsgs">
-        <div v-if="isCoach(msg.role)">
+
+
+        <div v-if="!isMe(msg.userID)">
           <div class="coachMsgWrap">
-            <h6 class="coachMsgDisplay"> &nbsp {{msg.text}} &nbsp </h6>
+            <h6 class="coachMsgDisplay"> &nbsp {{msg.message}} &nbsp </h6>
             <br><br>
           </div>
 
         </div>
 
-        <div v-if="isPlayer(msg.role)">
+        <div v-else>
           <div class="playerMsgWrap">
-            <h6 class="playerMsgDisplay"> &nbsp {{msg.text}} &nbsp</h6>
+            <h6 class="playerMsgDisplay"> &nbsp {{msg.message}} &nbsp</h6>
             <br><br>
           </div>
 
@@ -110,13 +113,47 @@ export default{
       role: '',
     }
   },
+  created: function(){
+    this.updateData();
+    this.$store.dispatch('updateData');
+    //this.$store.dispatch('getCoachChatID'); // I'm not sure If I need to do this
+  },
   computed: {
-    chatMsgs: function(){
-      this.getChatMsgs();
-      return this.messages;
+    name: function(){
+      return this.$store.getters.user.name;
     },
+    chatMsgs: function(){
+      console.log("chatDisplay: " + this.$store.getters.coachChatMsgs[0].message);
+      return this.$store.getters.coachChatMsgs;
+    },
+
+
   },
   methods: {
+    updateData: function(){
+      let timerID = setInterval(() => {
+        // JSpencer update calls
+        this.$store.dispatch('getCoachChatID');
+        this.$store.dispatch('getCoachChatMsgs');
+
+      }, 3000);
+    },
+
+    test: function(){
+      this.$store.dispatch('getCoachChatID');
+    },
+
+    isMe: function(msgUserID){
+      if(msgUserID == this.$store.getters.user.id){
+        console.log("success");
+        return true;
+      }
+      else {
+        return false;
+      }
+    },
+
+
     isCoach: function(type){
       if (type == "coach"){
         return true;
@@ -135,23 +172,12 @@ export default{
       }
     },
 
-    getChatMsgs: function(){
-      axios.get('/api/coachChat').then(response => {
-        this.messages = response.data;
-        return true;
-      }).catch (err => {
-      });
-
-    },
-
     addChatMsg: function(){
       this.$store.dispatch('addChatMsg', {
         text: this.msgText,
-        chatID: 0,
-        userID: 1,
       });
       this.msgText = '';
-      this.getChatMsgs();
+
 
     },
   },
