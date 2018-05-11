@@ -1,9 +1,14 @@
 <template>
 <div class = "container">
-  <div v-if="loggedIn">
-    <waiting-page/>
+<div v-if="loggedIn">
+  <div v-if="inGameStatus">
+    <player-playground/>
   </div>
   <div v-else>
+    <waiting-page/>
+  </div>
+</div>
+<div v-else>
     <login-register/>
   </div>
 </div>
@@ -12,12 +17,20 @@
   import axios from 'axios'
   import loginRegister from './loginRegister'
   import waitingPage from './waitingPage'
+  import playerPlayground from './playerPlayground'
 export default{
   name: 'homepage',
-  components: {loginRegister,waitingPage},
+  components: {loginRegister,waitingPage, playerPlayground},
   computed: {
     loggedIn:function () {
       return this.$store.getters.loggedIn;
+    },
+    inGameStatus: function() {
+      return this.$store.getters.inGameStatus;
+
+    },
+    gameState: function(){
+      return this.$store.getters.gameState;
     }
   },
 

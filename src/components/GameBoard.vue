@@ -21,38 +21,38 @@
             <div>
               <div class = "row">
                 <div class = "col-lg-2 col-md-2 col-sm-2 col-xs-2 boardRow" >
-                  <button class="btn btn-success" v-on:click="submitChoice(1)"><h2>1</h2></button>
+                  <button v-show="isUnsubmitted" class="btn btn-success" v-on:click="submitChoice(1)"><h2>1</h2></button>
                 </div>
 
                 <div class = "col-lg-5 col-md-5 col-sm-5 col-xs-5 boardRow">
                   <br>
-                  <h5>You: {{$store.getters.matrix[0][0][0]}}</h5>
-                  <h5> Opponent: {{$store.getters.matrix[0][0][1]}}</h5>
+                  <h5>You: {{$store.getters.matrix[0][0][me]}}</h5>
+                  <h5> Opponent: {{$store.getters.matrix[0][0][other]}}</h5>
                 </div>
 
                 <div class = "col-lg-5 col-md-5 col-sm-5 col-xs-5 boardRow">
                   <br>
-                  <h5>You: {{$store.getters.matrix[0][1][0]}}</h5>
-                  <h5> Opponent: {{$store.getters.matrix[0][1][1]}}</h5>
+                  <h5>You: {{$store.getters.matrix[0][1][me]}}</h5>
+                  <h5> Opponent: {{$store.getters.matrix[0][1][other]}}</h5>
                 </div>
               </div>
 
               <div class = "row">
                 <div class = "col-lg-2 col-md-2 col-sm-5 col-xs-5 boardRow" >
 
-                  <button class="btn btn-success" v-on:click="submitChoice(2)"><h2>2</h2></button>
+                  <button v-show="isUnsubmitted" class="btn btn-success" v-on:click="submitChoice(2)"><h2>2</h2></button>
                 </div>
 
                 <div class = "col-lg-5 col-md-5 col-sm-5 col-xs-5 boardRow">
                   <br>
-                  <h5>You: {{$store.getters.matrix[1][0][0]}}</h5>
-                  <h5> Opponent: {{$store.getters.matrix[1][0][1]}}</h5>
+                  <h5>You: {{$store.getters.matrix[1][0][me]}}</h5>
+                  <h5> Opponent: {{$store.getters.matrix[1][0][other]}}</h5>
                 </div>
 
                 <div class = "col-lg-5 col-md-5 col-sm-5 col-xs-5 boardRow">
                   <br>
-                  <h5>You: {{$store.getters.matrix[1][1][0]}}</h5>
-                  <h5> Opponent: {{$store.getters.matrix[1][1][1]}}</h5>
+                  <h5>You: {{$store.getters.matrix[1][1][me]}}</h5>
+                  <h5> Opponent: {{$store.getters.matrix[1][1][other]}}</h5>
                 </div>
               </div>
             </div>
@@ -65,27 +65,33 @@
   import axios from 'axios'
 	export default {
 		name: 'GameBoard',
-		data (){
-			return {
-
-			}
-		},
-		created (){
-		
-			
-		},
-		computed: {
-
-
-		},
+    computed: {
+      isUnsubmitted: function(){
+        if(this.$store.getters.gameState==="unsubmitted")
+          return true;
+        return false;
+      },
+      me: function(){
+        return this.$store.getters.whichPlayer;
+      },
+      other: function(){
+        let player=this.$store.getters.whichPlayer;
+        if(player===1)
+          return 0;
+        return 1;
+      }
+    },
 	   methods: {
 			submitChoice: function(choice){
         console.log("selected ",choice);
         
         this.$store.dispatch("submitChoice", choice);
 				
+
 			},
-      
+      getMatrix: function(){
+          this.$store.dispatch('getMatrix', this.$store.getters.currentRound);
+      },
 		},
 
 	}

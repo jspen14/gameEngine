@@ -141,7 +141,7 @@ export default{
         return true;
       }).catch (err => {
       });
-      console.log("hey" + this.messages);
+      //console.log("hey" + this.messages);
     },
 
     addChatMsg: function(){

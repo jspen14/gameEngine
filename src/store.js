@@ -11,7 +11,7 @@ const getAuthHeader = () => {
 export default new Vuex.Store({
   state: {
 
-    inGameStatus: 'false',
+    inGameStatus: false,
     user: {},
     loginError: '',
     registerError: '',
@@ -19,9 +19,11 @@ export default new Vuex.Store({
     currentRound: 1,
     currentGame: '',
     roundOption: '',
+    gameState: 'unsubmitted',
     matrix: [],
     coachChatMsgs: [],
     playerChatMsgs: [],
+    whichPlayer: null,
   },
   getters: {
     inGameStatus: state => state.inGameStatus,
@@ -33,24 +35,31 @@ export default new Vuex.Store({
     matrix: state => state.matrix,
     coachChatMsgs: state => state.coachChatMsgs,
     playerChatMsgs: state => state.playerChatMsgs,
-
+    gameState: state =>state.gameState,
     //added for registration
     user: state => state.user,
     getToken: state => state.token,
     loggedIn: state => {
-      if (state.token === '')
+      if (state.token === '' || state.user==={})
        return false;
       return true;
     },
     loginError: state => state.loginError,
     registerError: state => state.registerError,
-
+    whichPlayer: state=> state.whichPlayer,
 
   },
   mutations: {
-
+    setCurrentGame (state, gameID){
+      state.currentGame=gameID;
+    },
+    
     setInGameStatus (state, inGameStatus){
       state.inGameStatus = inGameStatus;
+    },
+    
+    setGameState(state, gameState){
+      state.gameState =gameState;
     },
     setCoachID (state, coachID){
       state.coachID = coachID
@@ -84,22 +93,47 @@ export default new Vuex.Store({
     setRegisterError (state, message) {
       state.registerError = message;
     },
+    setWhichPlayer(state, which){
+      state.whichPlayer=which;
+    }
 
   },
   actions: {
-    updateData(context){
-      let timerID = setInterval(() => {
-        //console.log("in updateData in store: " + context.state.userID.userID);
-        axios.get('/api/inGameStatus/' + context.state.user.id).then(response => {
-          console.log(response.data.gameID + " - " + response.data.inGameStatus);
-          if(response.data.inGameStatus == true){
-            console.log("one small step for man");
-          }
-          context.commit('setInGameStatus',response.data.inGameStatus);
 
-        });
+    updateData(context){
+      var updateDataTimer = setInterval(() => {
+        //console.log("in updateData in store: " + context.state.userID.userID);
+        axios.post('/api/inGameStatus/', context.state.user).then(response => {
+        context.commit('setInGameStatus',response.data.inGameStatus);
+
+        context.commit('setCurrentGame', response.data.gameID);
+        context.commit('setWhichPlayer', response.data.which);
+        console.log(context.state.inGameStatus);
+        if(context.state.inGameStatus===true)
+        {
+          context.dispatch('getMatrix',context.state.currentRound);
+          context.commit('setGameState','unsubmitted');
+          clearInterval(updateDataTimer);
+          context.dispatch('updateGame');
+        }
+      });
 
       }, 3000);
+    },
+    //needs to update game
+    updateGame(context){
+      let timerID = setInterval(() => {
+        //getMatrix(context.state.currentRound);
+        console.log("updateGame");
+        console.log("currentGame: ",context.state.currentGame);
+        console.log("whichplayer: ",context.state.whichPlayer); 
+        axios.get('/api/gameState/'+context.state.currentGame+'/'+context.state.whichPlayer).then(response => {
+        console.log(response.data.gameState);
+        context.commit('setGameState',response.data.gameState);
+        });
+   
+      }, 3000);
+
     },
   // Initialize //
     initialize(context) {
@@ -116,6 +150,15 @@ export default new Vuex.Store({
   });
 }
 },
+  whichPlayer(context)
+  {
+    console.log("api/game/"+context.state.currentGame+'/'+context.state.user.id);
+    let whichplayer=axios.get("/api/game/"+context.state.currentGame+'/'+context.state.user.id);
+    if (whichplayer!==null)
+    {
+      context.commit('setWhichPlayer',whichPlayer-1);
+    }
+  },
   // Registration, Login //
 
     login(context,user) {
@@ -159,7 +202,7 @@ export default new Vuex.Store({
           context.commit('setRegisterError',"That user name is already taken.");
         return;
       }
-  context.commit('setRegisterError',"Sorry, your request failed. We will look into it.");
+        context.commit('setRegisterError',"Sorry, your request failed. We will look into it.");
       });
 
     },
@@ -171,8 +214,31 @@ export default new Vuex.Store({
       	console.log("addPost failed:",err);
       });
     },
+    
+    submitChoice(context, choice){
+      
+      let choiceInfo = {round: context.state.currentRound,
+        which: context.state.whichPlayer,
+        choice: choice,
+        game: context.state.currentGame,
+      }
+      axios.post("/api/game",choiceInfo).then(response =>
+      {
+        console.log(response.data);
+        console.log("success");
+        context.commit('setGameState','submitted');
 
-
+      }).catch(err =>{
+        console.log("submitChoice failed: ", err);
+      });
+      
+    },
+    /*
+    nextRound(context)
+    {
+      axios.post("/api/game/nextRound");
+    }
+*/
     getMatrix(context, matrixID){
       axios.get("/api/matrix/" + matrixID).then(response => {
         let data= response.data.matrix[0];

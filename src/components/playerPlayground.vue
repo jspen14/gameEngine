@@ -19,7 +19,7 @@
 
 
       <div class="col-lg-5 col-md-5 col-sm-5 col-xs-5">
-        <chatDisplay></chatDisplay>
+        <!--<chatDisplay></chatDisplay>-->
       </div>
 
       <div class="col-lg-2 col-md-2 col-sm-2 col-xs-2"></div>
@@ -28,6 +28,11 @@
 
           <game-board></game-board>
           <earnings></earnings>
+          <br>
+          <button v-show="gameState==='done'" class="btn btn-success" v-on:click="nextRound()">Go to Next Round</button>
+          <h3 v-show="gameState==='submitted'">Waiting for other player...</h3>
+          <br>
+          <button class="btn btn-danger" v-on:click="logout()">Logout</button>
 
       </div>
     </div>
@@ -45,10 +50,6 @@ import Earnings from './Earnings'
     components: {GameBoard, Earnings},
     data () {
       return {
-        roundNumber: 1,
-        roundEarnings: 0,
-        averageEarnings: 0,
-        totalEarnings: 0,
         playerOption: '',
         msgText: '',
         messages: [],
@@ -58,23 +59,20 @@ import Earnings from './Earnings'
     },
 
     created: function() {
-      //this.getChatMsgs();
-      //this.getRoundEarnings();
-      //this.getAverageEarnings();
-      //this.getTotalEarnings();
       this.getMatrix();
-
-
-    },
-    data(){
-
-
+      this.updateGame();
 
     },
     computed: {
-
+      gameState: function() {
+        return this.$store.getters.gameState;
+      }
     },
     methods: {
+      
+      updateGame: function(){
+        this.$store.dispatch('updateGame');
+    },
       submitOption: function(param){
       console.log(param);
         axios.put('/api/p1roundOption',{
@@ -129,11 +127,13 @@ import Earnings from './Earnings'
         }).catch(err => {
         });
       },
-      getMatrix: function(){
-          this.$store.dispatch('getMatrix', this.$store.getters.roundID);
-          console.log(this.$store.getters.matrix);
-      },
 
+      nextRound: function(){
+        this.$store.dispatch('nextRound');
+      },
+      logout: function(){
+        this.$store.dispatch('logout');
+      }
 
 
   }
