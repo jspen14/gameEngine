@@ -64,7 +64,7 @@
 
     <hr>
 
-    <div class = "msgsBox">
+    <div class = "msgsBox" id = "chatDisplayContainer">
       <div v-for="msg in chatMsgs">
 
 
@@ -123,7 +123,6 @@ export default{
       return this.$store.getters.user.name;
     },
     chatMsgs: function(){
-      console.log("chatDisplay: " + this.$store.getters.coachChatMsgs[0].message);
       return this.$store.getters.coachChatMsgs;
     },
 
@@ -133,8 +132,15 @@ export default{
     updateData: function(){
       let timerID = setInterval(() => {
         // JSpencer update calls
+        this.overflowScroll();
         this.$store.dispatch('getCoachChatID');
-        this.$store.dispatch('getCoachChatMsgs');
+
+        if(this.$store.getters.coachChatMsgsSize = 0){
+          this.$store.dispatch('getCoachChatMsgsSize'); // this still needs to be tested
+        }
+        if(this.$store.getters.coachChatMsgs.length > 0){ //this is the problem
+          this.$store.dispatch('getCoachChatMsgs');
+        }
 
       }, 3000);
     },
@@ -177,8 +183,7 @@ export default{
         text: this.msgText,
       });
       this.msgText = '';
-
-
+      this.$store.dispatch('getCoachChatMsgs');
     },
   },
 

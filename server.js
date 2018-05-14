@@ -91,7 +91,6 @@ app.post('/api/coachChatID',(req,res) => {
 });
 
 app.get('/api/coachChatID/:userID/:gameID',(req,res) => {
-  console.log("in coachChatID: (userID - gameID): " + req.params.userID + " - " + req.params.gameID);
 
   knex('chatID').where({
     gameID: req.params.gameID,
@@ -102,7 +101,6 @@ app.get('/api/coachChatID/:userID/:gameID',(req,res) => {
     user2: req.params.userID,
     chatType: 'P/C',
   }).then(response => {
-    console.log("this is from the server: " + response[0].id)
     res.status(200).json({id: response[0].id});
     return;
   });
@@ -110,7 +108,6 @@ app.get('/api/coachChatID/:userID/:gameID',(req,res) => {
 });
 
 app.post('/api/coachChatMsgs', (req,res) => {
-  console.log(req.body);
 
   knex('chats').insert({
     chatID: req.body.chatID,
@@ -132,10 +129,8 @@ app.get('/api/coachChatMsgs/:chatID',(req,res) => {
   // I will have this retrieve all the information from all the chats with a matching chatID
   let chatID = parseInt(req.params.chatID);
 
-  console.log("Server: " + chatID);
-
   knex('chats').where('chatID',chatID).then(response => {
-    console.log("response from /api/coachChat: " + response[0].message);
+
     res.status(200).json({messages: response});
   }).catch(err => {
     console.log("GET /api/coachChat/:chatID Failed: " + err);
@@ -170,7 +165,6 @@ app.post('/api/createGame', (req,res) =>{
 
       // Send gameID to admin so we can view game progress
       knex('games').where({id: ids[0]}).first(); // I'm pretty sure that this isn't doing anything
-      console.log("on server in createGame: " + ids[0]);
       res.status(200).json({gameID:ids[0]});
     }).catch(error => {
       console.log(error);

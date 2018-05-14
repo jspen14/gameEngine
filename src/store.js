@@ -60,7 +60,6 @@ export default new Vuex.Store({
     },
     setCoachChatMsgs (state, coachChatMsgs){
       state.coachChatMsgs = coachChatMsgs;
-      console.log('mutations: ' + state.coachChatMsgs[0].message);
     },
     setPartnerChatMsgs (state, partnerChatMsgs){
       state.partnerChatMsgs = partnerChatMsgs;
@@ -94,6 +93,7 @@ export default new Vuex.Store({
         }).catch(err => {
           console.log("GET in updataData store side Failed: " + err);
         });
+
 
 
 
@@ -163,11 +163,9 @@ export default new Vuex.Store({
 
 //START JSPENCER CHAT STUFF
     getCoachChatID(context){
-      console.log(context.state.currentGame);
       axios.get('/api/coachChatID/'+ context.state.user.id +'/'+ context.state.currentGame).then(response => { // context.state.user.id/context.state.currentGame
-        console.log("(in store) response.data.id: " + response.data.id);
         context.commit('setCoachChatID', response.data.id);
-        console.log("coachChatID: " + context.state.coachChatID)
+        console.log("setCoachChatID: " + context.state.coachChatID);
       }).catch(err => {
         console.log("getCoachChatID Failed: " + err);
 
@@ -175,7 +173,6 @@ export default new Vuex.Store({
     },
 
     addChatMsg(context, msgInfo){
-      console.log(msgInfo.text + " - " + context.state.coachChatID + " - " + context.state.user.id)
       axios.post('/api/coachChatMsgs', {
         text: msgInfo.text,
         chatID: context.state.coachChatID,
@@ -190,11 +187,21 @@ export default new Vuex.Store({
 
     getCoachChatMsgs(context){
       axios.get('/api/coachChatMsgs/' + context.state.coachChatID).then(response => {
-        console.log(response.data);
         context.commit('setCoachChatMsgs',response.data.messages);
+        console.log('STORE getCoachChatMsgs: ' + response.data.messages)
         return true;
       }).catch(err => {
         console.log("STORE: getCoachChatMsgs: " + err);
+      });
+    },
+
+    getCoachChatMsgsSize(context){
+      axios.get('/api/coachChatMsgs/' + context.state.coachChatID).then(response => {
+        //Check the format of this.
+        return response.messages.length;
+
+      }).catch(err => {
+        console.log("STORE: getCoachChatMsgsSize: " + err);
       });
     },
 
