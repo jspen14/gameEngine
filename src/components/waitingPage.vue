@@ -7,15 +7,15 @@
 <div class="container">
   <h1>{{name}}, please wait while you are being paired. Thanks! </h1>
   <br><br>
-  <div v-if="inGameStatus != true">
+ 
     <br>
     <br>
     <img src="/static/images/ajax-loader.gif"/>
-  </div>
+ 
   <br>
   <br>
 
-  <button v-on:click="logout()" class="btn btn-danger btn-block">Log out</button>
+  <button v-on:click="logout()" class="btn btn-danger ">Log out</button>
 
 </div>
 </template>
@@ -38,7 +38,6 @@ export default{
     userID: function(){
       return this.$store.getters.user.id;
     },
-
 
   },
   methods: {

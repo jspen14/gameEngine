@@ -13,7 +13,7 @@
 <template>
 
   <div class="container">
-    <h3> Objective: Win as much money as possible. </h3>
+    <h3> {{name}} Objective: Win as much money as possible. </h3>
     <hr>
     <div class="row">
 
@@ -26,7 +26,7 @@
 
       <div class='col-lg-5 col-md-5 col-sm-5 col-xs-5'>
 
-          <gameBoard></gameBoard>
+          <gameBoard></gameBoard> 
           <earnings></earnings>
           <br>
           <div v-show="gameState==='done'">
@@ -57,12 +57,12 @@ import axios from 'axios'
         playerOption: '',
         msgText: '',
         messages: [],
-        role: 'Player',
 
       }
     },
 
     created: function() {
+
       this.updateGame();
 
     },
@@ -89,29 +89,13 @@ import axios from 'axios'
         this.getTotalEarnings();
       },
 
-      getRoundEarnings: function(){
-        axios.get('/api/p1roundEarnings').then(response => {
-          this.roundEarnings = response.data;
-          return true;
-        });
-        //.catch (err => {});
-      },
 
-      getAverageEarnings: function(){
-        axios.get('/api/p1averageEarnings').then(response => {
-          this.averageEarnings = response.data.toFixed(2);
-          return true;
-        });
-        //.catch (err => {});
-      },
+    
+      updateData: function(){
+        let timerID = setInterval(() => {
+          //Poll the store to see if there are any new messages
 
-      getTotalEarnings: function(){
-        axios.get('/api/p1totalEarnings').then(response => {
-          this.totalEarnings = response.data;
-          this.totalEarnings = this.totalEarnings.toFixed(2);
-          return true;
-        });
-        //.catch (err => {});
+        }, 3000);
       },
 
       getChatMsgs: function(){
@@ -141,7 +125,7 @@ import axios from 'axios'
         this.$store.dispatch('logout');
       }
 
-
   }
+  
 }
 </script>

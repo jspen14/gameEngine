@@ -162,8 +162,10 @@ class Game {
 
 let gameModels= [];
 
+
 let availableUsers = [{role: "Coach", id: 17, name: "Joe"}, {role: "Coach", id: 18, name: "Jon"},
                       {role: "Player", id: 19, name: "Josh"}, {role: "Player", id: 20, name: "Chad"}];
+
 
 // Endpoint Functions
 app.get('/api/availableUsers',(req,res) => {
@@ -193,6 +195,7 @@ app.post('/api/inGameStatus', (req,res)=>{
   res.status(200).json({inGameStatus: false});
   return;
 });
+
 
 
 function userIsInAvaiablePlayers(id){
@@ -305,7 +308,7 @@ app.get('/api/coachChatMsgs/:chatID',(req,res) => {
 });
 
 // END JSPENCER CHAT STUFF
-//TODO: if gameID and matrixID combo already exist don't insert into table...
+
 app.post('/api/round', (req,res) =>{
 return knex('rounds').select().where('gameID', req.body.gameID)
 .andWhere('matrixID', req.body.currentRound)
@@ -326,7 +329,9 @@ return knex('rounds').select().where('gameID', req.body.gameID)
   console.log(error);
   res.status(500).json({error});
 })
+
 });
+
 
 app.get('/api/matrix/:id', (req,res)=> {
   let id=parseInt(req.params.id);
@@ -417,7 +422,6 @@ function removeFromAvaiableUsers(id){
 }
 app.post('/api/createGame', (req,res) =>{
 
- // Pick up from here update create game so I'm not hitting the foreign key constraint
     return knex('games').insert(
       {player1ID:knex('users').where('id',req.body.player1ID).select('id'), 
       coach1ID:knex('users').where('id',req.body.coach1ID).select('id'), 
@@ -442,6 +446,7 @@ app.post('/api/createGame', (req,res) =>{
       gameModels.push(game);
       // Send gameID to admin so he can view game progress
       knex('games').where({id: ids[0]}).first();
+
       res.status(200).json({gameID:ids[0]});
     }).catch(error => {
       console.log(error);
@@ -529,6 +534,7 @@ app.post('/api/login', (req, res) => {
 
 //Register
 app.post('/api/users', (req, res) => {
+
   if ( !req.body.password || !req.body.name)
       return res.status(400).send();
       knex('users').where('name',req.body.name).first().then(user => {
@@ -555,8 +561,10 @@ app.post('/api/users', (req, res) => {
         console.log(error);
         res.status(500).json({ error });
       }
+
     });
 });
+
 app.get('/api/me', verifyToken, (req,res) => {
   knex('users').where('id',req.userID).first().select('name','id','role').then(user => {
     res.status(200).json({user:user});

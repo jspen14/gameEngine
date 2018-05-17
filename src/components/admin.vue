@@ -161,7 +161,6 @@ export default{
       }
     },
     setCoach: function(coach){
-      console.log(coach);
       if(coach.name != 'No Coach'){
         if(coach == this.selectedCoach1 || coach == this.selectedCoach2){
           return;
@@ -189,7 +188,6 @@ export default{
       }
       else{
         //Axios call
-                console.log("createGame:",this.selectedPlayer1.id, this.selectedPlayer2.id, this.selectedCoach1.id, this.selectedCoach2.id);
         axios.post('/api/createGame',{
           // Use the calls to get these players' ids
           player1ID: this.selectedPlayer1.id,
@@ -197,7 +195,7 @@ export default{
           player2ID: this.selectedPlayer2.id,
           coach2ID: this.selectedCoach2.id,
         }).then(response => {
-          console.log("gameID from Admin: ",response.data.gameID);
+
           axios.post('/api/coachChatID', {
             userID: this.selectedPlayer1.id,
             gameID: response.data.gameID,
@@ -212,6 +210,8 @@ export default{
             console.log("Error setting up player 2's coachChat: " + err);
           });
 
+
+          // Reset data
           this.selectedPlayer1 = '';
           this.selectedCoach1 = '';
           this.selectedPlayer2 = '';
@@ -224,9 +224,7 @@ export default{
     },
     updateAvailableUsers: function(){
       axios.get('/api/availableUsers').then(response => {
-        //console.log("from admin: " + response.data[0].role);
         this.users =  response.data;
-        //console.log (this.users);
       }).catch(err => {
         console.log(err);
       })

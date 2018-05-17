@@ -88,7 +88,6 @@
         </div>
       </div>
 
-
     </form>
 
   </div>
@@ -107,8 +106,6 @@ export default{
   },
   created: function(){
     this.updateData();
-    //this.$store.dispatch('updateData');
-    //this.$store.dispatch('getCoachChatID'); // I'm not sure If I need to do this
   },
   computed: {
     name: function(){
@@ -117,6 +114,7 @@ export default{
     chatMsgs: function(){
       return this.$store.getters.coachChatMsgs;
     },
+
   },
   methods: {
     updateData: function(){
@@ -124,6 +122,7 @@ export default{
         // JSpencer update calls
         //this.overflowScroll();
         this.$store.dispatch('getCoachChatID');
+
         if(this.$store.getters.coachChatMsgsSize = 0){
           this.$store.dispatch('getCoachChatMsgsSize'); // this still needs to be tested
         }
@@ -135,6 +134,7 @@ export default{
     test: function(){
       this.$store.dispatch('getCoachChatID');
     },
+
     isMe: function(msgUserID){
       if(msgUserID == this.$store.getters.user.id){
         console.log("success");
@@ -144,22 +144,7 @@ export default{
         return false;
       }
     },
-    isCoach: function(type){
-      if (type == "coach"){
-        return true;
-      }
-      else {
-        return false;
-      }
-    },
-    isPlayer: function(type){
-      if (type == "player"){
-        return true;
-      }
-      else {
-        return false;
-      }
-    },
+
     addChatMsg: function(){
       this.$store.dispatch('addChatMsg', {
         text: this.msgText,

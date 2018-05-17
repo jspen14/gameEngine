@@ -28,14 +28,17 @@ export default new Vuex.Store({
     numberOfRounds: '',
     roundEarnings: '-',
     totalEarnings: 0,
+    coachChatID: '',
+    partnerChatID: '',
+    partnerChatMsgs: [],
   },
   getters: {
     inGameStatus: state => state.inGameStatus,
-    currentRound: state=> state.currentRound,
-    currentGame: state=> state.currentGame,
-    user: state=>state.user,
-    playerID: state => state.user.id,
-    name: state => state.user.name,
+    currentRound: state => state.currentRound,
+    currentGame: state => state.currentGame,
+    user: state => state.user,
+    coachChatID: state => state.coachChatID,
+    partnerChatID: state => state.partnerChatID,
     matrix: state => state.matrix,
     coachChatMsgs: state => state.coachChatMsgs,
     playerChatMsgs: state => state.playerChatMsgs,
@@ -43,8 +46,10 @@ export default new Vuex.Store({
     p1Choice: state =>state.p1Choice,
     p2Choice: state =>state.p2Choice,
     numberOfRounds: state =>state.numberOfRounds,
+    partnerChatMsgs: state => state.partnerChatMsgs,
+
+
     //added for registration
-    user: state => state.user,
     getToken: state => state.token,
     loggedIn: state => {
       if (state.token === '' || state.user==={})
@@ -53,9 +58,11 @@ export default new Vuex.Store({
     },
     loginError: state => state.loginError,
     registerError: state => state.registerError,
+
     whichPlayer: state => state.whichPlayer,
     roundEarnings: state => state.roundEarnings,
     totalEarnings: state => state.totalEarnings,
+
   },
   mutations: {
 
@@ -82,11 +89,14 @@ export default new Vuex.Store({
     setMatrix (state, matrix){
       state.matrix = matrix;
     },
+    setCoachChatID (state, coachChatID){
+      state.coachChatID = coachChatID;
+    },
     setCoachChatMsgs (state, coachChatMsgs){
       state.coachChatMsgs = coachChatMsgs;
     },
-    setPlayerChatMsgs (state, playerChatMsgs){
-      state.playerChatMsgs = playerChatMsgs;
+    setPartnerChatMsgs (state, partnerChatMsgs){
+      state.partnerChatMsgs = partnerChatMsgs;
     },
     //added for login and registration
     setUser (state, user) {
@@ -178,7 +188,6 @@ export default new Vuex.Store({
           p1Earnings:context.state.matrix[context.state.p1Choice][context.state.p2Choice][0],
           p2Earnings:context.state.matrix[context.state.p1Choice][context.state.p2Choice][1],
         }
-
         axios.post('/api/round',roundInfo).then(response =>{
           console.log(response.data);
         });
@@ -213,6 +222,7 @@ export default new Vuex.Store({
   },
   // Registration, Login //
 
+
   login(context,user) {
     return axios.post("/api/login",user).then(response => {
       context.commit('setUser', response.data.user);
@@ -231,6 +241,7 @@ export default new Vuex.Store({
         return;
     }
   context.commit('setLoginError',"Sorry, your request failed. We will look into it.");
+
       });
     },
 
@@ -251,7 +262,6 @@ export default new Vuex.Store({
     },
 
     register(context,user) {
-      console.log(user);
       return axios.post("/api/users",user).then(response => {
       context.commit('setUser', response.data.user);
       context.commit('setToken',response.data.token);
@@ -351,6 +361,18 @@ export default new Vuex.Store({
       });
     },
 
+
+//START JSPENCER CHAT STUFF
+    getCoachChatID(context){
+      axios.get('/api/coachChatID/'+ context.state.user.id +'/'+ context.state.currentGame).then(response => { // context.state.user.id/context.state.currentGame
+        context.commit('setCoachChatID', response.data.id);
+        console.log("setCoachChatID: " + context.state.coachChatID);
+      }).catch(err => {
+        console.log("getCoachChatID Failed: " + err);
+
+      });
+    },
+
     addChatMsg(context, msgInfo){
       axios.post('/api/coachChatMsgs', {
         text: msgInfo.text,
@@ -358,6 +380,7 @@ export default new Vuex.Store({
         userID: context.state.user.id, //msgInfo.userID
       }).then(response => {
         //possibly call getChatMsgs from
+
         return true;
       }).catch(err => {
         console.log("error from addChatMsg: " + err);
@@ -373,6 +396,7 @@ export default new Vuex.Store({
         console.log("STORE: getCoachChatMsgs: " + err);
       });
     },
+
 
     getCoachChatMsgsSize(context){
       axios.get('/api/coachChatMsgs/' + context.state.coachChatID).then(response => {
