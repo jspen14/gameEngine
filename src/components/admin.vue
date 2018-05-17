@@ -146,6 +146,7 @@ export default{
   },
   methods: {
     setPlayer: function(player){
+
       if(player == this.selectedPlayer1 || player == this.selectedPlayer2){
         return;
       }
