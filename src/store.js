@@ -76,6 +76,9 @@ export default new Vuex.Store({
     setCoachID (state, coachID){
       state.coachID = coachID
     },
+    setCoachChatID (state, coachChatID){
+      state.coachChatID = coachChatID;
+    },
     setMatrix (state, matrix){
       state.matrix = matrix;
     },

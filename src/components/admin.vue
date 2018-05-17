@@ -197,6 +197,21 @@ export default{
           player2ID: this.selectedPlayer2.id,
           coach2ID: this.selectedCoach2.id,
         }).then(response => {
+          console.log("gameID from Admin: ",response.data.gameID);
+          axios.post('/api/coachChatID', {
+            userID: this.selectedPlayer1.id,
+            gameID: response.data.gameID,
+          }).catch(err => {
+            console.log("Error setting up player 1's coachChat: " + err);
+          });
+            // Player 2
+          axios.post('/api/coachChatID', {
+            userID: this.selectedPlayer2.id,
+            gameID: response.data.gameID,
+          }).catch(err => {
+            console.log("Error setting up player 2's coachChat: " + err);
+          });
+
           this.selectedPlayer1 = '';
           this.selectedCoach1 = '';
           this.selectedPlayer2 = '';
