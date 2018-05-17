@@ -132,7 +132,7 @@ export default{
     updateData: function(){
       let timerID = setInterval(() => {
         // JSpencer update calls
-        this.overflowScroll();
+        //this.overflowScroll();
         this.$store.dispatch('getCoachChatID');
 
         if(this.$store.getters.coachChatMsgsSize = 0){
