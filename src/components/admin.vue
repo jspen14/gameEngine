@@ -149,7 +149,6 @@ export default{
   },
   methods: {
     setPlayer: function(player){
-      console.log(player);
       if(player == this.selectedPlayer1 || player == this.selectedPlayer2){
         return;
       }
@@ -210,9 +209,9 @@ export default{
     },
     updateAvailableUsers: function(){
       axios.get('/api/availableUsers').then(response => {
-        console.log("from admin: " + response.data[0].role);
+        //console.log("from admin: " + response.data[0].role);
         this.users =  response.data;
-        console.log (this.users);
+        //console.log (this.users);
       }).catch(err => {
         console.log(err);
       })

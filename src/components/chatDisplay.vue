@@ -2,7 +2,6 @@
   ul {
     list-style: none;
   }
-
   li {
     background: #fff;
     width: 500px;
@@ -13,25 +12,21 @@
     display: flex;
     align-items: center;
   }
-
   .noBorder{
     border: 0;
     box-shadow: none;
   }
-
   .msgsBox{
     overflow-y: scroll;
     height: 65vh;
     word-wrap: break-word;
   }
-
   .coachMsgWrap{
     float: left;
     clear:left;
     max-width: 75%;
     min-width: 75%;
   }
-
   .coachMsgDisplay{
     float: left;
     clear:left;
@@ -39,14 +34,12 @@
     background-color: #2165DA;
     color: white;
   }
-
   .playerMsgWrap{
     float: right;
     clear:right;
     max-width: 75%;
     min-width: 75%;
   }
-
   .playerMsgDisplay{
     float: right;
     clear:right;
@@ -54,28 +47,30 @@
     background-color:#2AA745;
     color: white;
   }
-
 </style>
 
 <template>
   <div>
     <br>
-    <h2> {{title}} </h2>
+    <h2>{{name}}'s {{title}} </h2>
+
     <hr>
 
-    <div class = "msgsBox">
+    <div class = "msgsBox" id = "chatDisplayContainer">
       <div v-for="msg in chatMsgs">
-        <div v-if="isCoach(msg.role)">
+
+
+        <div v-if="!isMe(msg.userID)">
           <div class="coachMsgWrap">
-            <h6 class="coachMsgDisplay"> &nbsp {{msg.text}} &nbsp </h6>
+            <h6 class="coachMsgDisplay"> &nbsp {{msg.message}} &nbsp </h6>
             <br><br>
           </div>
 
         </div>
 
-        <div v-if="isPlayer(msg.role)">
+        <div v-else>
           <div class="playerMsgWrap">
-            <h6 class="playerMsgDisplay"> &nbsp {{msg.text}} &nbsp</h6>
+            <h6 class="playerMsgDisplay"> &nbsp {{msg.message}} &nbsp</h6>
             <br><br>
           </div>
 
@@ -110,13 +105,45 @@ export default{
       role: '',
     }
   },
+  created: function(){
+    this.updateData();
+    //this.$store.dispatch('updateData');
+    //this.$store.dispatch('getCoachChatID'); // I'm not sure If I need to do this
+  },
   computed: {
+    name: function(){
+      return this.$store.getters.user.name;
+    },
     chatMsgs: function(){
-      this.getChatMsgs();
-      return this.messages;
+      return this.$store.getters.coachChatMsgs;
     },
   },
   methods: {
+    updateData: function(){
+      let timerID = setInterval(() => {
+        // JSpencer update calls
+        //this.overflowScroll();
+        this.$store.dispatch('getCoachChatID');
+        if(this.$store.getters.coachChatMsgsSize = 0){
+          this.$store.dispatch('getCoachChatMsgsSize'); // this still needs to be tested
+        }
+        if(this.$store.getters.coachChatMsgs.length > 0){ //this is the problem
+          this.$store.dispatch('getCoachChatMsgs');
+        }
+      }, 3000);
+    },
+    test: function(){
+      this.$store.dispatch('getCoachChatID');
+    },
+    isMe: function(msgUserID){
+      if(msgUserID == this.$store.getters.user.id){
+        console.log("success");
+        return true;
+      }
+      else {
+        return false;
+      }
+    },
     isCoach: function(type){
       if (type == "coach"){
         return true;
@@ -125,7 +152,6 @@ export default{
         return false;
       }
     },
-
     isPlayer: function(type){
       if (type == "player"){
         return true;
@@ -134,27 +160,13 @@ export default{
         return false;
       }
     },
-
-    getChatMsgs: function(){
-      axios.get('/api/coachChat').then(response => {
-        this.messages = response.data;
-        return true;
-      }).catch (err => {
-      });
-
-    },
-
     addChatMsg: function(){
       this.$store.dispatch('addChatMsg', {
         text: this.msgText,
-        chatID: 0,
-        userID: 1,
       });
       this.msgText = '';
-      this.getChatMsgs();
-
+      this.$store.dispatch('getCoachChatMsgs');
     },
   },
-
 }
 </script>

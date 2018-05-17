@@ -28,6 +28,16 @@
 
           <gameBoard></gameBoard>
           <earnings></earnings>
+          <br>
+          <div v-show="gameState==='done'">
+            <button v-if="isLastRound" class="btn btn-success" v-on:click="readyForNextRound()">Finish Game</button>
+            <button v-else class="btn btn-success" v-on:click="readyForNextRound()">Go to Next Round</button>
+          </div>
+
+          <h3 v-show="gameState==='submitted'">Waiting for other player...</h3>
+          <h3 v-show="gameState==='isReady'">Waiting for other player...</h3>
+          <br>
+          <button class="btn btn-danger" v-on:click="logout()">Logout</button>
 
       </div>
     </div>
@@ -44,10 +54,6 @@ import axios from 'axios'
 
     data () {
       return {
-        roundNumber: 1,
-        roundEarnings: 0,
-        averageEarnings: 0,
-        totalEarnings: 0,
         playerOption: '',
         msgText: '',
         messages: [],
@@ -57,23 +63,22 @@ import axios from 'axios'
     },
 
     created: function() {
-      //this.getChatMsgs();
-      //this.getRoundEarnings();
-      //this.getAverageEarnings();
-      //this.getTotalEarnings();
-      this.getMatrix();
-
-
-    },
-    data(){
-
-
+      this.updateGame();
 
     },
     computed: {
-
+      gameState: function() {
+        return this.$store.getters.gameState;
+      },
+      isLastRound: function(){
+        return this.$store.getters.currentRound==this.$store.getters.numberOfRounds;
+      }
     },
     methods: {
+
+      updateGame: function(){
+        this.$store.dispatch('updateGame');
+    },
       submitOption: function(param){
       console.log(param);
         axios.put('/api/p1roundOption',{
@@ -128,11 +133,13 @@ import axios from 'axios'
         }).catch(err => {
         });
       },
-      getMatrix: function(){
-          this.$store.dispatch('getMatrix', this.$store.getters.roundID);
-          console.log(this.$store.getters.matrix);
-      },
 
+      readyForNextRound: function(){
+        this.$store.dispatch('readyForNextRound');
+      },
+      logout: function(){
+        this.$store.dispatch('logout');
+      }
 
 
   }

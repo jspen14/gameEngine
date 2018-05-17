@@ -37,12 +37,23 @@
 <script>
   export default {
     name: 'Earnings',
-    data() {
-      return {
-      roundEarnings: 0,
-      averageEarnings: 0,
-      totalEarnings: 0,
-    }
+    
+    computed: {
+      roundEarnings: function(){
+        return this.$store.getters.roundEarnings;
+      },
+      totalEarnings: function(){
+        return this.$store.getters.totalEarnings;
+      },
+      averageEarnings: function(){
+        if(this.$store.getters.gameState==="unsubmitted")
+        {
+          if(this.$store.getters.currentRound===1)
+            return 0;
+          return Math.round((this.$store.getters.totalEarnings/(this.$store.getters.currentRound-1))*100)/100;
+        }
+        return Math.round((this.$store.getters.totalEarnings/this.$store.getters.currentRound)*100)/100;
+      }
     }
   }
 </script>
