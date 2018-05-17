@@ -13,7 +13,7 @@
 <template>
 
   <div class="container">
-    <h3> {{name}} Objective: Win as much money as possible. </h3>
+    <h3>  Objective: Win as much money as possible. </h3>
     <hr>
     <div class="row">
 
@@ -26,7 +26,7 @@
 
       <div class='col-lg-5 col-md-5 col-sm-5 col-xs-5'>
 
-          <gameBoard></gameBoard> 
+          <gameBoard></gameBoard>
           <earnings></earnings>
           <br>
           <div v-show="gameState==='done'">
@@ -90,7 +90,7 @@ import axios from 'axios'
       },
 
 
-    
+
       updateData: function(){
         let timerID = setInterval(() => {
           //Poll the store to see if there are any new messages
@@ -126,6 +126,6 @@ import axios from 'axios'
       }
 
   }
-  
+
 }
 </script>
