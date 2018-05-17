@@ -29,8 +29,13 @@
           <game-board></game-board>
           <earnings></earnings>
           <br>
-          <button v-show="gameState==='done'" class="btn btn-success" v-on:click="nextRound()">Go to Next Round</button>
+          <div v-show="gameState==='done'">
+            <button v-if="isLastRound" class="btn btn-success" v-on:click="readyForNextRound()">Finish Game</button>
+            <button v-else class="btn btn-success" v-on:click="readyForNextRound()">Go to Next Round</button>
+          </div>
+
           <h3 v-show="gameState==='submitted'">Waiting for other player...</h3>
+          <h3 v-show="gameState==='isReady'">Waiting for other player...</h3>
           <br>
           <button class="btn btn-danger" v-on:click="logout()">Logout</button>
 
@@ -59,17 +64,19 @@ import Earnings from './Earnings'
     },
 
     created: function() {
-      this.getMatrix();
       this.updateGame();
 
     },
     computed: {
       gameState: function() {
         return this.$store.getters.gameState;
+      },
+      isLastRound: function(){
+        return this.$store.getters.currentRound==this.$store.getters.numberOfRounds;
       }
     },
     methods: {
-      
+
       updateGame: function(){
         this.$store.dispatch('updateGame');
     },
@@ -128,8 +135,8 @@ import Earnings from './Earnings'
         });
       },
 
-      nextRound: function(){
-        this.$store.dispatch('nextRound');
+      readyForNextRound: function(){
+        this.$store.dispatch('readyForNextRound');
       },
       logout: function(){
         this.$store.dispatch('logout');

@@ -44,9 +44,11 @@
 
     <div class = "msgsBox">
       <ul>
+        <!--
         <li v-for="msg in chatMsgs">
           {{msg.role}}: {{msg.text}}
         </li>
+      -->
       </ul>
     </div>
 

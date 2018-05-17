@@ -24,27 +24,19 @@ if (jwtSecret === undefined) {
 
 //------------Game--------------------------
 class Game {
-  constructor(gameID, player1, player2){
+  constructor(gameID, player1, player2, coach1, coach2){
     this._gameID = gameID;
     this._player1 = player1;
     this._player2 = player2;
+    this._coach1 = coach1;
+    this._coach2 = coach2;
     this._p1Choice= null;
     this._p2Choice= null;
-    this._currentRound = 0;
-    //this probably needs to change
-    this.numberOfRounds=1;
-    this.rounds=[];
-    this.roundEarnings=0;
-    this.averageEarnings=0;
-    this.totalEarnings=0;
-    //roundOver()/Both players submitted?
-    //show results
-    //submitChoice
-    //createRounds
-    //recordRounds
-    //nextGame
-    //EndGame
-    //Checking function that updates every x seconds in store
+    this._p1Ready= false;
+    this._p2Ready= false;
+    this._currentRound = 1;
+    //fix this later -- make it so number of rounds autimatically updates
+    this._numberOfRounds=3;
 
   }
   //Getters
@@ -57,20 +49,33 @@ class Game {
   get player2() {
     return this._player2;
   }
+  get coach1() {
+    return this._coach1;
+  }
+  get coach2() {
+    return this._coach2;
+  }
   get gameID() {
     return this._gameID;
   }
-  get nextRound(){
-    if(this._currentRound<this.numberOfRounds)
-    {
-      return this._currentRound+1;
-    }
+  get currentRound(){
+    return this._currentRound;
   }
   get p1Choice(){
     return this._p1Choice;
   }
   get p2Choice(){
     return this._p2Choice;
+  }
+  get numberOfRounds(){
+    return this._numberOfRounds;
+  }
+
+  get p1Ready(){
+    return this._p1Ready;
+  }
+  get p2Ready(){
+    return this._p2Ready;
   }
   //Setters
   set gameID(newgameID){
@@ -82,33 +87,58 @@ class Game {
   set player2(player2){
     this._player2=player2;
   }
+  set coach1(coach){
+    this._coach1=coach;
+  }
+  set coach2(coach){
+    this._coach2=coach;
+  }
+
   set p1Choice(choice1){
     this._p1Choice=choice1;
   }
   set p2Choice(choice2){
     this._p2Choice=choice2;
   }
+  set currentRound(round){
+    this._currentRound=round;
+  }
+  set numberOfRounds(x){
+    this._numberOfRounds=x;
+  }
+
+  set p1Ready(status){
+    this._p1Ready=status;
+  }
+  set p2Ready(status){
+    this._p2Ready=status;
+  }
   bothSubmitted()
   {
     
-    if (this.p1Choice!==null && this.p2Choice!==null)
+    if (this.p1Choice===null || this.p2Choice===null)
       { 
-        return true;
+        return false;
       }
-    else 
+    return true; 
+  }
+  bothReady(){
+    if(this.p1Ready && this.p2Ready)
+    {
       return true;
-    
+    }
+    return false;
   }
   amISubmitted(whichUser)
   {
     if(whichUser===0)
     {
-      if(p1Choice!==null)
+      if(this.p1Choice!==null)
         return true;
     }
     else
     {
-      if(p2Choice!==null)
+      if(this.p2Choice!==null)
         return true;
     }
     return false;
@@ -119,65 +149,48 @@ class Game {
       return true;
     return false;
   }
-  calcEarnings()
-  {
-    //fix this to pull from matrix
-    this.roundEarnings= 100;
-    this.averageEarnings= roundEarnings/(this.currentRound+1);
-    this.totalEarnings +=roundEarnings;
-  }
-// createRounds()
-  completeRound(){
-    //report results
-    this.calcEarnings();
-    //increment round
-    this.round +=1;
-    p1Choice=null;
-    p2Choice=null;
-    //figure end game
-  }
 
+
+  goToNextRound(){
+    this.p1Choice=null;
+    this.p2Choice=null;
+    this.p1Ready=false;
+    this.p2Ready=false;
+    this.currentRound+=1
+  }
 }
 
 //--------------------------------------------
-//include game.js
-//const gamejs=require('./game_model.js');
+
 // Data
-let currentGames = [];
-//refers to game_model.js
+
 let gameModels= [];
 
-let availableUsers = [{role: "Coach", userID: 17, name: "Joe"}, {role: "Coach", userID: 18, name: "Jon"},
-                      {role: "Player", userID: 19, name: "Josh"}, {role: "Player", userID: 20, name: "Chad"}];
+let availableUsers = [{role: "Coach", id: 17, name: "Joe"}, {role: "Coach", id: 18, name: "Jon"},
+                      {role: "Player", id: 19, name: "Josh"}, {role: "Player", id: 20, name: "Chad"}];
 
 // Endpoint Functions
 app.get('/api/availableUsers',(req,res) => {
-
   res.send(availableUsers);
 });
-
-app.get('/api/currentGames',(req,res) =>{
-  res.send(currentGames);
-});
-
 app.post('/api/inGameStatus', (req,res)=>{
   let user=req.body;
   let id = user.id;
 
  // pick up from here tomorrow ... get the ID from the current game and send it back to the store
-  if(userIsInAvaiablePlayers(user)===false)
+  if(userIsInAvaiablePlayers(id)===false)
   {
     availableUsers.push(user);
   }
-  for (let i = 0; i < currentGames.length; i++){
-    if (id == currentGames[i].player1ID || id == currentGames[i].coach1ID)
+  for (let i = 0; i < gameModels.length; i++){
+    if (id == gameModels[i].player1 || id == gameModels[i].coach1)
     {
-      res.status(200).json({inGameStatus: true, gameID: currentGames[i].gameID, which:0});
+      res.status(200).json({inGameStatus: true, gameID: gameModels[i].gameID, which:0});
       return;
         }
-    if(id == currentGames[i].player2ID || id == currentGames[i].coach2ID)
+    if(id == gameModels[i].player2 || id == gameModels[i].coach2)
     {
-      res.status(200).json({inGameStatus: true, gameID: currentGames[i].gameID, which:1});
+      res.status(200).json({inGameStatus: true, gameID: gameModels[i].gameID, which:1});
       return;
     }
   }
@@ -186,11 +199,11 @@ app.post('/api/inGameStatus', (req,res)=>{
 });
 
 
-function userIsInAvaiablePlayers(user){
+function userIsInAvaiablePlayers(id){
   let x;
   for(x=0;x<availableUsers.length;x++)
   {
-    if(user.id==availableUsers[x].id)
+    if(id==availableUsers[x].id)
     {
       return true;
     }
@@ -220,17 +233,27 @@ app.get('/api/coachChat/',(req,res) => {
                     {role: "coach", text: "I sure can!"},{role: "player", text: "Perfect. Just tell me what I should do."},
                     {role: "coach", text: "Okay. Let's start out by playing our personal best. Choose X"},{role: "player", text: "Okay"}]);
 });
+//TODO: if gameID and matrixID combo already exist don't insert into table...
+app.post('/api/round', (req,res) =>{
+return knex('rounds').select().where('gameID', req.body.gameID)
+.andWhere('matrixID', req.body.currentRound)
+.then(function(rows){
+  if(rows.length===0)
+  {
+  knex('rounds').insert({gameID: req.body.gameID, matrixID:req.body.currentRound, 
+  player1choice: req.body.p1Choice, player2choice: req.body.p2Choice, 
+  p1Earnings: req.body.p1Earnings, p2Earnings: req.body.p2Earnings})
+.then(res.status(200).send("success"))
+  }
+  else{
+    res.status(200).send("already Added");
+  }
+})
 
-app.post('/api/coachChat', (req,res) => {
-  // Use unshift to put messages at the top instead of the bottom
-
-  knex('users').insert({role: "player", coachType: "N/A"})
-    .catch(error => {
-      console.log(error);
-      res.status(500).json({error});
-    });
-
-  res.send([]);
+.catch(error =>{
+  console.log(error);
+  res.status(500).json({error});
+})
 });
 
 app.get('/api/matrix/:id', (req,res)=> {
@@ -244,48 +267,105 @@ app.get('/api/matrix/:id', (req,res)=> {
 app.get('/api/gameState/:id/:which',(req,res)=>{
   let id =parseInt(req.params.id);
   let index=getGameIndex(id);
-  let which=parseInt(req.params.id);
-  console.log("gameSTATE:")
-  console.log("id: ",id);
-  console.log("index: ",index);
-  console.log("which: ",which);
-  console.log("----")
+  let which=parseInt(req.params.which);
   if(gameModels[index].bothSubmitted())
   {
     res.status(200).json({gameState:'done',
-                          roundEarnings: gameModels[index].roundEarnings, 
-                          averageEarnings: gameModels[index].averageEarnings,
-                          totalEarnings: gameModels[index].totalEarnings,
-                          nextRound: gameModels[index].nextRound,
+                          p1Choice: gameModels[index].p1Choice,
+                          p2Choice: gameModels[index].p2Choice,
                           })
   }
   else if(gameModels[index].amISubmitted(which))
     res.status(200).json({gameState:'submitted'});
   else
     res.status(200).json({gameState:'unsubmitted'});
-
 });
+//indicates player is ready for the next round
+app.post('/api/ready', (req,res)=>{
+  let id= parseInt(req.body.gameID);
+  let which= parseInt(req.body.which);
+  let index=getGameIndex(id);
+   console.log("ready - id: "+id+", which: "+which);
+   console.log("bothReady? ", gameModels[index].bothReady());
+  if( which===0)
+  {
+    gameModels[index].p1Ready=true;
+    res.status(200).send("success");
+  }
+  else if( which===1)
+  {
+    gameModels[index].p2Ready=true;
+    res.status(200).send("success");
+  }
+  else
+  {
+    res.status(400).send("error in /ready");
+  }
+});
+//gets current round
+app.get('/api/ready/:gameID',(req,res)=>{
+  let id= parseInt(req.params.gameID);
+  let index= getGameIndex(id);
+  if(gameModels[index].bothReady())
+  {
+      gameModels[index].goToNextRound();
+  }
+  res.status(200).json({currentRound: gameModels[index].currentRound});
+
+})
+
+app.get('/api/numberOfRounds/:gameID',(req,res)=>{
+  let id= parseInt(req.params.gameID);
+  let index= getGameIndex(id);
+  res.status(200).json({numberOfRounds:gameModels[index].numberOfRounds});
+})
+app.get('/api/totalEarnings/:gameID/:which',(req,res)=>{
+  let id= parseInt(req.params.gameID);
+  let which =parseInt(req.params.which);
+  if(which===0){
+    return knex('rounds').sum('p1Earnings').where('gameID',id).then(earnings => {
+      let x= JSON.parse(JSON.stringify(earnings[0]));
+      res.status(200).send(x['sum(`p1Earnings`)']);
+    });
+  }
+  return knex('rounds').sum('p2Earnings').where('gameID',id).then(earnings => {
+      let x= JSON.parse(JSON.stringify(earnings[0]));
+      res.status(200).send(x['sum(`p2Earnings`)']);
+  });
+})
+function removeFromAvaiableUsers(id){
+  let index= null;
+  for(let x=0;x<availableUsers;x++)
+  {
+    if(availableUsers[x].id==id)
+      index=x;
+  }
+  if(index!==null)
+    availableUsers.splice(index,1);
+}
 app.post('/api/createGame', (req,res) =>{
- // We need to have the player IDs
-  console.log("in createGame on server: " + req.body);
-  console.log(req.body.player1ID, req.body.player2ID, req.body.coach1ID, req.body.coach2ID)
-  return knex('games').insert({player1ID:req.body.player1ID, coach1ID:req.body.coach1ID, player2ID:req.body.player2ID, coach2ID:req.body.coach2ID})
+ // Pick up from here update create game so I'm not hitting the foreign key constraint
+    return knex('games').insert(
+      {player1ID:knex('users').where('id',req.body.player1ID).select('id'), 
+      coach1ID:knex('users').where('id',req.body.coach1ID).select('id'), 
+      player2ID:knex('users').where('id',req.body.player2ID).select('id'), 
+      coach2ID:knex('users').where('id',req.body.coach2ID).select('id')})
     .then(ids => {
-      // Put game into currentGames array
+      
       let gID=parseInt(ids[0]);
       let p1ID=parseInt(req.body.player1ID);
       let p2ID=parseInt(req.body.player2ID);
-      let game = {currentRound:0, 
-                  gameID:gID, 
-                  player1ID:p1ID, 
-                  coach1ID:parseInt(req.body.coach1ID),
-                  player2ID: p2ID, 
-                  coach2ID:parseInt(req.body.coach2ID)
-                };
-      currentGames.push(game);
-      console.log("NEW GAME: ", gID,p1ID,p2ID);
-      let newGame= new Game(gID,p1ID,p2ID);
-      gameModels.push(newGame);
+      let c1ID=parseInt(req.body.coach1ID);
+      let c2ID=parseInt(req.body.coach2ID);
+      console.log("NEW GAME: ", gID,p1ID,p2ID,c1ID, c2ID);
+      console.log(availableUsers);
+      removeFromAvaiableUsers(p1ID);
+      removeFromAvaiableUsers(p2ID);
+      removeFromAvaiableUsers(c1ID);
+      removeFromAvaiableUsers(c2ID);
+      console.log(availableUsers);
+      let game= new Game(gID,p1ID,p2ID, c1ID, c2ID);
+      gameModels.push(game);
       // Send gameID to admin so he can view game progress
       knex('games').where({id: ids[0]}).first();
       res.status(200).json({gameID:ids[0]});
@@ -300,9 +380,6 @@ app.post('/api/game',(req,res)=>
   let gameID=parseInt(req.body.game);
   let which=parseInt(req.body.which);
   let choice=parseInt(req.body.choice);
-  console.log('----------------------------');
-  console.log('gameID: ',gameID);
-  console.log("choice: ",choice);
   //round is not being used
   let round = parseInt(req.body.round);
   let index = getGameIndex(gameID);
@@ -314,15 +391,11 @@ app.post('/api/game',(req,res)=>
   if(which===0)
   {
     gameModels[index].p1Choice=choice;
-    console.log('1 p1Choice: ', gameModels[index].p1Choice)
-    console.log('2 p2Choice: ', gameModels[index].p2Choice)
     res.status(200).send("success");
   }
   else if(which ===1)
   {
     gameModels[index].p2Choice=choice;
-    console.log('3 p1Choice: ', gameModels[index].p1Choice)
-    console.log('4 p2Choice: ', gameModels[index].p2Choice)
     res.status(200).send("success");
   }
   else{
@@ -331,8 +404,19 @@ app.post('/api/game',(req,res)=>
 
   }
 });
+app.delete('/api/game/:id', (req,res)=>
+{
+  let gameID=parseInt(req.params.id);
+  let index= getGameIndex(gameID);
 
 
+  if(typeof index != "undefined")
+  {
+    gameModels.splice(index,1);
+  }
+  console.log(gameModels);
+  res.status(200).send("deletedGame");
+})
 // Login
 app.post('/api/login', (req, res) => {
 
@@ -351,7 +435,8 @@ app.post('/api/login', (req, res) => {
        });
 
        //Add to availableUsers here
-      availableUsers.push(user);
+       if(!userIsInAvaiablePlayers(user.id))
+          availableUsers.push(user);
 
       res.status(200).json({user:{name:user.name,id:user.id,role:user.role},token:token});
     }
@@ -370,33 +455,33 @@ app.post('/api/login', (req, res) => {
 
 //Register
 app.post('/api/users', (req, res) => {
-if ( !req.body.password || !req.body.name)
-    return res.status(400).send();
-knex('users').where('name',req.body.name).first().then(user => {
-    console.log(user);
-    if (user !== undefined) {
-      res.status(409).send("User name already exists");
-      throw new Error('abort');
-    }
-    return bcrypt.hash(req.body.password, saltRounds);
-  }).then(hash => {
-    return knex('users').insert({hash: hash, role:req.body.role,
-         name:req.body.name});
-  }).then(ids => {
-    return knex('users').where('id',ids[0]).first().select('name','id','role');
-  }).then(user => {
-    let token = jwt.sign({ id: user.id }, jwtSecret, {
-      expiresIn: 86400 // expires in 24 hours
+  if ( !req.body.password || !req.body.name)
+      return res.status(400).send();
+      knex('users').where('name',req.body.name).first().then(user => {
+      console.log(user);
+      if (user !== undefined) {
+        res.status(409).send("User name already exists");
+        throw new Error('abort');
+      }
+      return bcrypt.hash(req.body.password, saltRounds);
+    }).then(hash => {
+      return knex('users').insert({hash: hash, role:req.body.role,
+           name:req.body.name});
+    }).then(ids => {
+      return knex('users').where('id',ids[0]).first().select('name','id','role');
+    }).then(user => {
+      let token = jwt.sign({ id: user.id }, jwtSecret, {
+        expiresIn: 86400 // expires in 24 hours
+      });
+      availableUsers.push(user);
+      res.status(200).json({user:user,token:token});
+      return;
+    }).catch(error => {
+      if (error.message !== 'abort') {
+        console.log(error);
+        res.status(500).json({ error });
+      }
     });
-    availableUsers.push(user);
-    res.status(200).json({user:user,token:token});
-    return;
-  }).catch(error => {
-    if (error.message !== 'abort') {
-      console.log(error);
-      res.status(500).json({ error });
-    }
-  });
 });
 app.get('/api/me', verifyToken, (req,res) => {
   knex('users').where('id',req.userID).first().select('name','id','role').then(user => {
