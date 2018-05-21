@@ -24,12 +24,16 @@ if (jwtSecret === undefined) {
 
 //------------Game--------------------------
 class Game {
-  constructor(gameID, player1, player2, coach1, coach2){
+  constructor(gameID, player1, player1Name, player2, player2Name, coach1, coach1Name, coach2, coach2Name){
     this._gameID = gameID;
     this._player1 = player1;
+    this._player1Name = player1Name;
     this._player2 = player2;
+    this._player2Name = player2Name;
     this._coach1 = coach1;
+    this._coach1Name = coach1Name;
     this._coach2 = coach2;
+    this._coach2Name = coach2Name;
     this._p1Choice= null;
     this._p2Choice= null;
     this._p1Ready= false;
@@ -165,14 +169,16 @@ let gameModels= [];
 
 let availableUsers = [];
 
-async function getName(userID){
+function getName(userID){
+  var i = 0;
 
-  var val = await knex('users').where('id',userID).then(res=>{
-    console.log(res[0].name);
-    return res[0].name;
-  }).then(()=>{
-    console.log("val: " + val);
-  });
+  console.log(availableUsers);
+
+  for (i = 0; i < availableUsers.length; i++){
+    if(availableUsers[i].id == userID){
+      return availableUsers[i].name;
+    }
+  }
 
 }
 
@@ -459,34 +465,22 @@ app.post('/api/createGame', (req,res) =>{
       let gID=parseInt(ids[0]);
 
       let p1ID=parseInt(req.body.player1ID);
-      getName(req.body.player1ID)
-        .then(function(p1N){
-          p1Name = p1N;
-        });
+      p1Name = getName(req.body.player1ID);
       console.log("p1Name: " + p1Name);
 
       let p2ID=parseInt(req.body.player2ID);
-      getName(req.body.player2ID)
-        .then(function(p2N){
-          p2Name = p2N;
-        });
-      console.log("p1Name: " + p1Name);
+      p2Name = getName(req.body.player2ID);
+      console.log("p2Name: " + p2Name);
 
       let c1ID=parseInt(req.body.coach1ID);
-      getName(req.body.coach1ID)
-        .then(function(c1N){
-          c1Name = c1N;
-        });
-      console.log("p1Name: " + p1Name);
+      c1Name = getName(req.body.coach1ID);
+      console.log("c1Name: " + c1Name);
 
       let c2ID=parseInt(req.body.coach2ID);
-      getName(req.body.coachID)
-        .then(function(p1N){
-          p1Name = p1N;
-        });
-      console.log("p1Name: " + p1Name);
+      c2Name = getName(req.body.coach2ID);
+      console.log("c2Name: " + c2Name);
 
-      console.log("NEW GAME: ", gID,p1ID,p2ID,c1ID, c2ID);
+      console.log("NEW GAME: ", gID, p1ID, p1Name, p2ID, p2Name, c1ID, c1Name, c2ID, c2Name);
 
       removeFromAvaiableUsers(p1ID);
       removeFromAvaiableUsers(p2ID);
@@ -494,7 +488,7 @@ app.post('/api/createGame', (req,res) =>{
       removeFromAvaiableUsers(c2ID);
       console.log(availableUsers);
 
-      let game= new Game(gID,p1ID,p2ID, c1ID, c2ID); // put this in a then
+      let game= new Game(gID, p1ID, p1Name, p2ID, p2Name, c1ID, c1Name, c2ID, c2Name); // put this in a then
       gameModels.push(game);
       // Send gameID to admin so he can view game progress
       knex('games').where({id: ids[0]}).first();

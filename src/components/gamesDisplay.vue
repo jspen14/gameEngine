@@ -6,10 +6,10 @@
     <div v-for="activeGame in activeGames" class="gamesDisplay">
       <h4><strong>Game ID:</strong> {{activeGame._gameID}} &nbsp &nbsp <strong>Round:</strong> {{activeGame._currentRound}}/{{activeGame._numberOfRounds}}</h4>
       <hr>
-      <h5><strong>Player 1 ID:</strong> {{activeGame._player1}} &nbsp&nbsp <strong>Coach 1 ID:</strong> {{activeGame._coach1}}</h5>
+      <h5><strong>Player 1 ID:</strong> {{activeGame._player1Name}} &nbsp&nbsp <strong>Coach 1 ID:</strong> {{activeGame._coach1Name}}</h5>
       <h6>Round Earnings: &nbsp&nbsp&nbsp&nbsp Average: &nbsp&nbsp&nbsp&nbsp Total:</h6>
       <hr>
-      <h5><strong>Player 2 ID:</strong> {{activeGame._player2}} &nbsp&nbsp <strong>Coach 2 ID:</strong> {{activeGame._coach2}}</h5>
+      <h5><strong>Player 2 ID:</strong> {{activeGame._player2Name}} &nbsp&nbsp <strong>Coach 2 ID:</strong> {{activeGame._coach2Name}}</h5>
       <h6>Round Earnings: &nbsp&nbsp&nbsp&nbsp Average: &nbsp&nbsp&nbsp&nbsp Total:</h6>
     </div>
 </div>
