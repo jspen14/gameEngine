@@ -165,21 +165,64 @@ class Game {
 // Data
 
 let gameModels= [];
-
-
 let availableUsers = [];
 
+// Non-Endpoint Functions
 function getName(userID){
   var i = 0;
-
-  console.log(availableUsers);
 
   for (i = 0; i < availableUsers.length; i++){
     if(availableUsers[i].id == userID){
       return availableUsers[i].name;
     }
   }
+}
 
+function removeFromAvailableUsers(id){
+  let index= null;
+  console.log("In removeFromAvailableUsers: " , availableUsers);
+
+  for(let x=0; x<availableUsers.length; x++)
+  {
+    console.log("Param: ", id, " Array: ", availableUsers[x].id);
+    if(availableUsers[x].id==id)
+      index=x;
+  }
+
+  if(index != null){
+    console.log("Remove User at Index: ", index);
+    availableUsers.splice(index,1);
+  }
+
+}
+
+function userIsInAvaiablePlayers(id){
+  let x;
+  for(x=0;x<availableUsers.length;x++)
+  {
+    if(id==availableUsers[x].id)
+    {
+      return true;
+    }
+  }
+  return false;
+}
+
+const verifyToken = (req, res, next) => {
+  const token = req.headers['authorization'];
+  if (!token)
+    return res.status(403).send({ error: 'No token provided.' });
+  jwt.verify(token, jwtSecret, function(err, decoded) {
+    if (err)
+      return res.status(500).send({ error: 'Failed to authenticate token.' });
+    // if everything good, save to request for use in other routes
+    req.userID = decoded.id;
+    next();
+  });
+}
+
+const getGameIndex = (gameID) =>{
+  return gameModels.findIndex(x=> x.gameID ==gameID);
 }
 
 // Endpoint Functions
@@ -190,10 +233,21 @@ app.get('/api/username/:userID',(req,res) => {
     res.status(200).json({name: response[0].name});
     return;
   });
-
 });
 
 app.get('/api/availableUsers',(req,res) => {
+  var i = 0;
+  var j = 0;
+
+  if(availableUsers.length != 0){
+    for (i = 0; i < gameModels.length; i++){
+      removeFromAvailableUsers(gameModels[i]._player1);
+      removeFromAvailableUsers(gameModels[i]._player2);
+      removeFromAvailableUsers(gameModels[i]._coach1);
+      removeFromAvailableUsers(gameModels[i]._coach2);
+    }
+  }
+
   res.send(availableUsers);
 });
 
@@ -205,7 +259,6 @@ app.post('/api/inGameStatus', (req,res)=>{
   let user=req.body;
   let id = user.id;
 
- // pick up from here tomorrow ... get the ID from the current game and send it back to the store
   if(userIsInAvaiablePlayers(id)===false)
   {
     availableUsers.push(user);
@@ -225,33 +278,6 @@ app.post('/api/inGameStatus', (req,res)=>{
   res.status(200).json({inGameStatus: false});
   return;
 });
-
-function userIsInAvaiablePlayers(id){
-  let x;
-  for(x=0;x<availableUsers.length;x++)
-  {
-    if(id==availableUsers[x].id)
-    {
-      return true;
-    }
-  }
-  return false;
-}
-const verifyToken = (req, res, next) => {
-  const token = req.headers['authorization'];
-  if (!token)
-    return res.status(403).send({ error: 'No token provided.' });
-  jwt.verify(token, jwtSecret, function(err, decoded) {
-    if (err)
-      return res.status(500).send({ error: 'Failed to authenticate token.' });
-    // if everything good, save to request for use in other routes
-    req.userID = decoded.id;
-    next();
-  });
-}
-const getGameIndex = (gameID) =>{
-  return gameModels.findIndex(x=> x.gameID ==gameID);
-}
 
 // START JSPENCER CHAT STUFF
 app.post('/api/coachChatID',(req,res) => {
@@ -322,7 +348,6 @@ app.post('/api/coachChatMsgs', (req,res) => {
 });
 
 app.get('/api/coachChatMsgs/:chatID',(req,res) => {
-  // I will have this retrieve all the information from all the chats with a matching chatID
   let chatID = parseInt(req.params.chatID);
 
   knex('chats').where('chatID',chatID).then(response => {
@@ -359,7 +384,6 @@ return knex('rounds').select().where('gameID', req.body.gameID)
 
 });
 
-
 app.get('/api/matrix/:id', (req,res)=> {
   let id=parseInt(req.params.id);
   knex('matrices').where('id',id).select('type', 'matrix').then(matrix => {
@@ -368,6 +392,7 @@ app.get('/api/matrix/:id', (req,res)=> {
     res.status(500).json({error});
   });
 });
+
 app.get('/api/gameState/:id/:which',(req,res)=>{
   let id =parseInt(req.params.id);
   let index=getGameIndex(id);
@@ -384,7 +409,8 @@ app.get('/api/gameState/:id/:which',(req,res)=>{
   else
     res.status(200).json({gameState:'unsubmitted'});
 });
-//indicates player is ready for the next round
+
+// This indicates player is ready for the next round
 app.post('/api/ready', (req,res)=>{
   let id= parseInt(req.body.gameID);
   let which= parseInt(req.body.which);
@@ -406,7 +432,8 @@ app.post('/api/ready', (req,res)=>{
     res.status(400).send("error in /ready");
   }
 });
-//gets current round
+
+// This gets current round
 app.get('/api/ready/:gameID',(req,res)=>{
   let id= parseInt(req.params.gameID);
   let index= getGameIndex(id);
@@ -415,7 +442,6 @@ app.get('/api/ready/:gameID',(req,res)=>{
       gameModels[index].goToNextRound();
   }
   res.status(200).json({currentRound: gameModels[index].currentRound});
-
 })
 
 app.get('/api/numberOfRounds/:gameID',(req,res)=>{
@@ -423,6 +449,7 @@ app.get('/api/numberOfRounds/:gameID',(req,res)=>{
   let index= getGameIndex(id);
   res.status(200).json({numberOfRounds:gameModels[index].numberOfRounds});
 })
+
 app.get('/api/totalEarnings/:gameID/:which',(req,res)=>{
   let id= parseInt(req.params.gameID);
   let which =parseInt(req.params.which);
@@ -437,16 +464,6 @@ app.get('/api/totalEarnings/:gameID/:which',(req,res)=>{
       res.status(200).send(x['sum(`p2Earnings`)']);
   });
 })
-function removeFromAvaiableUsers(id){
-  let index= null;
-  for(let x=0;x<availableUsers;x++)
-  {
-    if(availableUsers[x].id==id)
-      index=x;
-  }
-  if(index!==null)
-    availableUsers.splice(index,1);
-}
 
 app.post('/api/createGame', (req,res) =>{
     // Create a promise function that only returns when done
@@ -466,29 +483,25 @@ app.post('/api/createGame', (req,res) =>{
 
       let p1ID=parseInt(req.body.player1ID);
       p1Name = getName(req.body.player1ID);
-      console.log("p1Name: " + p1Name);
 
       let p2ID=parseInt(req.body.player2ID);
       p2Name = getName(req.body.player2ID);
-      console.log("p2Name: " + p2Name);
 
       let c1ID=parseInt(req.body.coach1ID);
       c1Name = getName(req.body.coach1ID);
-      console.log("c1Name: " + c1Name);
 
       let c2ID=parseInt(req.body.coach2ID);
       c2Name = getName(req.body.coach2ID);
-      console.log("c2Name: " + c2Name);
 
       console.log("NEW GAME: ", gID, p1ID, p1Name, p2ID, p2Name, c1ID, c1Name, c2ID, c2Name);
 
-      removeFromAvaiableUsers(p1ID);
-      removeFromAvaiableUsers(p2ID);
-      removeFromAvaiableUsers(c1ID);
-      removeFromAvaiableUsers(c2ID);
-      console.log(availableUsers);
+      removeFromAvailableUsers(p1ID);
+      removeFromAvailableUsers(p2ID);
+      removeFromAvailableUsers(c1ID);
+      removeFromAvailableUsers(c2ID);
+      console.log(availableUsers); // possibly come back and check htis.
 
-      let game= new Game(gID, p1ID, p1Name, p2ID, p2Name, c1ID, c1Name, c2ID, c2Name); // put this in a then
+      let game= new Game(gID, p1ID, p1Name, p2ID, p2Name, c1ID, c1Name, c2ID, c2Name);
       gameModels.push(game);
       // Send gameID to admin so he can view game progress
       knex('games').where({id: ids[0]}).first();
@@ -499,6 +512,7 @@ app.post('/api/createGame', (req,res) =>{
       res.status(500).json({error})
     });
 });
+
 //submit Choice
 app.post('/api/game',(req,res)=>
 {
@@ -529,11 +543,12 @@ app.post('/api/game',(req,res)=>
 
   }
 });
+
 app.delete('/api/game/:id', (req,res)=>
 {
+  console.log("halla");
   let gameID=parseInt(req.params.id);
   let index= getGameIndex(gameID);
-
 
   if(typeof index != "undefined")
   {
@@ -542,6 +557,7 @@ app.delete('/api/game/:id', (req,res)=>
   console.log(gameModels);
   res.status(200).send("deletedGame");
 })
+
 // Login
 app.post('/api/login', (req, res) => {
 

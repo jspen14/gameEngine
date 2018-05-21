@@ -58,7 +58,7 @@
     </div>
 
     <div class='col-lg-2 col-md-2 col-sm-2 col-xs-2 userDisplay'>
-      <button class="btn btn-warning btn-block" v-on:click="updateAvailableUsers()">Update Users</button>
+      <!-- <button class="btn btn-warning btn-block" v-on:click="updateAvailableUsers()">Update Users</button> -->
     </div>
 
     <div class="col-lg-4 col-md-4 col-sm-4 col-xs-4 userDisplay ">
@@ -128,6 +128,9 @@ export default{
       selectedCoach2: '',
     }
   },
+  created: function(){
+    this.updateData();
+  },
   computed: {
     coaches: function(){
       let coachArray = [];
@@ -149,6 +152,11 @@ export default{
     },
   },
   methods: {
+    updateData: function(){
+      let timerID = setInterval(() => {
+        this.updateAvailableUsers();
+      }, 2000);
+    },
     setPlayer: function(player){
       if(player == this.selectedPlayer1 || player == this.selectedPlayer2){
         return;

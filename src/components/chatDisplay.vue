@@ -178,15 +178,20 @@ export default{
     },
 
     addChatMsg: function(){
-      this.$store.dispatch('addChatMsg', {
-        text: this.msgText,
-      }).then(func => {
-        this.msgText = '';
-        this.$store.dispatch('getCoachChatMsgs');
-      }).then(func2 => {
-        $('#chatmessages').scrollTop($('#chatmessages')[0].scrollHeight);
-      });
-
+      console.log("Length: ", this.msgText.length);
+      if(this.msgText.length > 254){
+        swal("Error","Message is too long to send.","warning");
+      }
+      else{
+        this.$store.dispatch('addChatMsg', {
+          text: this.msgText,
+        }).then(func => {
+          this.msgText = '';
+          this.$store.dispatch('getCoachChatMsgs');
+        }).then(func2 => {
+          $('#chatmessages').scrollTop($('#chatmessages')[0].scrollHeight);
+        });
+      }
     },
   },
 }
