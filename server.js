@@ -111,12 +111,12 @@ class Game {
   }
   bothSubmitted()
   {
-    
+
     if (this.p1Choice===null || this.p2Choice===null)
-      { 
+      {
         return false;
       }
-    return true; 
+    return true;
   }
   bothReady(){
     if(this.p1Ready && this.p2Ready)
@@ -163,14 +163,38 @@ class Game {
 let gameModels= [];
 
 
-let availableUsers = [{role: "Coach", id: 17, name: "Joe"}, {role: "Coach", id: 18, name: "Jon"},
-                      {role: "Player", id: 19, name: "Josh"}, {role: "Player", id: 20, name: "Chad"}];
+let availableUsers = [];
 
+async function getName(userID){
+
+  var val = await knex('users').where('id',userID).then(res=>{
+    console.log(res[0].name);
+    return res[0].name;
+  }).then(()=>{
+    console.log("val: " + val);
+  });
+
+}
 
 // Endpoint Functions
+app.get('/api/username/:userID',(req,res) => {
+  knex('users').where({
+    id: req.params.userID,
+  }).then(response => {
+    res.status(200).json({name: response[0].name});
+    return;
+  });
+
+});
+
 app.get('/api/availableUsers',(req,res) => {
   res.send(availableUsers);
 });
+
+app.get('/api/gameModels',(req,res) => {
+  res.status(200).json({activeGames: gameModels});
+});
+
 app.post('/api/inGameStatus', (req,res)=>{
   let user=req.body;
   let id = user.id;
@@ -195,8 +219,6 @@ app.post('/api/inGameStatus', (req,res)=>{
   res.status(200).json({inGameStatus: false});
   return;
 });
-
-
 
 function userIsInAvaiablePlayers(id){
   let x;
@@ -315,8 +337,8 @@ return knex('rounds').select().where('gameID', req.body.gameID)
 .then(function(rows){
   if(rows.length===0)
   {
-  knex('rounds').insert({gameID: req.body.gameID, matrixID:req.body.currentRound, 
-  player1choice: req.body.p1Choice, player2choice: req.body.p2Choice, 
+  knex('rounds').insert({gameID: req.body.gameID, matrixID:req.body.currentRound,
+  player1choice: req.body.p1Choice, player2choice: req.body.p2Choice,
   p1Earnings: req.body.p1Earnings, p2Earnings: req.body.p2Earnings})
 .then(res.status(200).send("success"))
   }
@@ -324,7 +346,6 @@ return knex('rounds').select().where('gameID', req.body.gameID)
     res.status(200).send("already Added");
   }
 })
-
 .catch(error =>{
   console.log(error);
   res.status(500).json({error});
@@ -420,29 +441,60 @@ function removeFromAvaiableUsers(id){
   if(index!==null)
     availableUsers.splice(index,1);
 }
-app.post('/api/createGame', (req,res) =>{
 
+app.post('/api/createGame', (req,res) =>{
+    // Create a promise function that only returns when done
     return knex('games').insert(
-      {player1ID:knex('users').where('id',req.body.player1ID).select('id'), 
-      coach1ID:knex('users').where('id',req.body.coach1ID).select('id'), 
-      player2ID:knex('users').where('id',req.body.player2ID).select('id'), 
+      {player1ID:knex('users').where('id',req.body.player1ID).select('id'),
+      coach1ID:knex('users').where('id',req.body.coach1ID).select('id'),
+      player2ID:knex('users').where('id',req.body.player2ID).select('id'),
       coach2ID:knex('users').where('id',req.body.coach2ID).select('id')})
 
     .then(ids => {
-      
+      let p1Name = '';
+      let p2Name = '';
+      let c1Name = '';
+      let c2Name = '';
+
       let gID=parseInt(ids[0]);
+
       let p1ID=parseInt(req.body.player1ID);
+      getName(req.body.player1ID)
+        .then(function(p1N){
+          p1Name = p1N;
+        });
+      console.log("p1Name: " + p1Name);
+
       let p2ID=parseInt(req.body.player2ID);
+      getName(req.body.player2ID)
+        .then(function(p2N){
+          p2Name = p2N;
+        });
+      console.log("p1Name: " + p1Name);
+
       let c1ID=parseInt(req.body.coach1ID);
+      getName(req.body.coach1ID)
+        .then(function(c1N){
+          c1Name = c1N;
+        });
+      console.log("p1Name: " + p1Name);
+
       let c2ID=parseInt(req.body.coach2ID);
+      getName(req.body.coachID)
+        .then(function(p1N){
+          p1Name = p1N;
+        });
+      console.log("p1Name: " + p1Name);
+
       console.log("NEW GAME: ", gID,p1ID,p2ID,c1ID, c2ID);
-      console.log(availableUsers);
+
       removeFromAvaiableUsers(p1ID);
       removeFromAvaiableUsers(p2ID);
       removeFromAvaiableUsers(c1ID);
       removeFromAvaiableUsers(c2ID);
       console.log(availableUsers);
-      let game= new Game(gID,p1ID,p2ID, c1ID, c2ID);
+
+      let game= new Game(gID,p1ID,p2ID, c1ID, c2ID); // put this in a then
       gameModels.push(game);
       // Send gameID to admin so he can view game progress
       knex('games').where({id: ids[0]}).first();

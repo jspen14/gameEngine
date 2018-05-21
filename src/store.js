@@ -76,7 +76,7 @@ export default new Vuex.Store({
     setInGameStatus (state, inGameStatus){
       state.inGameStatus = inGameStatus;
     },
-    
+
     setGameState(state, gameState){
       state.gameState =gameState;
     },
@@ -120,7 +120,7 @@ export default new Vuex.Store({
     },
     setP1Choice(state, choice){
       state.p1Choice=choice;
-    },    
+    },
     setP2Choice(state, choice){
       state.p2Choice=choice;
     },
@@ -168,17 +168,17 @@ export default new Vuex.Store({
         context.commit('setP1Choice', response.data.p1Choice);
         context.commit('setP2Choice', response.data.p2Choice);
         if(context.state.whichPlayer===0)
-            context.commit('setRoundEarnings', context.state.matrix[context.state.p1Choice][context.state.p2Choice][0]); 
+            context.commit('setRoundEarnings', context.state.matrix[context.state.p1Choice][context.state.p2Choice][0]);
         else
           context.commit('setRoundEarnings', context.state.matrix[context.state.p1Choice][context.state.p2Choice][1]);
         axios.get('/api/totalEarnings/'+context.state.currentGame+'/'+context.state.whichPlayer).then(response =>{
 
           console.log("RESPONSE: ", response.data);
-          context.commit('setTotalEarnings', response.data); 
+          context.commit('setTotalEarnings', response.data);
         }).catch(error=>{
           console.log(error);
         });
-         
+
         console.log("setTotalEarnings to: ", context.state.totalEarnings);
         let roundInfo={
           gameID: context.state.currentGame,
@@ -249,7 +249,7 @@ export default new Vuex.Store({
         context.commit('setInGameStatus', false);
         context.commit('setUser', {});//originial logout
         context.commit('setToken','');//*
-        
+
         context.commit('setCurrentRound',1);
         context.commit('setCurrentGame','');
         context.commit('setP1Choice','');
@@ -285,9 +285,9 @@ export default new Vuex.Store({
         context.dispatch('logout')}).catch(err=>{console.log("endGame error")});
     },
 
-    
+
     submitChoice(context, choice){
-      
+
       let choiceInfo = {round: context.state.currentRound,
         which: context.state.whichPlayer,
         choice: choice,
@@ -301,7 +301,7 @@ export default new Vuex.Store({
       }).catch(err =>{
         console.log("submitChoice failed: ", err);
       });
-      
+
     },
     readyForNextRound(context){
       let readyInfo={gameID:context.state.currentGame, which: context.state.whichPlayer}
@@ -366,7 +366,6 @@ export default new Vuex.Store({
     getCoachChatID(context){
       axios.get('/api/coachChatID/'+ context.state.user.id +'/'+ context.state.currentGame).then(response => { // context.state.user.id/context.state.currentGame
         context.commit('setCoachChatID', response.data.id);
-        console.log("setCoachChatID: " + context.state.coachChatID);
       }).catch(err => {
         console.log("getCoachChatID Failed: " + err);
 
@@ -374,23 +373,26 @@ export default new Vuex.Store({
     },
 
     addChatMsg(context, msgInfo){
-      axios.post('/api/coachChatMsgs', {
-        text: msgInfo.text,
-        chatID: context.state.coachChatID,
-        userID: context.state.user.id, //msgInfo.userID
-      }).then(response => {
-        //possibly call getChatMsgs from
+      if(msgInfo.text != ''){
+        axios.post('/api/coachChatMsgs', {
+          text: msgInfo.text,
+          chatID: context.state.coachChatID,
+          userID: context.state.user.id, //msgInfo.userID
+        }).then(response => {
+          //possibly call getChatMsgs from
 
-        return true;
-      }).catch(err => {
-        console.log("error from addChatMsg: " + err);
-      });
+          return true;
+        }).catch(err => {
+          console.log("error from addChatMsg: " + err);
+        });
+      }
+
     },
 
     getCoachChatMsgs(context){
       axios.get('/api/coachChatMsgs/' + context.state.coachChatID).then(response => {
         context.commit('setCoachChatMsgs',response.data.messages);
-        console.log('STORE getCoachChatMsgs: ' + response.data.messages)
+
         return true;
       }).catch(err => {
         console.log("STORE: getCoachChatMsgs: " + err);

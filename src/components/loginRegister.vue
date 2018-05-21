@@ -5,15 +5,13 @@
     <hr>
   </div>
   <div class = "subHeader">
-    Select Your User
-    <router-link to="admin" class="subHeader" style="color:black">* </router-link>
-    :
+    Select Your User:
   </div>
   <br>
     <div class = "row">
     <div class="col-lg-3 col-md-3">
     </div>
-  
+
   <div class="col-lg-6 col-md-6">
     <ul class="nav nav-tabs">
       <li v-bind:class= "{active: isregister}" v-on:click="isregister=true" class="nav-link "><a>Register</a></li>
@@ -28,21 +26,21 @@
       <select  class="form-control"  v-model="role" required>
         <option>Player</option>
         <option>Coach</option>
-      </select>   
+      </select>
     </div>
     </div>
     <div  class="form-group row">
       <div class="col-2 col-form-label">Name</div>
       <div class="col-10">
       <input type="text" class="form-control"  placeholder= "first and last name" v-model="name" required>
-    
+
     </div>
     </div>
     <div class="form-group row">
       <div class="col-2 col-form-label">Password</div>
       <div class="col-10">
       <input type="password" class="form-control"  placeholder= "password" v-model="password" required>
-    
+
     </div>
     </div>
     <button v-if="isregister" v-on:click="registerUser()" type="submit" class="btn btn-primary">Register</button>
@@ -102,4 +100,3 @@ a:hover{
 }
 
 </style>
-

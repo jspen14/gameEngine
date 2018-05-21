@@ -4,6 +4,7 @@ import homepage from '@/components/homepage.vue'
 import playerPlayground from '@/components/playerPlayground'
 import coachPlayground from '@/components/coachPlayground'
 import admin from '@/components/admin'
+import gamesDisplay from '@/components/gamesDisplay'
 
 Vue.use(Router)
 
@@ -28,6 +29,11 @@ export default new Router({
       path: '/admin',
       name: 'admin',
       component: admin,
+    },
+    {
+      path: '/gamesDisplay',
+      name: 'gamesDisplay',
+      component: gamesDisplay,
     },
 
 
