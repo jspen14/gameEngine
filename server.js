@@ -41,7 +41,7 @@ class Game {
     this.getMatrix();
 
     //fix this later -- make it so number of rounds autimatically updates
-    this._numberOfRounds=3;
+    this._numberOfRounds=this.setNumberOfRounds();
 
   }
   //Getters
@@ -242,61 +242,65 @@ class Game {
     this.currentRound+=1
     this.getMatrix();
   }
+  setNumberOfRounds(){
+    knex('matrices').count('id').then(n =>{
+      this.numberOfRounds=parseInt(n[0]["count(`id`)"]);
+    })
+  }
+  getMatrix(){
 
-    getMatrix(){
+    knex('matrices').where('id',this.currentRound).select('type', 'matrix').then(q => {
+    
+    let data=q[0];
+    let mx=data.matrix
+    let type= data.type;
+    let dimensions= type.split('x');
+    for(let i=0; i<dimensions.length;i++)
+    {
+      dimensions[i]=parseInt(dimensions[i]);
+    }
+    let rows=dimensions[0];
+    let cols=dimensions[1];
+    let index=0;
+    let temparray=[]
+    while(index<mx.length)
+    {
 
-        knex('matrices').where('id',this.currentRound).select('type', 'matrix').then(q => {
-        
-        let data=q[0];
-        let mx=data.matrix
-        let type= data.type;
-        let dimensions= type.split('x');
-        for(let i=0; i<dimensions.length;i++)
+      if(isNaN(mx[index]))
+        index++;
+      else{
+        let temp=index;
+        while(!isNaN(mx[temp]))
+          temp++;
+        let k=parseInt(mx.substring(index,temp));
+        index=temp;
+        temparray.push(k);
+      }
+    }
+    let matrix=[]
+    //Initialize matrix
+    let arrayIndex=0;
+    for(let y =0; y<rows;y++)
+    {
+      let row=[]
+      for(let x=0; x<cols;x++)
+      {
+        let option=[]
+        for(let i=0;i<2;i++)
         {
-          dimensions[i]=parseInt(dimensions[i]);
+          option.push(temparray[arrayIndex]);
+          arrayIndex++;
         }
-        let rows=dimensions[0];
-        let cols=dimensions[1];
-        let index=0;
-        let temparray=[]
-        while(index<mx.length)
-        {
+        row.push(option);
+      }
+      matrix.push(row);
+    }
+    this.matrix=matrix;
+          
+    }).catch(err => {
+      console.log("getMatrix Failed:", err);
 
-          if(isNaN(mx[index]))
-            index++;
-          else{
-            let temp=index;
-            while(!isNaN(mx[temp]))
-              temp++;
-            let k=parseInt(mx.substring(index,temp));
-            index=temp;
-            temparray.push(k);
-          }
-        }
-        let matrix=[]
-        //Initialize matrix
-        let arrayIndex=0;
-        for(let y =0; y<rows;y++)
-        {
-          let row=[]
-          for(let x=0; x<cols;x++)
-          {
-            let option=[]
-            for(let i=0;i<2;i++)
-            {
-              option.push(temparray[arrayIndex]);
-              arrayIndex++;
-            }
-            row.push(option);
-          }
-          matrix.push(row);
-        }
-        this.matrix=matrix;
-              
-      }).catch(err => {
-        console.log("getMatrix Failed:", err);
-
-      });
+    });
   }
 }
 
