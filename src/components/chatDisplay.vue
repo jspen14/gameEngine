@@ -138,6 +138,7 @@ export default{
     }
   },
   created: function(){
+    this.$store.dispatch('getCoachChatID');
     this.updateData();
   },
   computed: {
@@ -153,6 +154,7 @@ export default{
   methods: {
     updateData: function(){
       let timerID = setInterval(() => {
+
         this.$store.dispatch('getCoachChatID'); // only do this if it hasnt already been set
 
         this.$store.dispatch('getCoachChatMsgs');
@@ -162,6 +164,7 @@ export default{
         $('#chatmessages').scrollTop($('#chatmessages')[0].scrollHeight);
 
       }, 1000);
+
     },
 
     test: function(){

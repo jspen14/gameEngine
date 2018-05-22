@@ -150,7 +150,7 @@ export default new Vuex.Store({
         context.commit('setWhichPlayer', response.data.which);
         if(context.state.inGameStatus===true)
         {
-          context.dispatch('updateData2')
+          context.commit('setCurrentRound',response.data.round);
           context.dispatch('getNumberOfRounds');
           context.dispatch('getMatrix',context.state.currentRound);
           context.commit('setGameState','unsubmitted');
@@ -185,34 +185,48 @@ export default new Vuex.Store({
         clearInterval(timerID);
         context.commit('setP1Choice', response.data.p1Choice);
         context.commit('setP2Choice', response.data.p2Choice);
+
         if(context.state.whichPlayer===0)
             context.commit('setRoundEarnings', context.state.matrix[context.state.p1Choice][context.state.p2Choice][0]);
         else
           context.commit('setRoundEarnings', context.state.matrix[context.state.p1Choice][context.state.p2Choice][1]);
-        axios.get('/api/totalEarnings/'+context.state.currentGame+'/'+context.state.whichPlayer).then(response =>{
 
-          console.log("RESPONSE: ", response.data);
-          context.commit('setTotalEarnings', response.data);
+        axios.get('/api/totalEarnings/'+context.state.currentGame+'/'+context.state.whichPlayer).then(resp =>{
+        context.commit('setTotalEarnings', resp.data.earnings); 
         }).catch(error=>{
           console.log(error);
-        });
-
-        console.log("setTotalEarnings to: ", context.state.totalEarnings);
-        let roundInfo={
-          gameID: context.state.currentGame,
-          currentRound: context.state.currentRound,
-          p1Choice: context.state.p1Choice,
-          p2Choice: context.state.p2Choice,
-          p1Earnings:context.state.matrix[context.state.p1Choice][context.state.p2Choice][0],
-          p2Earnings:context.state.matrix[context.state.p1Choice][context.state.p2Choice][1],
-        }
-        axios.post('/api/round',roundInfo).then(response =>{
-          console.log(response.data);
         });
 
       }
       });
       }, 1000);
+    },
+    updateCoach(context){
+      let timerID=setInterval(() => {
+        axios.get('/api/game/'+context.state.currentGame+'/'+context.state.whichPlayer).then(response =>{
+          context.commit('setRoundEarnings', response.data.roundEarnings);
+          context.commit('setTotalEarnings', response.data.totalEarnings);
+          context.commit('setP1Choice', response.data.p1Choice);
+          context.commit('setP2Choice', response.data.p2Choice);
+          
+          if(context.state.currentRound!==response.data.round)
+          {
+            context.commit('setCurrentRound',response.data.round);
+            context.dispatch('getMatrix',context.state.currentRound);
+          }
+          if(context.state.currentRound===context.state.numberOfRounds
+             && context.state.p1Choice!=null && context.state.p2Choice!=null)
+          {
+            clearInterval(timerID);
+            context.commit('setGameState','isLastRound');
+          }
+        })
+      },3000);
+    },
+    abortCheck(context){
+      let timerID=setInterval(() =>{
+        context.dispatch('checkGameAborted');
+      },5000);
     },
   // Initialize //
     initialize(context) {
@@ -231,7 +245,6 @@ export default new Vuex.Store({
 
   whichPlayer(context)
   {
-    console.log("api/game/"+context.state.currentGame+'/'+context.state.user.id);
     let whichplayer=axios.get("/api/game/"+context.state.currentGame+'/'+context.state.user.id);
     if (whichplayer!==null)
     {
@@ -266,8 +279,7 @@ export default new Vuex.Store({
     logout(context) {
         context.commit('setInGameStatus', false);
         context.commit('setUser', {});//originial logout
-        context.commit('setToken','');//*
-
+        context.commit('setToken','');//*   
         context.commit('setCurrentRound',1);
         context.commit('setCurrentGame','');
         context.commit('setP1Choice','');
@@ -298,15 +310,18 @@ export default new Vuex.Store({
       });
 
     },
-        endGame(context){
+    endGame(context){
       axios.delete('/api/game/'+context.state.currentGame).then(response =>{
         context.dispatch('logout')}).catch(err=>{console.log("endGame error")});
     },
 
-
+    gotoEndGame(context){
+      context.commit('setGameState','endGame');
+    },
+    
     submitChoice(context, choice){
-
-      let choiceInfo = {round: context.state.currentRound,
+      
+      let choiceInfo = {
         which: context.state.whichPlayer,
         choice: choice,
         game: context.state.currentGame,
@@ -337,12 +352,7 @@ export default new Vuex.Store({
         .then(response => {
           let newRound=response.data.currentRound;
 
-          if(newRound>context.state.numberOfRounds)
-          {
-            context.commit('setGameState','endGame');
-            clearInterval(timerID);
-          }
-          else if(newRound>context.state.currentRound)
+          if(newRound>context.state.currentRound)
           {
             clearInterval(timerID);
             console.log("got to nextRound");
@@ -366,16 +376,6 @@ export default new Vuex.Store({
         context.commit('setNumberOfRounds', response.data.numberOfRounds)})
       .catch(err =>{
         console.log("getNumberOfRounds failed: ",err);
-      });
-    },
-    //START JSPENCER CHAT STUFF
-    getCoachChatID(context){
-      axios.get('/api/coachChatID/'+ context.state.user.id +'/'+ context.state.currentGame).then(response => { // context.state.user.id/context.state.currentGame
-        context.commit('setCoachChatID', response.data.id);
-        console.log("setCoachChatID: " + context.state.coachChatID);
-      }).catch(err => {
-        console.log("getCoachChatID Failed: " + err);
-
       });
     },
 
@@ -449,7 +449,6 @@ export default new Vuex.Store({
         let temparray=[]
         while(index<mx.length)
         {
-
           if(isNaN(mx[index]))
           {
             index++;
@@ -457,7 +456,6 @@ export default new Vuex.Store({
           else{
 
             let temp=index;
-
             while(!isNaN(mx[temp]))
             {
               temp++;
@@ -466,7 +464,6 @@ export default new Vuex.Store({
 
             index=temp;
             temparray.push(k);
-
           }
         }
         let matrix=[]

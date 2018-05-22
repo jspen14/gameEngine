@@ -33,7 +33,7 @@
           <earnings></earnings>
           <br>
           <div v-show="gameState==='done'">
-            <button v-if="isLastRound" class="btn btn-success" v-on:click="readyForNextRound()">Finish Game</button>
+            <button v-if="isLastRound" class="btn btn-success" v-on:click="gotoEndGame()">Finish Game</button>
             <button v-else class="btn btn-success" v-on:click="readyForNextRound()">Go to Next Round</button>
           </div>
 
@@ -65,7 +65,6 @@ import axios from 'axios'
     },
     created: function() {
       this.updateGame();
-      this.updateData();
     },
     computed: {
 
@@ -75,14 +74,23 @@ import axios from 'axios'
       isLastRound: function(){
         return this.$store.getters.currentRound==this.$store.getters.numberOfRounds;
       },
+
       gameAborted: function(){
-        return this.isAborted;
+        return this.$store.getters.gameAborted;      
       },
+
+      name: function(){
+        return this.$store.getters.user.name;
+      }
+
     },
     methods: {
-
+      gotoEndGame: function(){
+        this.$store.dispatch('gotoEndGame');
+      },
       updateGame: function(){
         this.$store.dispatch('updateGame');
+        this.$store.dispatch('abortCheck');
     },
       submitOption: function(param){
       console.log(param);
@@ -92,14 +100,6 @@ import axios from 'axios'
         this.getRoundEarnings();
         this.getAverageEarnings();
         this.getTotalEarnings();
-      },
-
-
-
-      updateData: function(){
-        let timerID = setInterval(() => {
-          this.isAborted = this.$store.getters.gameAborted;
-        }, 1500);
       },
 
       getChatMsgs: function(){

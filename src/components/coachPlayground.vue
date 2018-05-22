@@ -1,4 +1,4 @@
-<style>
+<style scoped>
   ul {
     list-style: none;
   }
@@ -44,9 +44,10 @@
 
       <div class='col-lg-5 col-md-5 col-sm-5 col-xs-5'>
 
-
-          <earnings></earnings>
-
+          <game-board/>
+          <earnings/>
+          <br>
+          <button class="btn btn-success" v-show="isLastRound" @click="gotoEndGame()">Finish Game</button>
       </div>
 
     </div>
@@ -63,11 +64,12 @@ export default{
       msgText: '',
       messages: [],
       role: 'coach',
-      isAborted: false,
     }
   },
+
   created: function() {
-    this.updateData();
+
+    this.update();
   },
   computed: {
     chatMsgs: function(){
@@ -75,16 +77,15 @@ export default{
       return this.messages;
     },
     gameAborted: function(){
-      return this.isAborted;
+      return this.$store.getters.gameAborted;
     },
+
+    isLastRound: function(){
+        return this.$store.getters.gameState==='isLastRound';
+      },
+
   },
   methods: {
-
-  updateData: function(){
-    let timerID = setInterval(() => {
-      this.isAborted = this.$store.getters.gameAborted;
-    }, 3000);
-  },
 
   getChatMsgs: function(){
     axios.get('/api/coachChat').then(response => {
@@ -105,6 +106,13 @@ export default{
     }).catch(err => {
     });
   },
+  update(){
+    this.$store.dispatch('updateCoach');
+    this.$store.dispatch('abortCheck');
+  },
+  gotoEndGame: function(){
+        this.$store.dispatch('gotoEndGame');
+      },
   },
 
 }
