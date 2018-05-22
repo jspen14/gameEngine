@@ -1,7 +1,7 @@
 <template>
 <div class="container">
     <h2> {{title}} </h2>
-    <router-link to="gamesDisplay"><button class="btn btn-warning btn-sm" name="button">View All Games Currently in Progress</button></router-link>
+    <router-link to="admin"><button class="btn btn-warning btn-sm" name="button">Back to Admin Page</button></router-link>
     <hr>
 
     <div v-for="activeGame in activeGames" class="gamesDisplay">

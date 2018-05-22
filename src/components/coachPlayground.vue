@@ -30,9 +30,11 @@
   <div class="container">
     <h3> Objective: Coach your player to win as much money as possible. </h3>
     <hr>
+    <div v-if="gameAborted === true">
+      <h2>You have been logged out of the game by the administrator. Thank you for playing.</h2>
+    </div>
 
-    <div class="row">
-
+    <div v-if="gameAborted != true" class="row">
 
       <div class="col-lg-5 col-md-5 col-sm-5 col-xs-5">
         <chatDisplay></chatDisplay>
@@ -61,15 +63,29 @@ export default{
       msgText: '',
       messages: [],
       role: 'coach',
+      isAborted: false,
     }
+  },
+  created: function() {
+    this.updateData();
   },
   computed: {
     chatMsgs: function(){
       this.getChatMsgs();
       return this.messages;
     },
+    gameAborted: function(){
+      return this.isAborted;
+    },
   },
   methods: {
+
+  updateData: function(){
+    let timerID = setInterval(() => {
+      this.isAborted = this.$store.getters.gameAborted;
+    }, 3000);
+  },
+
   getChatMsgs: function(){
     axios.get('/api/coachChat').then(response => {
       this.messages = response.data;

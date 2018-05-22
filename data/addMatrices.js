@@ -1,6 +1,6 @@
 // Knex Setup
 const env = process.env.NODE_ENV || 'development';
-const config = require('../knexfile')[env];  
+const config = require('../knexfile')[env];
 const knex = require('knex')(config);
 //Takes Json as argument on command line
 const fs = require('fs');

@@ -40,7 +40,7 @@ class Game {
     this._p2Ready= false;
     this._currentRound = 1;
     //fix this later -- make it so number of rounds autimatically updates
-    this._numberOfRounds=3;
+    this._numberOfRounds=3; //query the database to get the number of
 
   }
   //Getters
@@ -180,17 +180,14 @@ function getName(userID){
 
 function removeFromAvailableUsers(id){
   let index= null;
-  console.log("In removeFromAvailableUsers: " , availableUsers);
 
   for(let x=0; x<availableUsers.length; x++)
   {
-    console.log("Param: ", id, " Array: ", availableUsers[x].id);
     if(availableUsers[x].id==id)
       index=x;
   }
 
   if(index != null){
-    console.log("Remove User at Index: ", index);
     availableUsers.splice(index,1);
   }
 
@@ -226,6 +223,23 @@ const getGameIndex = (gameID) =>{
 }
 
 // Endpoint Functions
+app.get('/api/gameAborted/:userID',(req,res)=>{
+  var i = 0;
+  var userID = parseInt(req.params.userID);
+  console.log("gameModels from /api/gameAborted: ", userID, gameModels);
+    for(i = 0; i < gameModels.length; i++){
+      if(userID == gameModels[i]._player1 ||
+         userID == gameModels[i]._player2 ||
+         userID == gameModels[i]._coach1 ||
+         userID == gameModels[i]._coach2){
+           res.status(200).json({isAborted:false});
+           return;
+         }
+    }
+    res.status(200).json({isAborted:true});
+    return false;
+});
+
 app.get('/api/username/:userID',(req,res) => {
   knex('users').where({
     id: req.params.userID,

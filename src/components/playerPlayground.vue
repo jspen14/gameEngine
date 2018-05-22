@@ -15,8 +15,11 @@
   <div class="container">
     <h3>  Objective: Win as much money as possible. </h3>
     <hr>
-    <div class="row">
+    <div v-if="gameAborted === true">
+      <h2>You have been logged out of the game by the administrator. Thank you for playing.</h2>
+    </div>
 
+    <div v-if="gameAborted != true" class="row">
 
       <div class="col-lg-5 col-md-5 col-sm-5 col-xs-5">
         <chatDisplay></chatDisplay>
@@ -57,22 +60,24 @@ import axios from 'axios'
         playerOption: '',
         msgText: '',
         messages: [],
-
+        isAborted: false,
       }
     },
-
     created: function() {
-
       this.updateGame();
-
+      this.updateData();
     },
     computed: {
+
       gameState: function() {
         return this.$store.getters.gameState;
       },
       isLastRound: function(){
         return this.$store.getters.currentRound==this.$store.getters.numberOfRounds;
-      }
+      },
+      gameAborted: function(){
+        return this.isAborted;
+      },
     },
     methods: {
 
@@ -93,9 +98,8 @@ import axios from 'axios'
 
       updateData: function(){
         let timerID = setInterval(() => {
-          //Poll the store to see if there are any new messages
-
-        }, 3000);
+          this.isAborted = this.$store.getters.gameAborted;
+        }, 1500);
       },
 
       getChatMsgs: function(){

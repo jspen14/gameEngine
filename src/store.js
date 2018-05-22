@@ -31,6 +31,7 @@ export default new Vuex.Store({
     coachChatID: '',
     partnerChatID: '',
     partnerChatMsgs: [],
+    gameAborted: false,
   },
   getters: {
     inGameStatus: state => state.inGameStatus,
@@ -62,7 +63,7 @@ export default new Vuex.Store({
     whichPlayer: state => state.whichPlayer,
     roundEarnings: state => state.roundEarnings,
     totalEarnings: state => state.totalEarnings,
-
+    gameAborted: state => state.gameAborted,
   },
   mutations: {
 
@@ -132,8 +133,10 @@ export default new Vuex.Store({
     },
     setTotalEarnings(state,money){
       state.totalEarnings=money;
-    }
-
+    },
+    setGameAborted(state, isAborted){
+      state.gameAborted = isAborted;
+    },
   },
   actions: {
 
@@ -147,6 +150,7 @@ export default new Vuex.Store({
         context.commit('setWhichPlayer', response.data.which);
         if(context.state.inGameStatus===true)
         {
+          context.dispatch('updateData2')
           context.dispatch('getNumberOfRounds');
           context.dispatch('getMatrix',context.state.currentRound);
           context.commit('setGameState','unsubmitted');
@@ -156,6 +160,20 @@ export default new Vuex.Store({
       });
 
       }, 1500);
+    },
+
+    updateData2(context){
+      var updateDataTimer = setInterval(() => {
+        console.log("ing updateData2 ... checking ... ");
+        context.dispatch('checkGameAborted');
+      }, 3000);
+    },
+
+    checkGameAborted(context){
+      axios.get('/api/gameAborted/'+context.state.user.id).then(response => {
+        console.log("checkGameAborted: ", response.data.isAborted);
+        context.commit('setGameAborted',response.data.isAborted);
+      });
     },
     //needs to update game
     updateGame(context){
