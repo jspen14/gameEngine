@@ -1,4 +1,4 @@
-<style>
+<style scoped>
   ul {
     list-style: none;
   }
@@ -42,9 +42,10 @@
 
       <div class='col-lg-5 col-md-5 col-sm-5 col-xs-5'>
 
-
-          <earnings></earnings>
-
+          <game-board/>
+          <earnings/>
+          <br>
+          <button class="btn btn-success" v-show="isLastRound" @click="gotoEndGame()">Finish Game</button>
       </div>
 
     </div>
@@ -63,11 +64,17 @@ export default{
       role: 'coach',
     }
   },
+  created: function(){
+    this.update();
+  },
   computed: {
     chatMsgs: function(){
       this.getChatMsgs();
       return this.messages;
     },
+    isLastRound: function(){
+        return this.$store.getters.gameState==='isLastRound';
+      },
   },
   methods: {
   getChatMsgs: function(){
@@ -89,6 +96,12 @@ export default{
     }).catch(err => {
     });
   },
+  update(){
+    this.$store.dispatch('updateCoach');
+  },
+  gotoEndGame: function(){
+        this.$store.dispatch('gotoEndGame');
+      },
   },
 
 }

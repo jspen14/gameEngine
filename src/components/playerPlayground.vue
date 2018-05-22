@@ -30,7 +30,7 @@
           <earnings></earnings>
           <br>
           <div v-show="gameState==='done'">
-            <button v-if="isLastRound" class="btn btn-success" v-on:click="readyForNextRound()">Finish Game</button>
+            <button v-if="isLastRound" class="btn btn-success" v-on:click="gotoEndGame()">Finish Game</button>
             <button v-else class="btn btn-success" v-on:click="readyForNextRound()">Go to Next Round</button>
           </div>
 
@@ -72,10 +72,15 @@ import axios from 'axios'
       },
       isLastRound: function(){
         return this.$store.getters.currentRound==this.$store.getters.numberOfRounds;
+      },
+      name: function(){
+        return this.$store.getters.user.name;
       }
     },
     methods: {
-
+      gotoEndGame: function(){
+        this.$store.dispatch('gotoEndGame');
+      },
       updateGame: function(){
         this.$store.dispatch('updateGame');
     },
@@ -89,14 +94,6 @@ import axios from 'axios'
         this.getTotalEarnings();
       },
 
-
-    
-      updateData: function(){
-        let timerID = setInterval(() => {
-          //Poll the store to see if there are any new messages
-
-        }, 3000);
-      },
 
       getChatMsgs: function(){
         axios.get('/api/p1coachChat').then(response => {

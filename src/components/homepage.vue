@@ -8,7 +8,8 @@
       </div>
       <div v-else>
         <!--Add v-if/else to make it so coach-playground deactivates when game is over -->
-        <coach-playground/>
+        <end-game-page v-if="gameState==='endGame'"/>
+        <coach-playground v-else/>
       </div>
     </div>
     <div v-else><waiting-page/></div>

@@ -105,6 +105,7 @@ export default{
     }
   },
   created: function(){
+    this.$store.dispatch('getCoachChatID');
     this.updateData();
   },
   computed: {
@@ -121,7 +122,7 @@ export default{
       let timerID = setInterval(() => {
         // JSpencer update calls
         //this.overflowScroll();
-        this.$store.dispatch('getCoachChatID');
+        
 
         if(this.$store.getters.coachChatMsgsSize = 0){
           this.$store.dispatch('getCoachChatMsgsSize'); // this still needs to be tested
