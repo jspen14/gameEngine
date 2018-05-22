@@ -395,7 +395,7 @@ app.get('/api/username/:userID',(req,res) => {
 });
 
 app.get('/api/availableUsers',(req,res) => {
-  var i = 0;
+ /* var i = 0;
   var j = 0;
 
   if(availableUsers.length != 0){
@@ -406,7 +406,7 @@ app.get('/api/availableUsers',(req,res) => {
       removeFromAvailableUsers(gameModels[i]._coach2);
     }
   }
-
+*/
   res.send(availableUsers);
 });
 
@@ -435,6 +435,8 @@ app.post('/api/inGameStatus', (req,res)=>{
       return;
     }
   }
+  res.status(200).json({inGameStatus: false});
+  return;
 });
 
 
