@@ -29,10 +29,15 @@
   }
   .coachMsgDisplay{
     float: left;
-    clear:left;
+    clear: left;
+    text-align: left;
     border-radius: 6px;
-    background-color: #2165DA;
-    color: white;
+    background-color: #E5E5EA;
+    color: black;
+    padding-top: 7px;
+    padding-bottom: 7px;
+    padding-left: 10px;
+    padding-right: 10px;
   }
   .playerMsgWrap{
     float: right;
@@ -41,11 +46,31 @@
     min-width: 75%;
   }
   .playerMsgDisplay{
+    text-align:left;
     float: right;
     clear:right;
     border-radius:6px;
-    background-color:#2AA745;
+    background-color:#31A3F9;
     color: white;
+    padding-top: 7px;
+    padding-bottom: 7px;
+    padding-left: 10px;
+    padding-right: 10px;
+  }
+  /* Attempt to get chat looking like an actual chat (iMessage)*/
+  #chatbox {
+    overflow:   none;
+    position:   relative;
+    /* width:      100%;
+    height:     65vh;  Inhere*/
+  }
+  #chatmessages
+  {
+      overflow:   auto;
+      position:   absolute;
+      bottom:     0;
+      width: 100%;
+      max-height: 65vh;
   }
 </style>
 
@@ -56,26 +81,28 @@
 
     <hr>
 
-    <div class = "msgsBox" id = "chatDisplayContainer">
-      <div v-for="msg in chatMsgs">
+    <div class = "msgsBox" id = "chatbox">
+      <div id="chatmessages">
+        <div v-for="msg in chatMsgs" >
 
 
-        <div v-if="!isMe(msg.userID)">
-          <div class="coachMsgWrap">
-            <h6 class="coachMsgDisplay"> &nbsp {{msg.message}} &nbsp </h6>
-            <br><br>
+          <div v-if="!isMe(msg.userID)">
+            <div class="coachMsgWrap">
+              <h6 class="coachMsgDisplay">  {{msg.message}}</h6>
+              <br><br>
+            </div>
+
+          </div>
+
+          <div v-else>
+            <div class="playerMsgWrap">
+              <h6 class="playerMsgDisplay"> {{msg.message}} </h6>
+              <br><br>
+            </div>
+
           </div>
 
         </div>
-
-        <div v-else>
-          <div class="playerMsgWrap">
-            <h6 class="playerMsgDisplay"> &nbsp {{msg.message}} &nbsp</h6>
-            <br><br>
-          </div>
-
-        </div>
-
       </div>
     </div>
 
@@ -84,7 +111,7 @@
       <div class="input-group mb-3">
         <input type="text" v-model="msgText" class="form-control" placeholder="Your Message" aria-describedby="basic-addon1">
         <div class="input-group-prepend">
-          <button class="btn btn-success" style="border-bottom-right-radius: 5px; border-top-right-radius: 5px" type="submit">Submit</button>
+          <button class="btn btn-success" style="border-bottom-right-radius: 5px; border-top-right-radius: 5px; background-color: #31A3F9; " type="submit">Send</button>
         </div>
       </div>
 
@@ -101,11 +128,11 @@ export default{
       title: 'Chat Display',
       msgText: '',
       messages: [],
-      role: '',
+      pastLength: 0,
+      currentLength: 0,
     }
   },
   created: function(){
-    this.$store.dispatch('getCoachChatID');
     this.updateData();
   },
   computed: {
@@ -113,45 +140,46 @@ export default{
       return this.$store.getters.user.name;
     },
     chatMsgs: function(){
-      return this.$store.getters.coachChatMsgs;
+      // this might be expensive
+      return this.messages;
     },
-
   },
   methods: {
     updateData: function(){
       let timerID = setInterval(() => {
-        // JSpencer update calls
-        //this.overflowScroll();
-        
-
-        if(this.$store.getters.coachChatMsgsSize = 0){
-          this.$store.dispatch('getCoachChatMsgsSize'); // this still needs to be tested
-        }
-        if(this.$store.getters.coachChatMsgs.length > 0){ //this is the problem
-          this.$store.dispatch('getCoachChatMsgs');
-        }
-      }, 3000);
+        this.$store.dispatch('getCoachChatID'); // only do this if it hasnt already been set
+        this.$store.dispatch('getCoachChatMsgs');
+        this.messages = this.$store.getters.coachChatMsgs.slice();
+        this.currentLength = this.messages.length;
+        $('#chatmessages').scrollTop($('#chatmessages')[0].scrollHeight);
+      }, 1000);
     },
     test: function(){
       this.$store.dispatch('getCoachChatID');
     },
-
     isMe: function(msgUserID){
       if(msgUserID == this.$store.getters.user.id){
-        console.log("success");
         return true;
       }
       else {
         return false;
       }
     },
-
     addChatMsg: function(){
-      this.$store.dispatch('addChatMsg', {
-        text: this.msgText,
-      });
-      this.msgText = '';
-      this.$store.dispatch('getCoachChatMsgs');
+      console.log("Length: ", this.msgText.length);
+      if(this.msgText.length > 254){
+        swal("Error","Message is too long to send.","warning");
+      }
+      else{
+        this.$store.dispatch('addChatMsg', {
+          text: this.msgText,
+        }).then(func => {
+          this.msgText = '';
+          this.$store.dispatch('getCoachChatMsgs');
+        }).then(func2 => {
+          $('#chatmessages').scrollTop($('#chatmessages')[0].scrollHeight);
+        });
+      }
     },
   },
 }

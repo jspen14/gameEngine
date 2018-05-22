@@ -7,11 +7,11 @@
 <div class="container">
   <h1>{{name}}, please wait while you are being paired. Thanks! </h1>
   <br><br>
- 
+
     <br>
     <br>
     <img src="/static/images/ajax-loader.gif"/>
- 
+
   <br>
   <br>
 
@@ -24,12 +24,12 @@
 export default{
   data() {
     return {
-      
+
     }
   },
   created: function(){
     this.updateData();
-    
+
   },
   computed: {
     name: function(){
@@ -41,15 +41,15 @@ export default{
 
   },
   methods: {
-    
+
     updateData: function(){
-     
+
         this.$store.dispatch('updateData');
     },
     logout: function(){
       this.$store.dispatch('logout');
     },
-    
+
   },
 
 }

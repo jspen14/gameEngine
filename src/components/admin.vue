@@ -37,6 +37,7 @@
 
   <br>
   <h2> {{title}} </h2>
+  <router-link to="gamesDisplay"><button class="btn btn-warning btn-sm" name="button">View All Games Currently in Progress</button></router-link>
   <hr>
 
   <div class="row">

@@ -24,12 +24,16 @@ if (jwtSecret === undefined) {
 
 //------------Game--------------------------
 class Game {
-  constructor(gameID, player1, player2, coach1, coach2){
+  constructor(gameID, player1, player1Name, player2, player2Name, coach1, coach1Name, coach2, coach2Name){
     this._gameID = gameID;
     this._player1 = player1;
+    this._player1Name = player1Name;
     this._player2 = player2;
+    this._player2Name = player2Name;
     this._coach1 = coach1;
+    this._coach1Name = coach1Name;
     this._coach2 = coach2;
+    this._coach2Name = coach2Name;
     this._p1Choice= null;
     this._p2Choice= null;
     this._p1Ready= false;
@@ -185,10 +189,10 @@ class Game {
   bothSubmitted()
   {
     if (this.p1Choice===null || this.p2Choice===null)
-      { 
+      {
         return false;
       }
-    return true; 
+    return true;
   }
   updateEarnings()
   {
@@ -196,14 +200,14 @@ class Game {
     {
       this.p1Earnings.push(this.matrix[this.p1Choice][this.p2Choice][0]);
       this.p2Earnings.push(this.matrix[this.p1Choice][this.p2Choice][1]);
-      knex('rounds').insert({gameID: this.gameID, 
-        matrixID:this.currentRound, 
-        player1choice: this.p1Choice, 
-        player2choice: this.p2Choice, 
-        p1Earnings: this.getP1RoundEarnings(), 
+      knex('rounds').insert({gameID: this.gameID,
+        matrixID:this.currentRound,
+        player1choice: this.p1Choice,
+        player2choice: this.p2Choice,
+        p1Earnings: this.getP1RoundEarnings(),
         p2Earnings: this.getP2RoundEarnings()}).then()
     }
-    
+
   }
   bothReady(){
     if(this.p1Ready && this.p2Ready)
@@ -250,7 +254,7 @@ class Game {
   getMatrix(){
 
     knex('matrices').where('id',this.currentRound).select('type', 'matrix').then(q => {
-    
+
     let data=q[0];
     let mx=data.matrix
     let type= data.type;
@@ -296,7 +300,7 @@ class Game {
       matrix.push(row);
     }
     this.matrix=matrix;
-          
+
     }).catch(err => {
       console.log("getMatrix Failed:", err);
 
@@ -316,10 +320,15 @@ let availableUsers = [];
 app.get('/api/availableUsers',(req,res) => {
   res.send(availableUsers);
 });
+
+app.get('/api/gameModels',(req,res) => {
+  res.status(200).json({activeGames: gameModels});
+});
+
 app.post('/api/inGameStatus', (req,res)=>{
   let user=req.body;
   let id = user.id;
- 
+
   if(userIsInAvaiablePlayers(id)===false)
   {
     availableUsers.push(user);
@@ -470,10 +479,10 @@ app.get('/api/game/:id/:which',(req,res)=>
   }
 
   res.status(200).json({
-    round:gameModels[index].currentRound, 
-    totalEarnings: totalEarnings, 
-    roundEarnings: roundEarnings, 
-    p1Choice: gameModels[index].p1Choice, 
+    round:gameModels[index].currentRound,
+    totalEarnings: totalEarnings,
+    roundEarnings: roundEarnings,
+    p1Choice: gameModels[index].p1Choice,
     p2Choice: gameModels[index].p2Choice});
 
 });
@@ -579,13 +588,13 @@ function removeFromAvaiableUsers(id){
 app.post('/api/createGame', (req,res) =>{
 
     return knex('games').insert(
-      {player1ID:knex('users').where('id',req.body.player1ID).select('id'), 
-      coach1ID:knex('users').where('id',req.body.coach1ID).select('id'), 
-      player2ID:knex('users').where('id',req.body.player2ID).select('id'), 
+      {player1ID:knex('users').where('id',req.body.player1ID).select('id'),
+      coach1ID:knex('users').where('id',req.body.coach1ID).select('id'),
+      player2ID:knex('users').where('id',req.body.player2ID).select('id'),
       coach2ID:knex('users').where('id',req.body.coach2ID).select('id')})
 
     .then(ids => {
-      
+
       let gID=parseInt(ids[0]);
       let p1ID=parseInt(req.body.player1ID);
       let p2ID=parseInt(req.body.player2ID);
