@@ -30,10 +30,11 @@
   <div class="container">
     <h3> Objective: Coach your player to win as much money as possible. </h3>
     <hr>
+    <div v-if="gameAborted === true">
+     <h2>You have been logged out of the game by the administrator. Thank you for playing.</h2>
+    </div>
 
-    <div class="row">
-
-
+    <div v-if="gameAborted != true" class="row">
       <div class="col-lg-5 col-md-5 col-sm-5 col-xs-5">
         <chatDisplay></chatDisplay>
       </div>
@@ -73,35 +74,38 @@ export default{
       return this.messages;
     },
     isLastRound: function(){
-        return this.$store.getters.gameState==='isLastRound';
-      },
+        return this.$store.getters.gameState ==='isLastRound';
+    },
+    gameAborted: function(){
+        return this.$store.getters.gameIsAborted; // possibly change this to be a variable that is changed by the store and then retrieved when requested
+    }
   },
   methods: {
-  getChatMsgs: function(){
-    axios.get('/api/coachChat').then(response => {
-      this.messages = response.data;
-      return true;
-    }).catch (err => {
-    });
-  },
+    getChatMsgs: function(){
+      axios.get('/api/coachChat').then(response => {
+        this.messages = response.data;
+        return true;
+      }).catch (err => {
+      });
+    },
 
-  addChatMsg: function(){
-    axios.post('/api/coachChat/', {
-      text: this.msgText,
-      role: this.role,
-    }).then(response => {
-      this.msgText = '',
-      this.getChatMsgs();
-      return true;
-    }).catch(err => {
-    });
-  },
-  update(){
-    this.$store.dispatch('updateCoach');
-  },
-  gotoEndGame: function(){
-        this.$store.dispatch('gotoEndGame');
-      },
+    addChatMsg: function(){
+      axios.post('/api/coachChat/', {
+        text: this.msgText,
+        role: this.role,
+      }).then(response => {
+        this.msgText = '',
+        this.getChatMsgs();
+        return true;
+      }).catch(err => {
+      });
+    },
+    update(){
+      this.$store.dispatch('updateCoach');
+    },
+    gotoEndGame: function(){
+      this.$store.dispatch('gotoEndGame');
+    },
   },
 
 }

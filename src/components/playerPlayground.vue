@@ -15,8 +15,11 @@
   <div class="container">
     <h3> {{name}} Objective: Win as much money as possible. </h3>
     <hr>
-    <div class="row">
+    <div v-if="gameAborted === true">
+     <h2>You have been logged out of the game by the administrator. Thank you for playing.</h2>
+    </div>
 
+    <div v-if="gameAborted != true" class="row">
 
       <div class="col-lg-5 col-md-5 col-sm-5 col-xs-5">
         <chatDisplay></chatDisplay>
@@ -26,7 +29,7 @@
 
       <div class='col-lg-5 col-md-5 col-sm-5 col-xs-5'>
 
-          <gameBoard></gameBoard> 
+          <gameBoard></gameBoard>
           <earnings></earnings>
           <br>
           <div v-show="gameState==='done'">
@@ -60,11 +63,9 @@ import axios from 'axios'
 
       }
     },
-
     created: function() {
-
       this.updateGame();
-
+      this.$store.dispatch('updateData2');
     },
     computed: {
       gameState: function() {
@@ -75,7 +76,10 @@ import axios from 'axios'
       },
       name: function(){
         return this.$store.getters.user.name;
-      }
+      },
+      gameAborted: function(){
+          return this.$store.getters.gameIsAborted; // possibly change this to be a variable that is changed by the store and then retrieved when requested
+      },
     },
     methods: {
       gotoEndGame: function(){
@@ -123,6 +127,6 @@ import axios from 'axios'
       }
 
   }
-  
+
 }
 </script>

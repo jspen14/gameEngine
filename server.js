@@ -313,11 +313,49 @@ class Game {
 // Data
 
 let gameModels= [];
-
 let availableUsers = [];
 
+function getName(userID){
+  var i = 0;
+
+  for (i = 0; i < availableUsers.length; i++){
+    if(availableUsers[i].id == userID){
+      return availableUsers[i].name;
+    }
+  }
+}
+
 // Endpoint Functions
+app.get('/api/gameAborted/:userID',(req,res)=>{
+  var i = 0;
+  var userID = parseInt(req.params.userID);
+  console.log("gameModels from /api/gameAborted: ", userID, gameModels);
+    for(i = 0; i < gameModels.length; i++){
+      if(userID == gameModels[i]._player1 ||
+         userID == gameModels[i]._player2 ||
+         userID == gameModels[i]._coach1 ||
+         userID == gameModels[i]._coach2){
+           res.status(200).json({isAborted:false});
+           return;
+         }
+    }
+    res.status(200).json({isAborted:true});
+    return;
+});
+
 app.get('/api/availableUsers',(req,res) => {
+  var i = 0;
+  var j = 0;
+
+  if(availableUsers.length != 0){
+    for (i = 0; i < gameModels.length; i++){
+      removeFromAvailableUsers(gameModels[i]._player1);
+      removeFromAvailableUsers(gameModels[i]._player2);
+      removeFromAvailableUsers(gameModels[i]._coach1);
+      removeFromAvailableUsers(gameModels[i]._coach2);
+    }
+  }
+
   res.send(availableUsers);
 });
 
@@ -575,16 +613,17 @@ app.get('/api/totalEarnings/:gameID/:which', (req,res)=>{
     res.status(500).send("error");
 })
 
-function removeFromAvaiableUsers(id){
+function removeFromAvailableUsers(id){
   let index= null;
-  for(let x=0;x<availableUsers;x++)
+  for(let x=0;x<availableUsers.length;x++)
   {
     if(availableUsers[x].id==id)
       index=x;
   }
-  if(index!==null)
+  if(index!=null)
     availableUsers.splice(index,1);
 }
+
 app.post('/api/createGame', (req,res) =>{
 
     return knex('games').insert(
@@ -594,18 +633,31 @@ app.post('/api/createGame', (req,res) =>{
       coach2ID:knex('users').where('id',req.body.coach2ID).select('id')})
 
     .then(ids => {
+      let p1Name = '';
+      let p2Name = '';
+      let c1Name = '';
+      let c2Name = '';
 
       let gID=parseInt(ids[0]);
       let p1ID=parseInt(req.body.player1ID);
+      p1Name = getName(req.body.player1ID);
+
       let p2ID=parseInt(req.body.player2ID);
+      p2Name = getName(req.body.player2ID);
+
       let c1ID=parseInt(req.body.coach1ID);
+      c1Name = getName(req.body.coach1ID);
+
       let c2ID=parseInt(req.body.coach2ID);
-      console.log("NEW GAME: ", gID,p1ID,p2ID,c1ID, c2ID);
-      removeFromAvaiableUsers(p1ID);
-      removeFromAvaiableUsers(p2ID);
-      removeFromAvaiableUsers(c1ID);
-      removeFromAvaiableUsers(c2ID);
-      let game= new Game(gID,p1ID,p2ID, c1ID, c2ID);
+      c2Name = getName(req.body.coach2ID);
+
+      console.log("NEW GAME: ", gID, p1ID, p1Name, p2ID, p2Name, c1ID, c1Name, c2ID, c2Name);
+      removeFromAvailableUsers(p1ID);
+      removeFromAvailableUsers(p2ID);
+      removeFromAvailableUsers(c1ID);
+      removeFromAvailableUsers(c2ID);
+      let game= new Game(gID, p1ID, p1Name, p2ID, p2Name, c1ID, c1Name, c2ID, c2Name);
+
       gameModels.push(game);
       // Send gameID to admin so he can view game progress
       knex('games').where({id: ids[0]}).first();

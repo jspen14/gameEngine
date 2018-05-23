@@ -76,7 +76,7 @@ export default new Vuex.Store({
     setInGameStatus (state, inGameStatus){
       state.inGameStatus = inGameStatus;
     },
-    
+
     setGameState(state, gameState){
       state.gameState =gameState;
     },
@@ -120,7 +120,7 @@ export default new Vuex.Store({
     },
     setP1Choice(state, choice){
       state.p1Choice=choice;
-    },    
+    },
     setP2Choice(state, choice){
       state.p2Choice=choice;
     },
@@ -170,12 +170,12 @@ export default new Vuex.Store({
         context.commit('setP2Choice', response.data.p2Choice);
 
         if(context.state.whichPlayer===0)
-            context.commit('setRoundEarnings', context.state.matrix[context.state.p1Choice][context.state.p2Choice][0]); 
+            context.commit('setRoundEarnings', context.state.matrix[context.state.p1Choice][context.state.p2Choice][0]);
         else
           context.commit('setRoundEarnings', context.state.matrix[context.state.p1Choice][context.state.p2Choice][1]);
-        
+
         axios.get('/api/totalEarnings/'+context.state.currentGame+'/'+context.state.whichPlayer).then(resp =>{
-          context.commit('setTotalEarnings', resp.data.earnings); 
+          context.commit('setTotalEarnings', resp.data.earnings);
         }).catch(error=>{
           console.log(error);
         });
@@ -255,7 +255,7 @@ export default new Vuex.Store({
     logout(context) {
         context.commit('setInGameStatus', false);
         context.commit('setUser', {});//originial logout
-        context.commit('setToken','');//*   
+        context.commit('setToken','');//*
         context.commit('setCurrentRound',1);
         context.commit('setCurrentGame','');
         context.commit('setP1Choice','');
@@ -293,9 +293,9 @@ export default new Vuex.Store({
     gotoEndGame(context){
       context.commit('setGameState','endGame');
     },
-    
+
     submitChoice(context, choice){
-      
+
       let choiceInfo = {
         which: context.state.whichPlayer,
         choice: choice,
@@ -309,7 +309,7 @@ export default new Vuex.Store({
       }).catch(err =>{
         console.log("submitChoice failed: ", err);
       });
-      
+
     },
     readyForNextRound(context){
       let readyInfo={gameID:context.state.currentGame, which: context.state.whichPlayer}
