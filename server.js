@@ -607,7 +607,14 @@ app.get('/api/numberOfRounds/:gameID',(req,res)=>{
   res.status(200).json({numberOfRounds:gameModels[index].numberOfRounds});
 })
 
-
+app.post('/api/test', (req, res)=>{
+  console.log(req.body);
+  res.send("got the message");
+});
+app.get('/api/test/:message', (req, res)=>{
+  console.log(req.params.message);
+  res.send("got the message");
+});
 
 app.get('/api/totalEarnings/:gameID/:which', (req,res)=>{
   let index= getGameIndex(parseInt(req.params.gameID));
