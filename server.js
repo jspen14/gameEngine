@@ -44,8 +44,6 @@ class Game {
     this._matrix=[];
     this.getMatrix();
     this._numberOfRounds=this.setNumberOfRounds();
-
-
   }
   //Getters
   get player1() {
@@ -199,14 +197,14 @@ class Game {
     {
       this.p1Earnings.push(this.matrix[this.p1Choice][this.p2Choice][0]);
       this.p2Earnings.push(this.matrix[this.p1Choice][this.p2Choice][1]);
-      knex('rounds').insert({gameID: this.gameID, 
-        matrixID:this.currentRound, 
-        player1choice: this.p1Choice, 
-        player2choice: this.p2Choice, 
-        p1Earnings: this.getP1RoundEarnings(), 
+      knex('rounds').insert({gameID: this.gameID,
+        matrixID:this.currentRound,
+        player1choice: this.p1Choice,
+        player2choice: this.p2Choice,
+        p1Earnings: this.getP1RoundEarnings(),
         p2Earnings: this.getP2RoundEarnings()}).then()
     }
-    
+
   }
   bothReady(){
     if(this.p1Ready && this.p2Ready)
@@ -253,7 +251,7 @@ class Game {
   getMatrix(){
 
     knex('matrices').where('id',this.currentRound).select('type', 'matrix').then(q => {
-    
+
     let data=q[0];
     let mx=data.matrix
     let type= data.type;
@@ -299,7 +297,7 @@ class Game {
       matrix.push(row);
     }
     this.matrix=matrix;
-          
+
     }).catch(err => {
       console.log("getMatrix Failed:", err);
 
@@ -371,7 +369,7 @@ const getGameIndex = (gameID) =>{
 app.get('/api/gameAborted/:userID',(req,res)=>{
   var i = 0;
   var userID = parseInt(req.params.userID);
-  
+
     for(i = 0; i < gameModels.length; i++){
       if(userID == gameModels[i]._player1 ||
          userID == gameModels[i]._player2 ||
@@ -418,7 +416,7 @@ app.get('/api/gameModels',(req,res) => {
 app.post('/api/inGameStatus', (req,res)=>{
   let user=req.body;
   let id = user.id;
- 
+
   if(userIsInAvaiablePlayers(id)===false)
   {
     availableUsers.push(user);
