@@ -104,7 +104,6 @@ class Game {
   set coach2(coach){
     this._coach2=coach;
   }
-
   set p1Choice(choice1){
     this._p1Choice=choice1;
   }
@@ -117,7 +116,6 @@ class Game {
   set numberOfRounds(x){
     this._numberOfRounds=x;
   }
-
   set p1Ready(status){
     this._p1Ready=status;
   }
@@ -366,6 +364,13 @@ const getGameIndex = (gameID) =>{
 }
 
 // Endpoint Functions
+app.post('/api/terminal',(req,res) => {
+  console.log(req.body.username);
+
+  res.status(200).json({message: "thanks!", userID: 37});
+  return;
+});
+
 app.get('/api/gameAborted/:userID',(req,res)=>{
   var i = 0;
   var userID = parseInt(req.params.userID);

@@ -192,7 +192,7 @@ export default new Vuex.Store({
           context.commit('setRoundEarnings', context.state.matrix[context.state.p1Choice][context.state.p2Choice][1]);
 
         axios.get('/api/totalEarnings/'+context.state.currentGame+'/'+context.state.whichPlayer).then(resp =>{
-        context.commit('setTotalEarnings', resp.data.earnings); 
+        context.commit('setTotalEarnings', resp.data.earnings);
         }).catch(error=>{
           console.log(error);
         });
@@ -208,7 +208,7 @@ export default new Vuex.Store({
           context.commit('setTotalEarnings', response.data.totalEarnings);
           context.commit('setP1Choice', response.data.p1Choice);
           context.commit('setP2Choice', response.data.p2Choice);
-          
+
           if(context.state.currentRound!==response.data.round)
           {
             context.commit('setCurrentRound',response.data.round);
@@ -266,12 +266,12 @@ export default new Vuex.Store({
       context.commit('setToken','');
       context.commit('setRegisterError',"");
     if (error.response) {
-    if (error.response.status === 403 || error.response.status === 400)
-      context.commit('setLoginError',"Invalid login.");
-      context.commit('setRegisterError',"");
-        return;
+      if (error.response.status === 403 || error.response.status === 400)
+        context.commit('setLoginError',"Invalid login.");
+        context.commit('setRegisterError',"");
+          return;
     }
-  context.commit('setLoginError',"Sorry, your request failed. We will look into it.");
+      context.commit('setLoginError',"Sorry, your request failed. We will look into it.");
 
       });
     },
@@ -279,7 +279,7 @@ export default new Vuex.Store({
     logout(context) {
         context.commit('setInGameStatus', false);
         context.commit('setUser', {});//originial logout
-        context.commit('setToken','');//*   
+        context.commit('setToken','');//*
         context.commit('setCurrentRound',1);
         context.commit('setCurrentGame','');
         context.commit('setP1Choice','');
@@ -318,9 +318,9 @@ export default new Vuex.Store({
     gotoEndGame(context){
       context.commit('setGameState','endGame');
     },
-    
+
     submitChoice(context, choice){
-      
+
       let choiceInfo = {
         which: context.state.whichPlayer,
         choice: choice,

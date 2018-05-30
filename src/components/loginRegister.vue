@@ -21,30 +21,28 @@
 
     <form>
       <div v-show="isregister" class="form-group row">
-      <div class="col-2 col-form-label">Role</div>
-      <div class="col-10">
-      <select  class="form-control"  v-model="role" required>
-        <option>Player</option>
-        <option>Coach</option>
-      </select>
-    </div>
-    </div>
-    <div  class="form-group row">
+        <div class="col-2 col-form-label">Role</div>
+        <div class="col-10">
+          <select  class="form-control"  v-model="role" required>
+            <option>Player</option>
+            <option>Coach</option>
+          </select>
+        </div>
+      </div>
+    <div class="form-group row">
       <div class="col-2 col-form-label">Name</div>
       <div class="col-10">
-      <input type="text" class="form-control"  placeholder= "first and last name" v-model="name" required>
-
-    </div>
+        <input type="text" class="form-control"  placeholder= "first and last name" v-model="name" required>
+      </div>
     </div>
     <div class="form-group row">
       <div class="col-2 col-form-label">Password</div>
       <div class="col-10">
-      <input type="password" class="form-control"  placeholder= "password" v-model="password" required>
-
-    </div>
+        <input type="password" class="form-control"  placeholder= "password" v-model="password" required>
+      </div>
     </div>
     <button v-if="isregister" v-on:click="registerUser()" type="submit" class="btn btn-primary">Register</button>
-     <button v-else  v-on:click="login()" type="submit" class="btn btn-primary">Log In</button>
+    <button v-else  v-on:click="login()" type="submit" class="btn btn-primary">Log In</button>
 
   </form>
   </div>
