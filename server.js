@@ -539,7 +539,8 @@ app.get('/api/game/:id/:which',(req,res)=>
     totalEarnings=gameModels[index].getP2TotalEarnings();
     roundEarnings=gameModels[index].getP2RoundEarnings();
   }
-
+  res.status(200).json({p1Choice:gameModels[index].p1Choice, p2Choice:gameModels[index].p2Choice,
+    roundEarnings: roundEarnings, totalEarnings: totalEarnings, round:gameModels[index].currentRound});
 });
 
 app.get('/api/matrix/:id', (req,res)=> {

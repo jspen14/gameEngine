@@ -11,40 +11,48 @@ void error(const char *msg) { perror(msg); exit(0); }
 int main(int argc,char *argv[])
 {
     /* first what are we going to send and where are we going to send it? */
-    int portno =        3000;
-    char *host =        "10.24.65.228";
-    char *message_fmt = "GET /api/test/%s HTTP/1.0\r\n\r\n";
+    int portno = 3000;
+    char *host = "10.24.67.92";
+    //char *message_fmt = "POST /api/test/%s HTTP/1.0\r\n\r\n";
+    char *endpoint="/api/test";
+    //char *data ="name=lebron&password=james";
+    char *data="does this even work";
+    char *message_fmt = "POST /api/test HTTP/1.0\r\nContent-Type: text/plain\r\nContent-Length: %d\r\n\r\n%s\r\n";
+
+    //char *name= "lebron";
+    //char *password= "james";
 
     struct hostent *server;
     struct sockaddr_in serv_addr;
     int sockfd, bytes, sent, received, total;
     char message[1024],response[4096];
 
-    if (argc < 2) { puts("Parameters: <message>"); exit(0); }
+    //if (argc !=1) { puts("Parameters: <message>"); exit(0); }
 
     /* fill in the parameters */
-    sprintf(message,message_fmt,argv[1],argv[2]);
+    int dataLen=strlen(data);
+    sprintf(message,message_fmt,dataLen,data);
     printf("Request:\n%s\n",message);
 
-    /* create the socket */
+    // create the socket 
     sockfd = socket(AF_INET, SOCK_STREAM, 0);
     if (sockfd < 0) error("ERROR opening socket");
 
-    /* lookup the ip address */
+    // lookup the ip address 
     server = gethostbyname(host);
     if (server == NULL) error("ERROR, no such host");
 
-    /* fill in the structure */
+    // fill in the structure 
     memset(&serv_addr,0,sizeof(serv_addr));
     serv_addr.sin_family = AF_INET;
     serv_addr.sin_port = htons(portno);
     memcpy(&serv_addr.sin_addr.s_addr,server->h_addr,server->h_length);
 
-    /* connect the socket */
+    // connect the socket 
     if (connect(sockfd,(struct sockaddr *)&serv_addr,sizeof(serv_addr)) < 0)
         error("ERROR connecting");
 
-    /* send the request */
+    // send the request 
     total = strlen(message);
     sent = 0;
     do {
@@ -56,7 +64,7 @@ int main(int argc,char *argv[])
         sent+=bytes;
     } while (sent < total);
 
-    /* receive the response */
+    // receive the response 
     memset(response,0,sizeof(response));
     total = sizeof(response)-1;
     received = 0;
@@ -72,10 +80,10 @@ int main(int argc,char *argv[])
     if (received == total)
         error("ERROR storing complete response from socket");
 
-    /* close the socket */
+    //close the socket
     close(sockfd);
 
-    /* process response */
+    // process response 
     printf("Response:\n%s\n",response);
 
     return 0;
