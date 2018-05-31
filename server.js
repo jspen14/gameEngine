@@ -777,7 +777,7 @@ app.post('/api/users', (req, res) => {
   if ( !req.body.password || !req.body.name)
       return res.status(400).send();
       knex('users').where('name',req.body.name).first().then(user => {
-      console.log(user);
+      
       if (user !== undefined) {
         res.status(409).send("User name already exists");
         throw new Error('abort');
