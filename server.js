@@ -494,6 +494,7 @@ app.post('/api/coachChatMsgs', (req,res) => {
     chatID: req.body.chatID,
     userID: req.body.userID,
     message: req.body.text,
+    created: new Date()
   }).then(response => {
     // I might want to have a return here, but I'm not sure yet
     res.status(200);
