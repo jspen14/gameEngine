@@ -7,6 +7,8 @@ exports.up = function(knex, Promise) {
       table.integer('player2choice');
       table.integer('p1Earnings');
       table.integer('p2Earnings');
+      table.dateTime('p1ChoiceTime');
+      table.dateTime('p2ChoiceTime');
     })
 
 };
@@ -20,5 +22,7 @@ exports.down = function(knex, Promise) {
     table.dropColumn('player2choice');
     table.dropColumn('p1Earnings');
     table.dropColumn('p2Earnings');
+    table.dropColumn('p1ChoiceTime');
+    table.dropColumn('p2ChoiceTime');
   })
 };

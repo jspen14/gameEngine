@@ -5,6 +5,8 @@ exports.up = function(knex, Promise) {
       table.integer('coach1ID').unsigned().references('id').inTable("users");
       table.integer('player2ID').unsigned().notNullable().references('id').inTable("users");
       table.integer('coach2ID').unsigned().references('id').inTable("users");
+      table.dateTime('created');
+      table.dateTime('finished');
     })
 
 };
@@ -16,6 +18,8 @@ exports.down = function(knex, Promise) {
     table.dropColumn('coach1ID');
     table.dropColumn('player2ID');
     table.dropColumn('coach2ID');
+    table.dropColumn('created');
+    table.dropColumn('finished');
   })
 
 };
