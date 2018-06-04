@@ -45,6 +45,9 @@ export default {
 
       }, 3000);
     },
+    addEarnings: function(earningsArray){
+      console.log("yo");
+    },
 
     getActiveGames: function(){
       axios.get('/api/gameModels').then(response => {

@@ -387,12 +387,6 @@ const getGameIndex = (gameID) =>{
 }
 
 // Endpoint Functions
-app.post('/api/terminal',(req,res) => {
-  console.log(req.body.username);
-
-  res.status(200).json({message: "thanks!", userID: 37});
-  return;
-});
 
 app.get('/api/gameAborted/:userID',(req,res)=>{
   var i = 0;
@@ -421,8 +415,7 @@ app.get('/api/username/:userID',(req,res) => {
 });
 
 app.get('/api/availableUsers',(req,res) => {
- /* var i = 0;
-  var j = 0;
+ var i = 0;
 
   if(availableUsers.length != 0){
     for (i = 0; i < gameModels.length; i++){
@@ -432,7 +425,7 @@ app.get('/api/availableUsers',(req,res) => {
       removeFromAvailableUsers(gameModels[i]._coach2);
     }
   }
-*/
+
   res.send(availableUsers);
 });
 
@@ -441,7 +434,7 @@ app.get('/api/gameModels',(req,res) => {
 });
 
 
-app.post('/api/inGameStatus', (req,res)=>{
+app.post('/api/inGameStatus', (req,res)=>{ // Change this and then test functionality
   let user=req.body;
   let id = user.id;
 
@@ -573,6 +566,7 @@ app.get('/api/game/:id/:which',(req,res)=>
 });
 
 app.get('/api/matrix/:id', (req,res)=> {
+  //Is this 1-6?
   let id=parseInt(req.params.id);
   knex('matrices').where('id',id).select('type', 'matrix').then(matrix => {
     res.status(200).json({matrix:matrix});
@@ -637,12 +631,7 @@ app.get('/api/numberOfRounds/:gameID',(req,res)=>{
   res.status(200).json({numberOfRounds:gameModels[index].numberOfRounds});
 })
 
-// app.post('/api/test', (req, res)=>{
-//   console.log(req.body);
-//   res.send("Your message was: " + req.body);
-// });
-
-app.get('/api/test/:message', (req, res)=>{
+app.post('/api/test/:message', (req, res)=>{
   console.log(req.params.message);
   res.send("Your message was: " + req.params.message);
 });
@@ -757,7 +746,6 @@ app.post('/api/game',(req,res)=>
 
 app.delete('/api/game/:id', (req,res)=>
 {
-  console.log("halla");
   let gameID=parseInt(req.params.id);
   let index= getGameIndex(gameID);
 
@@ -825,7 +813,7 @@ app.post('/api/users', (req, res) => {
       let token = jwt.sign({ id: user.id }, jwtSecret, {
         expiresIn: 86400 // expires in 24 hours
       });
-      availableUsers.push(user);
+      availableUsers.push(user); // log this
       res.status(200).json({user:user,token:token});
       return;
     }).catch(error => {
@@ -843,6 +831,254 @@ app.get('/api/me', verifyToken, (req,res) => {
   }).catch(error => {
     res.status(500).json({ error });
   });
+});
+
+//AI Functions
+  // AI - Login
+app.post('/api/AIlogin/:name', (req, res)=>{
+  // THIS NEEDS TO BE ADDED IN AGAIN
+  // var i =0;
+  // for (i = 0; i < availableUsers.length; i++){
+  //   if (availableUsers[i].name == req.params.name){
+  //     res.send("^^^Name already in use!")
+  //     return;
+  //   }
+  // }
+
+  knex('users').where('name',req.params.name).first().select('name','id','role').then(user => {
+    console.log("User: ");
+    console.log(user.id);
+    availableUsers.push(user); // log this
+    res.send("^^^" + 8); // Change this to be user.id
+    return;
+  });
+});
+
+  // AI - Check if in game
+app.get('/api/AIinGameStatus/:userID', (req,res)=> {
+  var userID = req.params.userID;
+  console.log("AIinGameStatus: ", req.params.userID);
+
+  for (let i = 0; i < gameModels.length; i++){
+    if (userID == gameModels[i]._player1 || userID == gameModels[i]._coach1
+      ||userID == gameModels[i]._player2 || userID == gameModels[i]._coach2)
+    {
+      res.send("^^^" + gameModels[i]._gameID);
+      return;
+    }
+  }
+  res.send("^^^false");
+  return;
+  //look through gameModels for to see if userID is in a gameModel
+});
+
+// AI - Get either 1 or 2
+app.get('/api/AIwhich/:userID', (req,res)=> {
+  var userID = req.params.userID;
+  console.log("AIwhich: ", req.params.userID);
+
+  for (let i = 0; i < gameModels.length; i++){
+    if (userID == gameModels[i]._player1 || userID == gameModels[i]._coach1){
+      res.send("^^^1")
+      return;
+    }
+    else if (userID == gameModels[i]._player2 || userID == gameModels[i]._coach2){
+      res.send("^^^2");
+      return;
+    }
+  }
+  res.send("^^^false");
+  return;
+});
+
+// AI - Get round num
+app.get('/api/AIround/:gameID', (req,res)=> {
+  var gameID = req.params.gameID;
+
+  console.log("AIround- gameID: " + req.params.gameID);
+
+  for (let i = 0; i < gameModels.length; i++){
+    if (gameModels[i]._gameID = gameID){
+      res.send("^^^"+gameModels[i]._currentRound);
+      return;
+    }
+  }
+
+  return;
+});
+
+// AI - getMatrix
+app.get('/api/AImatrix/:gameID', (req,res)=> {
+  var gameID = parseInt(req.params.gameID);
+  var i = 0;
+  var roundNum = 0;
+  // Find the round that the gmae is on
+
+  for (i = 0; i < gameModels.length; i++){
+    if (gameModels[i]._gameID = gameID){
+      roundNum = gameModels[i]._currentRound;
+      break;
+    }
+  }
+
+  console.log("Round: " + roundNum);
+
+  knex('matrices').where('id',roundNum).select('matrix').then(matrix => {
+    console.log("AI Matrix: ");
+    console.log(matrix[0].matrix);
+
+    res.send("^^^" + matrix[0].matrix); // Eventually change this so that it only returns the AI's specific matrix
+  }).catch(error =>{
+    res.send("^^^failure");
+  });
+});
+
+app.post('/api/AIsetRoundOption/:gameID/:playerNum/:option', (req,res)=> {
+  var gameID = parseInt(req.params.gameID);
+  var playerNum = parseInt(req.params.playerNum);
+  var option = parseInt(req.params.option);
+  var index = getGameIndex(gameID);
+
+
+  if(gameModels[index]==null)
+  {
+    res.send("Bad Request!")
+  }
+  else if(playerNum==1)
+  {
+    gameModels[index].p1Choice=option; // might need to be _p1Choice
+    res.send("Success");
+  }
+  else if(playerNum==2)
+  {
+    gameModels[index].p2Choice=option;
+    res.send("Success");
+  }
+  else{
+    console.log("error in submit choice server side");
+    res.send("Failure");
+  }
+
+  return;
+});
+
+app.get('/api/AIsubmittedStatus/:gameID/:playerNum', (req,res)=> {
+  var gameID = parseInt(req.params.gameID);
+  var playerNum = parseInt(req.params.playerNum);
+  var index = getGameIndex(gameID);
+
+  if (playerNum == 1){
+    if (gameModels[index].p2Choice == null){
+      res.send("^^^false");
+      return;
+    }
+    else if (gameModels[index].p2Choice != null){
+      //gameModels[index].p1Ready = true; // I need to take this out
+      res.send("^^^true");
+      return;
+    }
+  }
+  else if (playerNum == 2){
+    if (gameModels[index].p1Choice == null){
+      res.send("^^^false");
+      return;
+    }
+    else if (gameModels[index].p1Choice != null){
+      //gameModels[index].p2Ready = true; // I need to take this out
+      res.send("^^^true");
+      return;
+    }
+  }
+
+  res.send("^^^error");
+});
+
+// AI earnings function(s)
+app.get('/api/AIroundEarnings/:gameID/:playerNum', (req,res)=> {
+  var gameID = parseInt(req.params.gameID);
+  var playerNum = parseInt(req.params.playerNum);
+  var index = getGameIndex(gameID);
+
+  if (playerNum == 1){
+    res.send("^^^" + gameModels[index].p1Earnings[gameModels[index].currentRound - 1]);
+  }
+  else if (playerNum == 2){
+    res.send("^^^" + gameModels[index].p2Earnings[gameModels[index].currentRound - 1]);
+  }
+  else{
+    res.send("^^^Error in AIroundEarnings");
+  }
+  return;
+});
+
+app.get('/api/AIotherPlayersOption/:gameID/:otherPlayerNum', (req,res) => {
+  var gameID = parseInt(req.params.gameID);
+  var otherPlayerNum = parseInt (req.params.otherPlayerNum);
+  var index = getGameIndex(gameID);
+
+  if (otherPlayerNum == 1){
+    res.send("^^^" + gameModels[index].p1Choice);
+  }
+  else if (otherPlayerNum == 2){
+    res.send("^^^" + gameModels[index].p2Choice);
+  }
+  else {
+    res.send("^^^Error in AIotherPlayersOption")
+  }
+  return;
+});
+
+app.get('/api/AIreadyStatus/:gameID/:playerNum', (req,res)=> {
+  var gameID = parseInt(req.params.gameID);
+  var playerNum = parseInt(req.params.playerNum);
+  var index = getGameIndex(gameID);
+
+  console.log("gameID: " + gameID);
+  console.log("playerNum: " + playerNum);
+
+  if (gameModels[index].p2Earnings.length == gameModels[index].numberOfRounds || gameModels[index].p1Earnings.length == gameModels[index].numberOfRounds){
+    res.send("^^^true");
+    return;
+  }
+  else if (playerNum == 1){
+    if (gameModels[index].p2Ready == false){
+      res.send("^^^false");
+      return;
+    }
+    else if (gameModels[index].p2Ready == true){
+      gameModels[index].p1Ready = true; // I need to take this out
+      res.send("^^^true");
+      return;
+    }
+  }
+  else if (playerNum == 2){
+    if (gameModels[index].p1Ready == false){
+      res.send("^^^false");
+      return;
+    }
+    else if (gameModels[index].p1Ready == true){
+      gameModels[index].p2Ready = true; // I need to take this out
+      res.send("^^^true");
+      return;
+    }
+  }
+
+  res.send("^^^error");
+});
+
+// AI game Done
+app.get('/api/AIgameIsDone/:gameID',(req,res)=> {
+  var gameID = parseInt(req.params.gameID);
+  var index = getGameIndex(gameID);
+
+  if (gameModels[index].p2Earnings.length == gameModels[index].numberOfRounds || gameModels[index].p1Earnings.length == gameModels[index].numberOfRounds){
+    res.send("^^^true");
+    return;
+  }
+  else {
+    res.send("^^^false");
+    return;
+  }
 });
 
 app.listen(3000, () => console.log("Server listening on port 3000!"));

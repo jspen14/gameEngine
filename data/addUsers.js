@@ -2,14 +2,14 @@
 
 // Knex Setup
 const env = process.env.NODE_ENV || 'development';
-const config = require('../knexfile')[env];  
+const config = require('../knexfile')[env];
 const knex = require('knex')(config);
 //Takes Json as argument on command line
 const fs = require('fs');
 const fileNames = process.argv.splice(2);
 
 let games=[
-	{	
+	{
 		player1ID: 1,
 		player2ID: 2,
 		coach1ID: 3,
@@ -18,44 +18,43 @@ let games=[
 ];
 let users= [
 {
-
-	role: "player",
+	role: "Player",
 	coachType: null,
 	name: "bill"
 },
 {
-	role: "player",
+	role: "Player",
 	coachType: null,
 	name: "ted"
 },
 {
-	role: "coach",
+	role: "Coach",
 	coachType: "dummy",
 	name: "trump"
 },
 {
-	role: "coach",
+	role: "Coach",
 	coachType: "dummy",
 	name: "obama"
 },
 {
 
-	role: "player",
+	role: "Player",
 	coachType: null,
 	name: "John"
 },
 {
-	role: "player",
+	role: "Player",
 	coachType: null,
 	name: "Doe"
 },
 {
-	role: "coach",
+	role: "Coach",
 	coachType: "dummy",
 	name: "Carnegie"
 },
 {
-	role: "coach",
+	role: "Coach",
 	coachType: "dummy",
 	name: "Mellon"
 }
@@ -98,9 +97,9 @@ let insertUsers = () => {
 let insertGames = ()=> {
 	let promises =[];
 	games.forEach(game =>{
-		promises.push(knex('games').insert({player1ID: knex('users').where('id', game.player1ID).select('id'), 
+		promises.push(knex('games').insert({player1ID: knex('users').where('id', game.player1ID).select('id'),
 											player2ID: knex('users').where('id', game.player2ID).select('id'),
-											 coach1ID: knex('users').where('id', game.coach1ID).select('id'), 
+											 coach1ID: knex('users').where('id', game.coach1ID).select('id'),
 											 coach2ID: knex('users').where('id', game.coach2ID).select('id')}));
 	});
 	return Promise.all(promises);
@@ -109,8 +108,8 @@ let insertRounds = ()=> {
 	let promises =[];
 	rounds.forEach(round =>{
 		promises.push(knex('rounds').insert({
-			gameID: knex('games').where('id', round.gameID).select('id'), 
-			matrixID: knex('matrices').where('id',round.matrixID).select('id'), 
+			gameID: knex('games').where('id', round.gameID).select('id'),
+			matrixID: knex('matrices').where('id',round.matrixID).select('id'),
 			player1choice: round.player1choice,
 			player2choice: round.player2choice}));
 	});
@@ -134,4 +133,3 @@ deleteRounds().then(() => {
 deleteUsers().then(()=>{
 	return insertUsers();
 }).then(()=>console.log("inserted Users"));
-
