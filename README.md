@@ -22,3 +22,13 @@ node data/addMatrices.js data/i1.json
 ```
 
 For a detailed explanation on how things work, check out the [guide](http://vuejs-templates.github.io/webpack/) and [docs for vue-loader](http://vuejs.github.io/vue-loader).
+
+## Extract Data from SQL DB
+
+```bash
+# Use Python Version 2.7 NOT 3.+
+# install dependencies
+pip install PyMySQL
+# run
+python getSQLData.py
+```

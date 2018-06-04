@@ -139,7 +139,10 @@ export default new Vuex.Store({
     },
   },
   actions: {
-
+    closeErrors(context){
+      context.commit('setLoginError','');
+      context.commit('setRegisterError','');
+    },
     updateData(context){
       var updateDataTimer = setInterval(() => {
         //console.log("in updateData in store: " + context.state.userID.userID);
@@ -204,7 +207,6 @@ export default new Vuex.Store({
     updateCoach(context){
       let timerID=setInterval(() => {
         axios.get('/api/game/'+context.state.currentGame+'/'+context.state.whichPlayer).then(response =>{
-          console.log("got to update Coach");
           context.commit('setRoundEarnings', response.data.roundEarnings);
           context.commit('setTotalEarnings', response.data.totalEarnings);
           context.commit('setP1Choice', response.data.p1Choice);
@@ -252,7 +254,7 @@ export default new Vuex.Store({
       context.commit('setWhichPlayer',whichPlayer-1);
     }
   },
-  // Registration, Login //
+  // Registration,  //
 
 
   login(context,user) {
@@ -431,7 +433,7 @@ export default new Vuex.Store({
 
 
 //END JSPENCER CHAT STUFF
-
+    
     getMatrix(context, matrixID){
       axios.get("/api/matrix/" + matrixID).then(response => {
         let data= response.data.matrix[0];

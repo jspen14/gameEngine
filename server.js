@@ -36,6 +36,8 @@ class Game {
     this._coach2Name = coach2Name;
     this._p1Choice= null;
     this._p2Choice= null;
+    this._p1ChoiceTime=null;
+    this._p2ChoiceTime=null;
     this._p1Ready= false;
     this._p2Ready= false;
     this._currentRound = 1;
@@ -69,6 +71,12 @@ class Game {
   }
   get p2Choice(){
     return this._p2Choice;
+  }
+  get p1ChoiceTime(){
+    return this._p1ChoiceTime;
+  }
+  get p2ChoiceTime(){
+    return this._p2ChoiceTime;
   }
   get numberOfRounds(){
     return this._numberOfRounds;
@@ -109,6 +117,12 @@ class Game {
   }
   set p2Choice(choice2){
     this._p2Choice=choice2;
+  }
+  set p1ChoiceTime(time){
+    this._p1ChoiceTime=time;
+  }
+  set p2ChoiceTime(time){
+    this._p2ChoiceTime=time;
   }
   set currentRound(round){
     this._currentRound=round;
@@ -200,7 +214,14 @@ class Game {
         player1choice: this.p1Choice,
         player2choice: this.p2Choice,
         p1Earnings: this.getP1RoundEarnings(),
-        p2Earnings: this.getP2RoundEarnings()}).then()
+        p2Earnings: this.getP2RoundEarnings(),
+        p1ChoiceTime: this.p1ChoiceTime,
+        p2ChoiceTime: this.p2ChoiceTime }).then()
+  
+      if(this.currentRound===this.numberOfRounds)
+      {
+        knex('games').where({'id':this.gameID}).update({finished: new Date()}).then()
+      }
     }
 
   }
@@ -236,6 +257,8 @@ class Game {
   goToNextRound(){
     this.p1Choice=null;
     this.p2Choice=null;
+    this.p1ChoiceTime=null;
+    this.p2ChoiceTime=null;
     this.p1Ready=false;
     this.p2Ready=false;
     this.currentRound+=1
@@ -499,6 +522,7 @@ app.post('/api/coachChatMsgs', (req,res) => {
     chatID: req.body.chatID,
     userID: req.body.userID,
     message: req.body.text,
+    created: new Date()
   }).then(response => {
     // I might want to have a return here, but I'm not sure yet
     res.status(200);
@@ -544,7 +568,8 @@ app.get('/api/game/:id/:which',(req,res)=>
     totalEarnings=gameModels[index].getP2TotalEarnings();
     roundEarnings=gameModels[index].getP2RoundEarnings();
   }
-
+  res.status(200).json({p1Choice:gameModels[index].p1Choice, p2Choice:gameModels[index].p2Choice,
+    roundEarnings: roundEarnings, totalEarnings: totalEarnings, round:gameModels[index].currentRound});
 });
 
 app.get('/api/matrix/:id', (req,res)=> {
@@ -656,7 +681,8 @@ app.post('/api/createGame', (req,res) =>{
       {player1ID:knex('users').where('id',req.body.player1ID).select('id'),
       coach1ID:knex('users').where('id',req.body.coach1ID).select('id'),
       player2ID:knex('users').where('id',req.body.player2ID).select('id'),
-      coach2ID:knex('users').where('id',req.body.coach2ID).select('id')})
+      coach2ID:knex('users').where('id',req.body.coach2ID).select('id'),
+      created:new Date()})
 
     .then(ids => {
       let p1Name = '';
@@ -713,11 +739,13 @@ app.post('/api/game',(req,res)=>
   if(which===0)
   {
     gameModels[index].p1Choice=choice;
+    gameModels[index].p1ChoiceTime=new Date();
     res.status(200).send("success");
   }
   else if(which ===1)
   {
     gameModels[index].p2Choice=choice;
+    gameModels[index].p2ChoiceTime=new Date();
     res.status(200).send("success");
   }
   else{
@@ -782,7 +810,7 @@ app.post('/api/users', (req, res) => {
   if ( !req.body.password || !req.body.name)
       return res.status(400).send();
       knex('users').where('name',req.body.name).first().then(user => {
-      console.log(user);
+      
       if (user !== undefined) {
         res.status(409).send("User name already exists");
         throw new Error('abort');

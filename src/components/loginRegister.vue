@@ -67,14 +67,28 @@ export default{
 
     }
   },
-
+  computed: {
+    registerError: function(){
+      return this.$store.getters.registerError;
+    },
+    loginError: function(){
+      return this.$store.getters.loginError;
+    }
+  },
 
   methods: {
     registerUser: function() {
       this.$store.dispatch('register', {name: this.name, role: this.role, password: this.password});
+      if(this.$store.getters.registerError!='')
+        swal("Error: ",this.$store.getters.registerError).then(()=>{this.$store.dispatch('closeErrors','') ;
+          console.log("got here");
+          });
     },
       login: function(){
     this.$store.dispatch('login', {name: this.name, password:this.password});
+    if(this.$store.getters.loginError!='')
+      swal("Error: ",this.$store.getters.loginError).then(()=>{this.$store.dispatch('closeErrors','');
+        console.log("whatttt")});
   },
 
   },
