@@ -76,7 +76,7 @@ import axios from 'axios'
       },
 
       gameAborted: function(){
-        return this.$store.getters.gameAborted;      
+        return this.$store.getters.gameAborted;
       },
 
       name: function(){
@@ -91,7 +91,7 @@ import axios from 'axios'
       updateGame: function(){
         this.$store.dispatch('updateGame');
         this.$store.dispatch('abortCheck');
-    },
+      },
       submitOption: function(param){
       console.log(param);
         axios.put('/api/p1roundOption',{
