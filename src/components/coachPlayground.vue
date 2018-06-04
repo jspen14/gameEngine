@@ -44,7 +44,9 @@
 
       <div class='col-lg-5 col-md-5 col-sm-5 col-xs-5'>
 
-          <game-board/>
+          <!-- Put a v-if here to determine which gameBoard to display  -->
+          <gameBoard1/>
+          
           <earnings/>
           <br>
           <button class="btn btn-success" v-show="isLastRound" @click="gotoEndGame()">Finish Game</button>

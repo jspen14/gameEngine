@@ -433,7 +433,7 @@ export default new Vuex.Store({
 
 
 //END JSPENCER CHAT STUFF
-    
+
     getMatrix(context, matrixID){
       axios.get("/api/matrix/" + matrixID).then(response => {
         let data= response.data.matrix[0];

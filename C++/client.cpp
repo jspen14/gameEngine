@@ -266,7 +266,7 @@ int main(int argc,char *argv[])
 
     // Get userID
     if (strcmp(userIDarg, userIDCheck) == 0){
-      cout << "Fail Check Worked" << endl; // This isn't working (most likely because server code is commented out)
+      cout << "User is already active in system." << endl; // This isn't working (most likely because server code is commented out)
       return 0;
     }
 
@@ -368,7 +368,7 @@ int main(int argc,char *argv[])
 
     }
 
-    cout << myEarnings.size() << theirEarnings.size() << myChoices.size() << theirChoices.size() << endl;
+    // Print information here if that's what we decide to do.
     cout << "Thanks for playing! " << endl;
 
     return 0;

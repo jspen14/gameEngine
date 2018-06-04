@@ -217,7 +217,7 @@ class Game {
         p2Earnings: this.getP2RoundEarnings(),
         p1ChoiceTime: this.p1ChoiceTime,
         p2ChoiceTime: this.p2ChoiceTime }).then()
-  
+
       if(this.currentRound===this.numberOfRounds)
       {
         knex('games').where({'id':this.gameID}).update({finished: new Date()}).then()
@@ -693,7 +693,7 @@ app.post('/api/createGame', (req,res) =>{
       let c2ID=parseInt(req.body.coach2ID);
       c2Name = getName(req.body.coach2ID);
 
-      console.log("NEW GAME: ", gID, p1ID, p1Name, p2ID, p2Name, c1ID, c1Name, c2ID, c2Name);
+      console.log("NEW GAME CREATED ... ");
 
       removeFromAvailableUsers(p1ID);
       removeFromAvailableUsers(p2ID);
@@ -798,7 +798,7 @@ app.post('/api/users', (req, res) => {
   if ( !req.body.password || !req.body.name)
       return res.status(400).send();
       knex('users').where('name',req.body.name).first().then(user => {
-      
+
       if (user !== undefined) {
         res.status(409).send("User name already exists");
         throw new Error('abort');
@@ -836,20 +836,28 @@ app.get('/api/me', verifyToken, (req,res) => {
 //AI Functions
   // AI - Login
 app.post('/api/AIlogin/:name', (req, res)=>{
-  // THIS NEEDS TO BE ADDED IN AGAIN
-  // var i =0;
-  // for (i = 0; i < availableUsers.length; i++){
-  //   if (availableUsers[i].name == req.params.name){
-  //     res.send("^^^Name already in use!")
-  //     return;
-  //   }
-  // }
+  //THIS NEEDS TO BE ADDED IN AGAIN
+  var i =0;
+  for (i = 0; i < availableUsers.length; i++){
+    if (availableUsers[i].name == req.params.name){
+      res.send("^^^Name already in use!")
+      return;
+    }
+  }
 
   knex('users').where('name',req.params.name).first().select('name','id','role').then(user => {
-    console.log("User: ");
-    console.log(user.id);
+    // I also need to check if the user is currently in a game
+    for (let i = 0; i < gameModels.length; i++){
+      if (user.id == gameModels[i]._player1 || user.id == gameModels[i]._coach1
+        ||user.id == gameModels[i]._player2 || user.id == gameModels[i]._coach2)
+      {
+        res.send("^^^Name already in use!")
+        return;
+      }
+    }
+
     availableUsers.push(user); // log this
-    res.send("^^^" + 8); // Change this to be user.id
+    res.send("^^^" + user.id);
     return;
   });
 });
@@ -857,7 +865,6 @@ app.post('/api/AIlogin/:name', (req, res)=>{
   // AI - Check if in game
 app.get('/api/AIinGameStatus/:userID', (req,res)=> {
   var userID = req.params.userID;
-  console.log("AIinGameStatus: ", req.params.userID);
 
   for (let i = 0; i < gameModels.length; i++){
     if (userID == gameModels[i]._player1 || userID == gameModels[i]._coach1
@@ -875,7 +882,6 @@ app.get('/api/AIinGameStatus/:userID', (req,res)=> {
 // AI - Get either 1 or 2
 app.get('/api/AIwhich/:userID', (req,res)=> {
   var userID = req.params.userID;
-  console.log("AIwhich: ", req.params.userID);
 
   for (let i = 0; i < gameModels.length; i++){
     if (userID == gameModels[i]._player1 || userID == gameModels[i]._coach1){
@@ -894,8 +900,6 @@ app.get('/api/AIwhich/:userID', (req,res)=> {
 // AI - Get round num
 app.get('/api/AIround/:gameID', (req,res)=> {
   var gameID = req.params.gameID;
-
-  console.log("AIround- gameID: " + req.params.gameID);
 
   for (let i = 0; i < gameModels.length; i++){
     if (gameModels[i]._gameID = gameID){
@@ -921,11 +925,7 @@ app.get('/api/AImatrix/:gameID', (req,res)=> {
     }
   }
 
-  console.log("Round: " + roundNum);
-
   knex('matrices').where('id',roundNum).select('matrix').then(matrix => {
-    console.log("AI Matrix: ");
-    console.log(matrix[0].matrix);
 
     res.send("^^^" + matrix[0].matrix); // Eventually change this so that it only returns the AI's specific matrix
   }).catch(error =>{
@@ -1032,9 +1032,6 @@ app.get('/api/AIreadyStatus/:gameID/:playerNum', (req,res)=> {
   var gameID = parseInt(req.params.gameID);
   var playerNum = parseInt(req.params.playerNum);
   var index = getGameIndex(gameID);
-
-  console.log("gameID: " + gameID);
-  console.log("playerNum: " + playerNum);
 
   if (gameModels[index].p2Earnings.length == gameModels[index].numberOfRounds || gameModels[index].p1Earnings.length == gameModels[index].numberOfRounds){
     res.send("^^^true");

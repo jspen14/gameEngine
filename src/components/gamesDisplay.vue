@@ -9,10 +9,10 @@
       <button v-on:click="removeActiveGame(activeGame)" class="btn btn-sm btn-danger">Remove from List</button>
       <hr>
       <h5><strong>Player 1:</strong> {{activeGame._player1Name}} &nbsp&nbsp <strong>Coach 1:</strong> {{activeGame._coach1Name}}</h5>
-      <h6>Round Earnings: &nbsp&nbsp&nbsp&nbsp Average: &nbsp&nbsp&nbsp&nbsp Total:</h6>
+      <h6>Round {{activeGame._p1Earnings.length}}'s Earnings: {{activeGame._p1Earnings[activeGame._p1Earnings.length-1]}} &nbsp&nbsp&nbsp&nbsp Total: {{addEarnings(activeGame._p1Earnings)}}</h6>
       <hr>
       <h5><strong>Player 2:</strong> {{activeGame._player2Name}} &nbsp&nbsp <strong>Coach 2:</strong> {{activeGame._coach2Name}}</h5>
-      <h6>Round Earnings: &nbsp&nbsp&nbsp&nbsp Average: &nbsp&nbsp&nbsp&nbsp Total:</h6>
+      <h6>Round {{activeGame._p2Earnings.length}}'s Earnings: {{activeGame._p2Earnings[activeGame._p2Earnings.length-1]}} &nbsp&nbsp&nbsp&nbsp Total: {{addEarnings(activeGame._p2Earnings)}}</h6>
     </div>
 </div>
 
@@ -35,7 +35,6 @@ export default {
   computed: {
     activeGames: function(){
       return this.activeGamesData;
-
     }
   },
   methods: {
@@ -46,7 +45,7 @@ export default {
       }, 3000);
     },
     addEarnings: function(earningsArray){
-      console.log("yo");
+      return earningsArray.reduce(function(acc, val) { return acc + val; });
     },
 
     getActiveGames: function(){

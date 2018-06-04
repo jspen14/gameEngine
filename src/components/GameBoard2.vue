@@ -1,4 +1,5 @@
 <template>
+	<div
 	<div class="gameboard">
 		<br>
           <h2>Game Board</h2>
@@ -64,8 +65,8 @@
                 @mouseleave="deactivate(0,0)"
                 class = "col-lg-5 col-md-5 col-sm-5 col-xs-5 boardRow">
                   <br>
-                  <h5 v-bind:class="{p1:isPlayer0, p2: isPlayer1}">{{$store.getters.matrix[0][0][other]}}</h5>
-                  <h5 v-bind:class="{p2:isPlayer0, p1: isPlayer1}">{{$store.getters.matrix[0][0][me]}}</h5>
+                  <h5 class="p2">{{$store.getters.matrix[0][0][me]}}</h5>
+                  <h5 class="p1">{{$store.getters.matrix[0][0][other]}}</h5>
                 </div>
 
                 <div v-bind:class="{selected: zero_one, colX: colActive(Col2), rowX: rowActive(Row1)}"
@@ -73,8 +74,8 @@
                 @mouseleave="deactivate(0,1)"
                 class = "col-lg-5 col-md-5 col-sm-5 col-xs-5 boardRow">
                   <br>
-                  <h5 v-bind:class="{p1:isPlayer0, p2: isPlayer1}">{{$store.getters.matrix[0][1][other]}}</h5>
-                  <h5 v-bind:class="{p2:isPlayer0, p1: isPlayer1}">{{$store.getters.matrix[0][1][me]}}</h5>
+                  <h5 class="p2">{{$store.getters.matrix[0][1][me]}}</h5>
+                  <h5 class="p1">{{$store.getters.matrix[0][1][other]}}</h5>
                 </div>
               </div>
 
@@ -100,8 +101,8 @@
                 @mouseleave="deactivate(1,0)"
                 class = "col-lg-5 col-md-5 col-sm-5 col-xs-5 boardRow">
                   <br>
-                  <h5 v-bind:class="{p1:isPlayer0, p2: isPlayer1}">{{$store.getters.matrix[1][0][other]}}</h5>
-                  <h5 v-bind:class="{p2:isPlayer0, p1: isPlayer1}">{{$store.getters.matrix[1][0][me]}}</h5>
+                  <h5 class="p2">{{$store.getters.matrix[1][0][me]}}</h5>
+                  <h5 class="p1">{{$store.getters.matrix[1][0][other]}}</h5>
                 </div>
 
                 <div v-bind:class="{selected: one_one, colX: colActive(Col2), rowX: rowActive(Row2)}"
@@ -109,8 +110,8 @@
                 @mouseleave="deactivate(1,1)"
                 class = "col-lg-5 col-md-5 col-sm-5 col-xs-5 boardRow">
                   <br>
-                  <h5 v-bind:class="{p1:isPlayer0, p2: isPlayer1}">{{$store.getters.matrix[1][1][other]}}</h5>
-                  <h5 v-bind:class="{p2:isPlayer0, p1: isPlayer1}">{{$store.getters.matrix[1][1][me]}}</h5>
+                  <h5 class="p2">{{$store.getters.matrix[1][1][me]}}</h5>
+                  <h5 class="p1">{{$store.getters.matrix[1][1][other]}}</h5>
                 </div>
               </div>
             </div>
@@ -261,7 +262,7 @@
   h2{
     line-height: 90px;
   }
-  .p2{
+.p2{
     color: #007bff;
 }
 .p1{

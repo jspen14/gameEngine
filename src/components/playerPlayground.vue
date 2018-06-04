@@ -28,8 +28,13 @@
       <div class="col-lg-2 col-md-2 col-sm-2 col-xs-2"></div>
 
       <div class='col-lg-5 col-md-5 col-sm-5 col-xs-5'>
+        <div v-if="player1">
+          <gameBoard1></gameBoard1>
+        </div>
+        <div v-else>
+          <gameBoard2></gameBoard2>
+        </div>
 
-          <gameBoard></gameBoard>
           <earnings></earnings>
           <br>
           <div v-show="gameState==='done'">
@@ -67,7 +72,16 @@ import axios from 'axios'
       this.updateGame();
     },
     computed: {
+      player1: function() {
+        console.log("Which player: " + this.$store.getters.whichPlayer);
+        if (this.$store.getters.whichPlayer == "0"){
+          return true;
+        }
+        else {
+          return false;
+        }
 
+      },
       gameState: function() {
         return this.$store.getters.gameState;
       },

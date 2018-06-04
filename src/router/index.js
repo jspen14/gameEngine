@@ -36,6 +36,5 @@ export default new Router({
       component: gamesDisplay,
     },
 
-
   ]
 })

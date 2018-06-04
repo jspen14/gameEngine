@@ -17,47 +17,22 @@ let games=[
 	}
 ];
 let users= [
-{
-	role: "Player",
-	coachType: null,
-	name: "bill"
-},
-{
-	role: "Player",
-	coachType: null,
-	name: "ted"
-},
-{
-	role: "Coach",
-	coachType: "dummy",
-	name: "trump"
-},
-{
-	role: "Coach",
-	coachType: "dummy",
-	name: "obama"
-},
-{
-
-	role: "Player",
-	coachType: null,
-	name: "John"
-},
-{
-	role: "Player",
-	coachType: null,
-	name: "Doe"
-},
-{
-	role: "Coach",
-	coachType: "dummy",
-	name: "Carnegie"
-},
-{
-	role: "Coach",
-	coachType: "dummy",
-	name: "Mellon"
-}
+	{
+		role: "Player",
+		name: "Trump"
+	},
+	{
+		role: "Player",
+		name: "Carnegie"
+	},
+	{
+		role: "Player",
+		name: "Thumper"
+	},
+	{
+		role: "Coach",
+		name: "Mellon"
+	}
 ]
 let rounds = [
 	{
@@ -75,61 +50,12 @@ let rounds = [
 
 ]
 
-let deleteUsers = () => {
-  return knex('users').del();
-}
-/*
-let deleteGames = () => {
-	return knex('games').del();
-}
-let deleteRounds = () => {
-	return knex('rounds').del();
-}
-*/
 let insertUsers = () => {
   let promises = [];
   	users.forEach(user => {
-    promises.push(knex('users').insert({role: user.role, coachType: user.coachType, name: user.name }));
+    promises.push(knex('users').insert({role: user.role, name: user.name, hash: "password"}));
   });
   return Promise.all(promises);
 }
-/*
-let insertGames = ()=> {
-	let promises =[];
-	games.forEach(game =>{
-		promises.push(knex('games').insert({player1ID: knex('users').where('id', game.player1ID).select('id'),
-											player2ID: knex('users').where('id', game.player2ID).select('id'),
-											 coach1ID: knex('users').where('id', game.coach1ID).select('id'),
-											 coach2ID: knex('users').where('id', game.coach2ID).select('id')}));
-	});
-	return Promise.all(promises);
-}
-let insertRounds = ()=> {
-	let promises =[];
-	rounds.forEach(round =>{
-		promises.push(knex('rounds').insert({
-			gameID: knex('games').where('id', round.gameID).select('id'),
-			matrixID: knex('matrices').where('id',round.matrixID).select('id'),
-			player1choice: round.player1choice,
-			player2choice: round.player2choice}));
-	});
-	return Promise.all(promises);
-}
 
-deleteRounds().then(() => {
-  return deleteGames();
-}).then(() => {
-  return deleteUsers();
-}).then(() => {
-  return insertUsers();
-}).then(() => {
-  return insertGames();
-}).then(() => {
-	return	insertRounds();
-}).then(()=> {
-	console.log("created test data");
-});
-*/
-deleteUsers().then(()=>{
-	return insertUsers();
-}).then(()=>console.log("inserted Users"));
+insertUsers().then(()=>console.log("Inserted Users"));

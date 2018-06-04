@@ -1,5 +1,5 @@
 <template>
-  <div class="earnings">          
+  <div class="earnings">
     <br><br>
     <div class="row">
       <div class="col-lg-4 col-md-4"></div>
@@ -15,7 +15,7 @@
         <h4>Round </h4>
       </div>
       <div class="col-lg-4 col-md-4 boardHeader">
-        <h4>Average </h4>
+        <h4>Avg. </h4>
       </div>
       <div class="col-lg-4 col-md-4 boardHeader">
         <h4>Total </h4>
@@ -37,7 +37,7 @@
 <script>
   export default {
     name: 'Earnings',
-    
+
     computed: {
       roundEarnings: function(){
         return this.$store.getters.roundEarnings;
@@ -46,13 +46,12 @@
         return this.$store.getters.totalEarnings;
       },
       averageEarnings: function(){
-        if(this.$store.getters.gameState==="unsubmitted")
-        {
-          if(this.$store.getters.currentRound===1)
-            return 0;
-          return Math.round((this.$store.getters.totalEarnings/(this.$store.getters.currentRound-1))*100)/100;
-        }
-        return Math.round((this.$store.getters.totalEarnings/this.$store.getters.currentRound)*100)/100;
+          if(this.$store.getters.currentRound===1 || this.$store.getters.currentRound === 0){
+            return this.$store.getters.totalEarnings;
+          }
+          else {
+            return Math.round((this.$store.getters.totalEarnings/(this.$store.getters.currentRound-1))*100)/100;
+          }
       }
     }
   }
