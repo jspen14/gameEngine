@@ -110,8 +110,6 @@ char * getUserID(char *argv[]){
 
   response = httpCall(message);
 
-  cout << "Response: " << response;
-
   return response;
 }
 
@@ -225,7 +223,6 @@ char * getReadyStatus(char *gameID, char *playerNum){
 }
 
 char * getGameStatus(char *gameID){
-    cout << "GameID A: " << gameID << endl;
     char *message_fmt = (char *) "GET /api/AIgameIsDone/%s HTTP/1.0\r\n\r\n";
     char *response;
     char message[1024];
@@ -269,46 +266,45 @@ int main(int argc,char *argv[])
 
     // Get userID
     if (strcmp(userIDarg, userIDCheck) == 0){
-      cout << "Fail Check Worked" << endl;
+      cout << "Fail Check Worked" << endl; // This isn't working (most likely because server code is commented out)
       return 0;
     }
 
+    cout << "Waiting to be added to game ..." << endl;
     // Set userID
     userIDStr = userIDarg;    // Conversion from char* to string
 
     // Check inGameStatus
     while(strcmp(inGameStatus,inGameStatusCheck) == 0){
       inGameStatus = stripHeader(getInGameStatus((char *) userIDStr.c_str()));
-      cout << inGameStatus << endl;
       sleep(3);
     }
 
     // Set gameID
     gameIDStr = inGameStatus;   // Conversion from char* to string
 
-    cout << "game: " << gameIDStr << endl;
-
     // Set Which Player (1 || 2)
     whichStr = stripHeader(getWhich((char *) userIDStr.c_str()));
 
-    cout << "Successfully added to game " << gameIDStr << " as player " << whichStr << "." << endl;
+    cout << "Successfully added to game " << gameIDStr << " as player " << whichStr << "." << endl << endl;
 
     //Round Play
     while(!done){
       // getRound
       roundNumStr = stripHeader(getRound((char *) gameIDStr.c_str()));
-      cout << "Round Number: " << roundNumStr << endl;
+      cout << "Round: " << roundNumStr << endl;
+      cout << "------------------------------------------------" << endl;
 
       // getMatrix
       roundMatrixStr = stripHeader(getMatrix((char *) gameIDStr.c_str()));
 
-      cout << "Round Matrix: " << roundMatrixStr << endl;
+      cout << "Matrix: " << roundMatrixStr << endl;
 
       // Make Decision
       roundOptionInt = rand() % 2;
       roundOptionStr = to_string(roundOptionInt);
       myChoices.push_back(roundOptionStr);
-      cout << "Round Option: " << roundOptionStr << endl;
+      cout << "Option: " << roundOptionStr << endl;
 
       // Send Decision
       submitRoundOption((char *) gameIDStr.c_str(), (char *) whichStr.c_str(), (char *) roundOptionStr.c_str());
@@ -346,8 +342,10 @@ int main(int argc,char *argv[])
         theirChoices.push_back(stripHeader(getOtherPlayersOption((char *) gameIDStr.c_str(), (char *) "1")));
       }
 
+      cout << "My Payoff: " << myEarnings[myEarnings.size()-1] << endl;
+      cout << "Their Payoff: " << theirEarnings[theirEarnings.size()-1] << endl;
+      cout <<  "------------------------------------------------" << endl << endl;
       // Update readyStatus
-
       waiting = true;
 
       while(waiting){
@@ -356,13 +354,11 @@ int main(int argc,char *argv[])
         if (readyStatusStr == "true"){
           waiting = false;
         }
-        
+
         sleep(3);
       }
 
       gameIsDoneStr = stripHeader(getGameStatus((char *) gameIDStr.c_str()));
-
-      cout << "gameIsDoneStr: " << gameIsDoneStr << endl;
 
       if (gameIsDoneStr == "true"){
         done = true;
