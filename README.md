@@ -31,6 +31,7 @@
   - cd C++ (to navigate into C++ folder)
   - ./client username
     - username can be Trump, Thumper, or Carnegie
+    - Host is set to 127.0.0.1 but can be changed. If I need to change it, let me know. Josh
 
 (If you want to connect multiple users on your machine you MUST use a different browser because we used JSW tokens)
 (Preferred browser: Google Chrome)
