@@ -46,7 +46,7 @@
 
           <!-- Put a v-if here to determine which gameBoard to display  -->
           <gameBoard1/>
-          
+
           <earnings/>
           <br>
           <button class="btn btn-success" v-show="isLastRound" @click="gotoEndGame()">Finish Game</button>
@@ -110,7 +110,6 @@ export default{
   },
   update(){
     this.$store.dispatch('updateCoach');
-    this.$store.dispatch('abortCheck');
   },
   gotoEndGame: function(){
         this.$store.dispatch('gotoEndGame');

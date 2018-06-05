@@ -8,30 +8,32 @@
         <hr>
       </div>
       <div class="col-lg-4 col-md-4"></div>
-    </div>
-
-    <div class="row">
-      <div class="col-lg-4 col-md-4 boardHeader">
-        <h4>Round </h4>
+    </div v-if="ubsubmitted">
+      <div class="">
+        <div class="row">
+          <div class="col-lg-4 col-md-4 boardHeader">
+            <h4>Round </h4>
+          </div>
+          <div class="col-lg-4 col-md-4 boardHeader">
+            <h4>Avg. </h4>
+          </div>
+          <div class="col-lg-4 col-md-4 boardHeader">
+            <h4>Total </h4>
+          </div>
+        </div>
+        <div class="row">
+          <div class="col-lg-4 col-md-4 boardHeader">
+            <h4>  ${{roundEarnings}}</h4>
+          </div>
+          <div class="col-lg-4 col-md-4 boardHeader">
+            <h4 v-if="gameState ==='done' || gameState==='isReady'">Computing</h4>
+            <h4 v-else>${{averageEarnings}}</h4>
+          </div>
+          <div class="col-lg-4 col-md-4 boardHeader">
+            <h4> ${{totalEarnings}}</h4>
+          </div>
+        </div>
       </div>
-      <div class="col-lg-4 col-md-4 boardHeader">
-        <h4>Avg. </h4>
-      </div>
-      <div class="col-lg-4 col-md-4 boardHeader">
-        <h4>Total </h4>
-      </div>
-    </div>
-    <div class="row">
-      <div class="col-lg-4 col-md-4 boardHeader">
-        <h4>  ${{roundEarnings}}</h4>
-      </div>
-      <div class="col-lg-4 col-md-4 boardHeader">
-        <h4> ${{averageEarnings}} </h4>
-      </div>
-      <div class="col-lg-4 col-md-4 boardHeader">
-        <h4> ${{totalEarnings}}</h4>
-      </div>
-    </div>
   </div>
 </template>
 <script>
@@ -52,7 +54,13 @@
           else {
             return Math.round((this.$store.getters.totalEarnings/(this.$store.getters.currentRound-1))*100)/100;
           }
-      }
+      },
+      unsubmitted: function(){
+        if(this.$store.getters.gameState != "unsubmitted"){
+          return false;
+        }
+        return true;
+      },
     }
   }
 </script>

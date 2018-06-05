@@ -150,12 +150,13 @@ export default{
       return this.messages;
     },
 
+
   },
   methods: {
     updateData: function(){
       let timerID = setInterval(() => {
 
-        this.$store.dispatch('getCoachChatID'); // only do this if it hasnt already been set
+        //this.$store.dispatch('getCoachChatID'); // See if this will still work if call moved to line 160 of store
 
         this.$store.dispatch('getCoachChatMsgs');
         this.messages = this.$store.getters.coachChatMsgs.slice();
@@ -163,7 +164,7 @@ export default{
 
         $('#chatmessages').scrollTop($('#chatmessages')[0].scrollHeight);
 
-      }, 1000);
+      }, 2000);
 
     },
 

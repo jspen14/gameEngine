@@ -156,53 +156,52 @@ export default new Vuex.Store({
           context.commit('setCurrentRound',response.data.round);
           context.dispatch('getNumberOfRounds');
           context.dispatch('getMatrix',context.state.currentRound);
-          context.commit('setGameState','unsubmitted');
+          //context.commit('setGameState','unsubmitted');
+          context.dispatch('getCoachChatID');
           clearInterval(updateDataTimer);
           context.dispatch('updateGame');
+          context.dispatch('abortCheck');
         }
       });
-
+        console.log("did this stop?");
       }, 1500);
     },
 
-    updateData2(context){
-      var updateDataTimer = setInterval(() => {
-        console.log("ing updateData2 ... checking ... ");
+    abortCheck(context){
+      let timerID=setInterval(() =>{
         context.dispatch('checkGameAborted');
-      }, 3000);
+      },10000);
     },
 
     checkGameAborted(context){
       axios.get('/api/gameAborted/'+context.state.user.id).then(response => {
-        console.log("checkGameAborted: ", response.data.isAborted);
         context.commit('setGameAborted',response.data.isAborted);
       });
     },
     //needs to update game
     updateGame(context){
       let timerID = setInterval(() => {
-      axios.get('/api/gameState/'+context.state.currentGame+'/'+context.state.whichPlayer).then(response => {
-      context.commit('setGameState',response.data.gameState);
-      if(context.state.gameState==='done')
-      {
-        clearInterval(timerID);
-        context.commit('setP1Choice', response.data.p1Choice);
-        context.commit('setP2Choice', response.data.p2Choice);
+        axios.get('/api/gameState/'+context.state.currentGame+'/'+context.state.whichPlayer).then(response => {
+          context.commit('setGameState',response.data.gameState);
+          if(context.state.gameState==='done'){
+            clearInterval(timerID);
+            context.commit('setP1Choice', response.data.p1Choice);
+            context.commit('setP2Choice', response.data.p2Choice);
 
-        if(context.state.whichPlayer===0)
-            context.commit('setRoundEarnings', context.state.matrix[context.state.p1Choice][context.state.p2Choice][0]);
-        else
-          context.commit('setRoundEarnings', context.state.matrix[context.state.p1Choice][context.state.p2Choice][1]);
+            if(context.state.whichPlayer===0)
+                context.commit('setRoundEarnings', context.state.matrix[context.state.p1Choice][context.state.p2Choice][0]);
+            else
+              context.commit('setRoundEarnings', context.state.matrix[context.state.p1Choice][context.state.p2Choice][1]);
 
-        axios.get('/api/totalEarnings/'+context.state.currentGame+'/'+context.state.whichPlayer).then(resp =>{
-        context.commit('setTotalEarnings', resp.data.earnings);
-        }).catch(error=>{
-          console.log(error);
+            axios.get('/api/totalEarnings/'+context.state.currentGame+'/'+context.state.whichPlayer).then(resp =>{
+            context.commit('setTotalEarnings', resp.data.earnings);
+            }).catch(error=>{
+              console.log(error);
+            });
+
+          }
         });
-
-      }
-      });
-      }, 1000);
+      }, 3000);
     },
     updateCoach(context){
       let timerID=setInterval(() => {
@@ -225,11 +224,6 @@ export default new Vuex.Store({
           }
         })
       },3000);
-    },
-    abortCheck(context){
-      let timerID=setInterval(() =>{
-        context.dispatch('checkGameAborted');
-      },5000);
     },
   // Initialize //
     initialize(context) {

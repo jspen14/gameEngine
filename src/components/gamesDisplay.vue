@@ -45,6 +45,9 @@ export default {
       }, 3000);
     },
     addEarnings: function(earningsArray){
+      if (earningsArray.length == 0){
+        return 0;
+      }
       return earningsArray.reduce(function(acc, val) { return acc + val; });
     },
 

@@ -34,8 +34,8 @@
         <div v-else>
           <gameBoard2></gameBoard2>
         </div>
+            <earnings></earnings>
 
-          <earnings></earnings>
           <br>
           <div v-show="gameState==='done'">
             <button v-if="isLastRound" class="btn btn-success" v-on:click="gotoEndGame()">Finish Game</button>
@@ -80,11 +80,12 @@ import axios from 'axios'
         else {
           return false;
         }
-
       },
+
       gameState: function() {
         return this.$store.getters.gameState;
       },
+
       isLastRound: function(){
         return this.$store.getters.currentRound==this.$store.getters.numberOfRounds;
       },
@@ -95,7 +96,7 @@ import axios from 'axios'
 
       name: function(){
         return this.$store.getters.user.name;
-      }
+      },
 
     },
     methods: {
@@ -104,7 +105,6 @@ import axios from 'axios'
       },
       updateGame: function(){
         this.$store.dispatch('updateGame');
-        this.$store.dispatch('abortCheck');
       },
       submitOption: function(param){
       console.log(param);
