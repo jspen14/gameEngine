@@ -8,7 +8,7 @@
         <hr>
       </div>
       <div class="col-lg-4 col-md-4"></div>
-    </div v-if="ubsubmitted">
+    </div>
       <div class="">
         <div class="row">
           <div class="col-lg-4 col-md-4 boardHeader">
@@ -26,8 +26,8 @@
             <h4>  ${{roundEarnings}}</h4>
           </div>
           <div class="col-lg-4 col-md-4 boardHeader">
-            <h4 v-if="gameState ==='done' || gameState==='isReady'">Computing</h4>
-            <h4 v-else>${{averageEarnings}}</h4>
+            <h4  v-if="unsubmitted">${{averageEarnings}}</h4>
+            <h4 v-else>$<img style="margin: 0.5vh;" src="/static/images/ajax-loader.gif"/></h4>
           </div>
           <div class="col-lg-4 col-md-4 boardHeader">
             <h4> ${{totalEarnings}}</h4>

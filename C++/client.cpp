@@ -10,6 +10,7 @@
 #include <string>
 #include <vector>
 
+
 using namespace std;
 
 void error(const char *msg) { perror(msg); exit(0); }
@@ -234,6 +235,78 @@ char * getGameStatus(char *gameID){
     return response;
 }
 
+vector< vector<int> > parseString(string toParse){
+    vector< vector<int> > rows;
+    vector<int> row;
+
+    for (int i = 0; i < toParse.size(); i++){
+
+        if (toParse[i] == ']'){
+            if (row.size() != 0){
+                rows.push_back(row);
+            }
+            row.clear();
+        }
+        else if (isdigit(toParse[i])){
+            if (isdigit(toParse[i+1])){
+              cout << "NUM: " << i << " " << (toParse[i] - '0')*10 + (toParse[i+1]-'0') << endl;
+
+              row.push_back((toParse[i] - '0')*10 + (toParse[i+1]-'0'));
+              i++;
+            }
+            else{
+                row.push_back(toParse[i]-'0');
+            }
+        }
+
+    }
+    return rows;
+}
+
+vector<int> getChoices(vector< vector<int> > rows, int whichPlayer){
+    vector<int> choices;
+    int option1 = 0;
+    int option2 = 0;
+
+    if(whichPlayer == 1){
+        whichPlayer = 0;
+        option1 = rows[0][whichPlayer]+rows[1][whichPlayer];
+        option2 = rows[2][whichPlayer] + rows[3][whichPlayer];
+    }
+    else{ // This function is working
+        whichPlayer = 1;
+        option1 = rows[0][whichPlayer]+rows[2][whichPlayer];
+        option2 = rows[1][whichPlayer] + rows[3][whichPlayer];
+    }
+
+    choices.push_back(option1);
+    choices.push_back(option2);
+    return choices;
+}
+
+int computeBestOption(string toParse, int whichPlayer) {
+    vector< vector<int> > rowsOfMatrices;
+    vector<int> choices;
+    int myChoice = 0;
+
+    rowsOfMatrices = parseString(toParse);
+    choices = getChoices(rowsOfMatrices, whichPlayer);
+
+    // This is the max possible payoff strategy
+    if(choices[0]>choices[1]){
+        myChoice = 0;
+    }
+    else {
+        myChoice = 1;
+    }
+    // Make an algorithm that analyzes what the other player is likely to do and then determines your possible outcome based upon that
+
+        cout << myChoice << " @ $" << choices[myChoice] << endl;
+
+    return myChoice;
+}
+
+
 int main(int argc,char *argv[])
 {
     // Error check
@@ -298,10 +371,12 @@ int main(int argc,char *argv[])
       // getMatrix
       roundMatrixStr = stripHeader(getMatrix((char *) gameIDStr.c_str()));
 
+      // See how this works
+
       cout << "Matrix: " << roundMatrixStr << endl;
 
       // Make Decision
-      roundOptionInt = rand() % 2;
+      roundOptionInt = computeBestOption(roundMatrixStr, stoi(whichStr));
       roundOptionStr = to_string(roundOptionInt);
       myChoices.push_back(roundOptionStr);
       cout << "Option: " << roundOptionStr << endl;

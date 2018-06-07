@@ -205,6 +205,10 @@ export default new Vuex.Store({
     },
     updateCoach(context){
       let timerID=setInterval(() => {
+        axios.get('/api/gameState/'+context.state.currentGame+'/'+context.state.whichPlayer).then(response => {
+          context.commit('setGameState',response.data.gameState);
+        });
+        
         axios.get('/api/game/'+context.state.currentGame+'/'+context.state.whichPlayer).then(response =>{
           context.commit('setRoundEarnings', response.data.roundEarnings);
           context.commit('setTotalEarnings', response.data.totalEarnings);

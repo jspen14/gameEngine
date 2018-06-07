@@ -134,7 +134,6 @@ export default{
   computed: {
     coaches: function(){
       let coachArray = [];
-      console.log(this.users);
       for(let i = 0; i < this.users.length; i++){
         if(this.users[i].role == "Coach"){
           coachArray.push(this.users[i]);
@@ -194,7 +193,12 @@ export default{
       if (this.selectedPlayer1 == '' || this.selectedPlayer2 == '' ||
           this.selectedCoach1 == '' || this.selectedCoach2 == ''){
 
+      console.log(this.selectedPlayer1);
         swal("Error","Please enter users for all player and coach fields.","warning")
+      }
+      else if (this.selectedPlayer1.name == this.selectedPlayer2.name ||
+               this.selectedCoach1.name == this.selectedCoach2.name){
+        swal("Error","Please enter UNIQUE users for all player and coach fields.","warning")
       }
       else{
         //Axios call
