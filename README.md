@@ -5,29 +5,28 @@
   - "CREATE DATABASE gameEngine;"
   - "quit;"
 
-- Once database is created, run migrations with command:
+- Once database is created, in main folder (that contains c++ folder),run migrations with command:
   - "npx knex migrate:latest"
 
-- After migrations have been added, add matrices and AIusers with commands:
-  - node data/addMatrices.js data/i1.json (then ctrl C to go back to main folder)
+- After migrations have been added, in main folder (that contains c++ folder), add matrices and AI users with commands:
+  - node data/addMatrices.js data/i1.json (then ctrl c)
   - node data/addUsers.js (then ctrl c)
 
 - Navigate to C++ folder (cd C++) and compile C++ client with commands:
   - g++ client.cpp -o client
-  - Navigate back to main folder (cd ..)
 
-- Install dependencies for node with command:
+- Navigate back to main folder (that contains c++ folder), and install dependencies for node with command:
   - npm install
-    - If it says that it didn't install all dependencies, do it manually with given instructions
+    - If it says that it didn't install all dependencies, follow the commands provided by terminal
 
-- Start the server with commands:
+- In the main folder, start the server with commands:
   - source .env
   - node server.js (served on port 3000)
 
-- Start the front end with command:
+- In the main folder, start the front end with command:
   - npm run dev (runs on port 8080)
 
-- Add a C++ client (if desired) with commands:
+- In the C++ folder, add a C++ client (if desired) with commands:
   - cd C++ (to navigate into C++ folder)
   - ./client username
     - username can be Trump, Thumper, or Carnegie

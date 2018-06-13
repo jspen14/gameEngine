@@ -235,6 +235,7 @@ char * getGameStatus(char *gameID){
     return response;
 }
 
+
 vector< vector<int> > parseString(string toParse){
     vector< vector<int> > rows;
     vector<int> row;
@@ -284,7 +285,7 @@ vector<int> getChoices(vector< vector<int> > rows, int whichPlayer){
     return choices;
 }
 
-int computeBestOption(string toParse, int whichPlayer) {
+int computeRiskyOption(string toParse, int whichPlayer) {
     vector< vector<int> > rowsOfMatrices;
     vector<int> choices;
     int myChoice = 0;
@@ -316,7 +317,7 @@ int main(int argc,char *argv[])
     srand(time(NULL));
 
     // Significant Data for GamePlay
-    char * userIDarg = stripHeader(getUserID(argv));
+    char * userIDarg;
     char * userIDCheck = (char *) "Name already in use!";
     char * inGameStatus = (char *) "false";
     char * inGameStatusCheck = (char *) "false";
@@ -338,14 +339,23 @@ int main(int argc,char *argv[])
     vector<string> theirChoices;
 
     // Get userID
-    if (strcmp(userIDarg, userIDCheck) == 0){
-      cout << "User is already active in system." << endl; // This isn't working (most likely because server code is commented out)
+    userIDarg = stripHeader(getUserID(argv));
+
+    // Set userID
+    userIDStr = userIDarg;
+
+    if (userIDStr == "undefined"){
+      cout << "This user is not currently enrolled in the system." << endl;
+      return 0;
+    }
+    else if (strcmp(userIDarg, userIDCheck) == 0){
+      cout << "User is already active in system." << endl;
       return 0;
     }
 
     cout << "Waiting to be added to game ..." << endl;
-    // Set userID
-    userIDStr = userIDarg;    // Conversion from char* to string
+
+
 
     // Check inGameStatus
     while(strcmp(inGameStatus,inGameStatusCheck) == 0){
@@ -376,7 +386,7 @@ int main(int argc,char *argv[])
       cout << "Matrix: " << roundMatrixStr << endl;
 
       // Make Decision
-      roundOptionInt = computeBestOption(roundMatrixStr, stoi(whichStr));
+      roundOptionInt = computeRiskyOption(roundMatrixStr, stoi(whichStr));
       roundOptionStr = to_string(roundOptionInt);
       myChoices.push_back(roundOptionStr);
       cout << "Option: " << roundOptionStr << endl;

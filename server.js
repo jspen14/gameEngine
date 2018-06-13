@@ -847,18 +847,24 @@ app.post('/api/AIlogin/:name', (req, res)=>{
 
   knex('users').where('name',req.params.name).first().select('name','id','role').then(user => {
     // I also need to check if the user is currently in a game
-    for (let i = 0; i < gameModels.length; i++){
-      if (user.id == gameModels[i]._player1 || user.id == gameModels[i]._coach1
-        ||user.id == gameModels[i]._player2 || user.id == gameModels[i]._coach2)
-      {
-        res.send("^^^Name already in use!")
-        return;
-      }
+    if (user == undefined){
+      res.send("^^^undefined");
+      return;
     }
+    else{
+      for (let i = 0; i < gameModels.length; i++){
+        if (user.id == gameModels[i]._player1 || user.id == gameModels[i]._coach1
+          ||user.id == gameModels[i]._player2 || user.id == gameModels[i]._coach2)
+        {
+          res.send("^^^Name already in use!")
+          return;
+        }
+      }
 
-    availableUsers.push(user); // log this
-    res.send("^^^" + user.id);
-    return;
+      availableUsers.push(user); // log this
+      res.send("^^^" + user.id);
+      return;
+    }
   });
 });
 
