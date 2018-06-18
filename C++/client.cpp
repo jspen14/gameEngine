@@ -15,7 +15,7 @@ using namespace std;
 
 void error(const char *msg) { perror(msg); exit(0); }
 
-char * httpCall(char message[1024]){
+string httpCall(char message[1024]){
   int portno = 3000;
   char *host = (char *) "127.0.0.1"; // This will eventually need to change
 
@@ -23,12 +23,7 @@ char * httpCall(char message[1024]){
   struct sockaddr_in serv_addr;
   int sockfd, bytes, sent, received, total;
   char response[4096];
-
-
-  /* fill in the parameters */
-  // sprintf(message,message_fmt,argv[1]);
-  //printf("Request:\n%s\n",message);
-
+  string responseStr;
   /* create the socket */
   sockfd = socket(AF_INET, SOCK_STREAM, 0);
   if (sockfd < 0) error("ERROR opening socket");
@@ -76,23 +71,23 @@ char * httpCall(char message[1024]){
       error("ERROR storing complete response from socket");
 
   /* close the socket */
+
   close(sockfd);
 
   /* process response */
 
-  //printf("Response:\n%s\n\n",response);
+  responseStr = response;
 
-  return response;
-
+  return responseStr;
 }
 
-char * stripHeader(char * withHeader){
-  char * withoutHeader;
+string stripHeader(string withHeader){
+  string withoutHeader;
   int numChars = 0;
-  int len = strlen(withHeader);
+  int len = withHeader.length();
 
 
-  for (int i = 0; i < strlen(withHeader); i++){
+  for (int i = 0; i < len; i++){
     if (withHeader[i] == '^' && withHeader[i+1] == '^' && withHeader[i+2] == '^'){
       numChars = len - (i+3);
       withoutHeader = &withHeader[len - numChars];
@@ -102,96 +97,107 @@ char * stripHeader(char * withHeader){
   return withoutHeader;
 }
 
-char * getUserID(char *argv[]){
+string getUserID(char *argv[]){
   char *message_fmt = (char *) "POST /api/AIlogin/%s HTTP/1.0\r\n\r\n";
-  char * response;
+  string response;
   char message[1024];
 
   sprintf(message,message_fmt,argv[1]);
-
   response = httpCall(message);
 
   return response;
 }
 
-char * getInGameStatus(char *userID){
+string getInGameStatus(string userIDStr){
   char *message_fmt = (char *) "GET /api/AIinGameStatus/%s HTTP/1.0\r\n\r\n";
-  char *response;
+  string response;
+  char *userIDArg = (char *) userIDStr.c_str();
   char message[1024];
 
-  sprintf(message,message_fmt,userID);
+  sprintf(message,message_fmt,userIDArg);
 
   response = httpCall(message);
 
   return response;
 }
 
-char * getWhich(char *userID){
+string getWhich(string userIDStr){
     char *message_fmt = (char *) "GET /api/AIwhich/%s HTTP/1.0\r\n\r\n";
-    char *response;
+    string response;
+    char *userIDArg = (char *) userIDStr.c_str();
     char message[1024];
 
-    sprintf(message,message_fmt,userID); //argv[1]
+
+    sprintf(message,message_fmt,userIDArg); //argv[1]
 
     response = httpCall(message);
 
     return response;
 }
 
-char * getRound(char *gameID){
+string getRound(string gameIDStr){
     char *message_fmt = (char *) "GET /api/AIround/%s HTTP/1.0\r\n\r\n";
-    char *response;
+    string response;
+    char *gameIDArg = (char *) gameIDStr.c_str();
     char message[1024];
 
-    sprintf(message,message_fmt,gameID);
+    sprintf(message,message_fmt,gameIDArg);
 
     response = httpCall(message);
 
     return response;
 }
 
-char * getMatrix(char *gameID){
+string getMatrix(string gameIDStr){
     char *message_fmt = (char *) "GET /api/AImatrix/%s HTTP/1.0\r\n\r\n";
-    char *response;
+    string response;
+    char *gameIDArg = (char *) gameIDStr.c_str();
     char message[1024];
 
-    sprintf(message,message_fmt,gameID); //argv[1]
+    sprintf(message,message_fmt,gameIDArg); //argv[1]
 
     response = httpCall(message);
 
     return response;
 }
 
-char * submitRoundOption(char *gameID, char *playerNum, char *option){
+string submitRoundOption(string gameIDStr, string playerNumStr, string optionStr){
     char *message_fmt = (char *) "POST /api/AIsetRoundOption/%s/%s/%s HTTP/1.0\r\n\r\n";
-    char *response;
+    string response;
+    char *gameIDArg = (char *) gameIDStr.c_str();
+    char *playerNumArg = (char *) playerNumStr.c_str();
+    char *optionArg = (char *) optionStr.c_str();
     char message[1024];
 
-    sprintf(message,message_fmt,gameID,playerNum,option); //argv[1]
+    sprintf(message,message_fmt,gameIDArg,playerNumArg,optionArg); //argv[1]
 
     response = httpCall(message);
 
     return response;
 }
 
-char * getSubmittedStatus(char *gameID, char *playerNum){
+string getSubmittedStatus(string gameIDStr, string playerNumStr){
     char *message_fmt = (char *) "GET /api/AIsubmittedStatus/%s/%s HTTP/1.0\r\n\r\n";
-    char *response;
+    string response;
+    char *gameIDArg = (char *) gameIDStr.c_str();
+    char *playerNumArg = (char *) playerNumStr.c_str();
     char message[1024];
 
-    sprintf(message,message_fmt,gameID,playerNum); //argv[1]
+    sprintf(message,message_fmt,gameIDArg,playerNumArg); //argv[1]
 
     response = httpCall(message);
 
     return response;
 }
 
-char * getRoundEarnings(char *gameID, char *playerNum){
+ string getRoundEarnings(string gameIDStr, string playerNumStr){
   char *message_fmt = (char *) "GET /api/AIroundEarnings/%s/%s HTTP/1.0\r\n\r\n";
-  char *response;
+  string response;
+  char *gameIDArg = (char *) gameIDStr.c_str();
+  char *playerNumArg = (char *) playerNumStr.c_str();
   char message[1024];
 
-  sprintf(message,message_fmt,gameID,playerNum); //argv[1]
+  sprintf(message,message_fmt,gameIDArg,playerNumArg); //argv[1]
 
   response = httpCall(message);
 
@@ -199,42 +205,46 @@ char * getRoundEarnings(char *gameID, char *playerNum){
 
 }
 
-char * getOtherPlayersOption(char *gameID, char *otherPlayerNum){
+string getOtherPlayersOption(string gameIDStr, string otherPlayerNumStr){
   char *message_fmt = (char *) "GET /api/AIotherPlayersOption/%s/%s HTTP/1.0\r\n\r\n";
-  char *response;
+  string response;
+  char *gameIDArg = (char *) gameIDStr.c_str();
+  char *otherPlayerNumArg = (char *) otherPlayerNumStr.c_str();
   char message[1024];
 
-  sprintf(message,message_fmt,gameID,otherPlayerNum); //argv[1]
+  sprintf(message,message_fmt,gameIDArg,otherPlayerNumArg); //argv[1]
 
   response = httpCall(message);
 
   return response;
 }
 
-char * getReadyStatus(char *gameID, char *playerNum){
+string getReadyStatus(string gameIDStr, string playerNumStr){
     char *message_fmt = (char *) "GET /api/AIreadyStatus/%s/%s HTTP/1.0\r\n\r\n";
-    char *response;
+    string response;
+    char *gameIDArg = (char *) gameIDStr.c_str();
+    char *playerNumArg = (char *) playerNumStr.c_str();
     char message[1024];
 
-    sprintf(message,message_fmt,gameID,playerNum); //argv[1]
+    sprintf(message,message_fmt,gameIDArg,playerNumArg); //argv[1]
 
     response = httpCall(message);
 
     return response;
 }
 
-char * getGameStatus(char *gameID){
+string getGameStatus(string gameIDStr){
     char *message_fmt = (char *) "GET /api/AIgameIsDone/%s HTTP/1.0\r\n\r\n";
-    char *response;
+    string response;
+    char *gameIDArg = (char *) gameIDStr.c_str();
     char message[1024];
 
-    sprintf(message,message_fmt,gameID);
+    sprintf(message,message_fmt,gameIDArg);
 
     response = httpCall(message);
 
     return response;
 }
-
 
 vector< vector<int> > parseString(string toParse){
     vector< vector<int> > rows;
@@ -317,10 +327,9 @@ int main(int argc,char *argv[])
     srand(time(NULL));
 
     // Significant Data for GamePlay
-    char * userIDarg;
-    char * userIDCheck = (char *) "Name already in use!";
-    char * inGameStatus = (char *) "false";
-    char * inGameStatusCheck = (char *) "false";
+    string userIDCheck = (char *) "Name already in use!";
+    string inGameStatus = "false";
+    string inGameStatusCheck = "false";
     string userIDStr = "";
     string gameIDStr = "";
     string whichStr = "";
@@ -339,27 +348,25 @@ int main(int argc,char *argv[])
     vector<string> theirChoices;
 
     // Get userID
-    userIDarg = stripHeader(getUserID(argv));
+    userIDStr = stripHeader(getUserID(argv));
 
     // Set userID
-    userIDStr = userIDarg;
 
     if (userIDStr == "undefined"){
       cout << "This user is not currently enrolled in the system." << endl;
       return 0;
     }
-    else if (strcmp(userIDarg, userIDCheck) == 0){
+    else if (userIDStr == userIDCheck){
       cout << "User is already active in system." << endl;
       return 0;
     }
 
     cout << "Waiting to be added to game ..." << endl;
 
-
-
     // Check inGameStatus
-    while(strcmp(inGameStatus,inGameStatusCheck) == 0){
-      inGameStatus = stripHeader(getInGameStatus((char *) userIDStr.c_str()));
+    while(inGameStatus == inGameStatusCheck){
+
+      inGameStatus = stripHeader(getInGameStatus(userIDStr));
       sleep(3);
     }
 
@@ -367,39 +374,38 @@ int main(int argc,char *argv[])
     gameIDStr = inGameStatus;   // Conversion from char* to string
 
     // Set Which Player (1 || 2)
-    whichStr = stripHeader(getWhich((char *) userIDStr.c_str()));
+    whichStr = stripHeader(getWhich(userIDStr));
 
     cout << "Successfully added to game " << gameIDStr << " as player " << whichStr << "." << endl << endl;
 
     //Round Play
     while(!done){
       // getRound
-      roundNumStr = stripHeader(getRound((char *) gameIDStr.c_str()));
+      roundNumStr = stripHeader(getRound(gameIDStr));
       cout << "Round: " << roundNumStr << endl;
       cout << "------------------------------------------------" << endl;
 
       // getMatrix
-      roundMatrixStr = stripHeader(getMatrix((char *) gameIDStr.c_str()));
+      roundMatrixStr = stripHeader(getMatrix(gameIDStr));
 
       // See how this works
-
       cout << "Matrix: " << roundMatrixStr << endl;
 
       // Make Decision
-      roundOptionInt = computeRiskyOption(roundMatrixStr, stoi(whichStr));
+      roundOptionInt = rand() % 2; //computeRiskyOption(roundMatrixStr, stoi(whichStr));
       roundOptionStr = to_string(roundOptionInt);
       myChoices.push_back(roundOptionStr);
-      cout << "Option: " << roundOptionStr << endl;
+      cout << "Option A: " << roundOptionStr << endl;
 
       // Send Decision
-      submitRoundOption((char *) gameIDStr.c_str(), (char *) whichStr.c_str(), (char *) roundOptionStr.c_str());
+      submitRoundOption(gameIDStr, whichStr, roundOptionStr);
 
       // Reset Waiting Bool
       waiting = true;
 
       // Wait for other player to play
       while (waiting){
-        submittedStatusStr = stripHeader(getSubmittedStatus((char *) gameIDStr.c_str(), (char *) whichStr.c_str()));
+        submittedStatusStr = stripHeader(getSubmittedStatus(gameIDStr, whichStr));
 
         if (submittedStatusStr == "true"){
           //cout << "Ready to continue. " << endl;
@@ -412,19 +418,19 @@ int main(int argc,char *argv[])
       // Get earnings here
       if (whichStr == "1"){
         // Get earnings
-        myEarnings.push_back(stripHeader(getRoundEarnings((char *) gameIDStr.c_str(), (char *) "1")));
-        theirEarnings.push_back(stripHeader(getRoundEarnings((char *) gameIDStr.c_str(), (char *) "2")));
+        myEarnings.push_back(stripHeader(getRoundEarnings(gameIDStr, "1")));
+        theirEarnings.push_back(stripHeader(getRoundEarnings(gameIDStr, "2")));
 
         // Get other player's choice
-        theirChoices.push_back(stripHeader(getOtherPlayersOption((char *) gameIDStr.c_str(), (char *) "2")));
+        theirChoices.push_back(stripHeader(getOtherPlayersOption(gameIDStr, "2")));
       }
       else if (whichStr == "2"){
         // Get earnings
-        myEarnings.push_back(stripHeader(getRoundEarnings((char *) gameIDStr.c_str(), (char *) "2")));
-        theirEarnings.push_back(stripHeader(getRoundEarnings((char *) gameIDStr.c_str(), (char *) "1")));
+        myEarnings.push_back(stripHeader(getRoundEarnings(gameIDStr, "2")));
+        theirEarnings.push_back(stripHeader(getRoundEarnings(gameIDStr, "1")));
 
         //Get other player's choice
-        theirChoices.push_back(stripHeader(getOtherPlayersOption((char *) gameIDStr.c_str(), (char *) "1")));
+        theirChoices.push_back(stripHeader(getOtherPlayersOption(gameIDStr, "1")));
       }
 
       cout << "My Payoff: " << myEarnings[myEarnings.size()-1] << endl;
@@ -434,7 +440,7 @@ int main(int argc,char *argv[])
       waiting = true;
 
       while(waiting){
-        readyStatusStr = stripHeader(getReadyStatus((char *) gameIDStr.c_str(), (char *) whichStr.c_str()));
+        readyStatusStr = stripHeader(getReadyStatus(gameIDStr, whichStr));
 
         if (readyStatusStr == "true"){
           waiting = false;
@@ -443,7 +449,7 @@ int main(int argc,char *argv[])
         sleep(3);
       }
 
-      gameIsDoneStr = stripHeader(getGameStatus((char *) gameIDStr.c_str()));
+      gameIsDoneStr = stripHeader(getGameStatus(gameIDStr));
 
       if (gameIsDoneStr == "true"){
         done = true;

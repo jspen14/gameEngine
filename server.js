@@ -945,7 +945,6 @@ app.post('/api/AIsetRoundOption/:gameID/:playerNum/:option', (req,res)=> {
   var option = parseInt(req.params.option);
   var index = getGameIndex(gameID);
 
-
   if(gameModels[index]==null)
   {
     res.send("Bad Request!")
@@ -961,7 +960,7 @@ app.post('/api/AIsetRoundOption/:gameID/:playerNum/:option', (req,res)=> {
     res.send("Success");
   }
   else{
-    console.log("error in submit choice server side");
+    console.log("error in submit choice server side AI");
     res.send("Failure");
   }
 
