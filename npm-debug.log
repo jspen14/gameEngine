@@ -1,0 +1,98 @@
+0 info it worked if it ends with ok
+1 verbose cli [ '/usr/local/bin/node',
+1 verbose cli   '/usr/local/bin/npm',
+1 verbose cli   'bugs',
+1 verbose cli   'testinterface1' ]
+2 info using npm@4.0.5
+3 info using node@v7.4.0
+4 silly fetchPackageMetaData testinterface1
+5 silly fetchNamedPackageData testinterface1
+6 silly mapToRegistry name testinterface1
+7 silly mapToRegistry using default registry
+8 silly mapToRegistry registry https://registry.npmjs.org/
+9 silly mapToRegistry data Result {
+9 silly mapToRegistry   raw: 'testinterface1',
+9 silly mapToRegistry   scope: null,
+9 silly mapToRegistry   escapedName: 'testinterface1',
+9 silly mapToRegistry   name: 'testinterface1',
+9 silly mapToRegistry   rawSpec: '',
+9 silly mapToRegistry   spec: 'latest',
+9 silly mapToRegistry   type: 'tag' }
+10 silly mapToRegistry uri https://registry.npmjs.org/testinterface1
+11 verbose request uri https://registry.npmjs.org/testinterface1
+12 verbose request no auth needed
+13 info attempt registry request try #1 at 12:07:23 PM
+14 verbose request id 4a40c2716ec7e22b
+15 http request GET https://registry.npmjs.org/testinterface1
+16 http 404 https://registry.npmjs.org/testinterface1
+17 verbose headers { date: 'Mon, 18 Jun 2018 18:07:23 GMT',
+17 verbose headers   'content-type': 'application/json',
+17 verbose headers   'content-length': '21',
+17 verbose headers   connection: 'keep-alive',
+17 verbose headers   'set-cookie': [ '__cfduid=d38adc324109a85c4336a877ab73c37c31529345243; expires=Tue, 18-Jun-19 18:07:23 GMT; path=/; domain=.registry.npmjs.org; HttpOnly' ],
+17 verbose headers   'cache-control': 'max-age=300',
+17 verbose headers   'cf-cache-status': 'MISS',
+17 verbose headers   'cf-ray': '42cfb1fc6ee56be6-SJC',
+17 verbose headers   'expect-ct': 'max-age=604800, report-uri="https://report-uri.cloudflare.com/cdn-cgi/beacon/expect-ct"',
+17 verbose headers   vary: 'accept-encoding, accept',
+17 verbose headers   server: 'cloudflare' }
+18 silly get cb [ 404,
+18 silly get   { date: 'Mon, 18 Jun 2018 18:07:23 GMT',
+18 silly get     'content-type': 'application/json',
+18 silly get     'content-length': '21',
+18 silly get     connection: 'keep-alive',
+18 silly get     'set-cookie': [ '__cfduid=d38adc324109a85c4336a877ab73c37c31529345243; expires=Tue, 18-Jun-19 18:07:23 GMT; path=/; domain=.registry.npmjs.org; HttpOnly' ],
+18 silly get     'cache-control': 'max-age=300',
+18 silly get     'cf-cache-status': 'MISS',
+18 silly get     'cf-ray': '42cfb1fc6ee56be6-SJC',
+18 silly get     'expect-ct': 'max-age=604800, report-uri="https://report-uri.cloudflare.com/cdn-cgi/beacon/expect-ct"',
+18 silly get     vary: 'accept-encoding, accept',
+18 silly get     server: 'cloudflare' } ]
+19 silly fetchPackageMetaData Error: Not found : testinterface1
+19 silly fetchPackageMetaData     at makeError (/usr/local/lib/node_modules/npm/node_modules/npm-registry-client/lib/request.js:302:12)
+19 silly fetchPackageMetaData     at CachingRegistryClient.<anonymous> (/usr/local/lib/node_modules/npm/node_modules/npm-registry-client/lib/request.js:290:14)
+19 silly fetchPackageMetaData     at Request._callback (/usr/local/lib/node_modules/npm/node_modules/npm-registry-client/lib/request.js:210:14)
+19 silly fetchPackageMetaData     at Request.self.callback (/usr/local/lib/node_modules/npm/node_modules/request/request.js:186:22)
+19 silly fetchPackageMetaData     at emitTwo (events.js:106:13)
+19 silly fetchPackageMetaData     at Request.emit (events.js:191:7)
+19 silly fetchPackageMetaData     at Request.<anonymous> (/usr/local/lib/node_modules/npm/node_modules/request/request.js:1081:10)
+19 silly fetchPackageMetaData     at emitOne (events.js:96:13)
+19 silly fetchPackageMetaData     at Request.emit (events.js:188:7)
+19 silly fetchPackageMetaData     at IncomingMessage.<anonymous> (/usr/local/lib/node_modules/npm/node_modules/request/request.js:1001:12)
+19 silly fetchPackageMetaData  error for testinterface1 { Error: Not found : testinterface1
+19 silly fetchPackageMetaData     at makeError (/usr/local/lib/node_modules/npm/node_modules/npm-registry-client/lib/request.js:302:12)
+19 silly fetchPackageMetaData     at CachingRegistryClient.<anonymous> (/usr/local/lib/node_modules/npm/node_modules/npm-registry-client/lib/request.js:290:14)
+19 silly fetchPackageMetaData     at Request._callback (/usr/local/lib/node_modules/npm/node_modules/npm-registry-client/lib/request.js:210:14)
+19 silly fetchPackageMetaData     at Request.self.callback (/usr/local/lib/node_modules/npm/node_modules/request/request.js:186:22)
+19 silly fetchPackageMetaData     at emitTwo (events.js:106:13)
+19 silly fetchPackageMetaData     at Request.emit (events.js:191:7)
+19 silly fetchPackageMetaData     at Request.<anonymous> (/usr/local/lib/node_modules/npm/node_modules/request/request.js:1081:10)
+19 silly fetchPackageMetaData     at emitOne (events.js:96:13)
+19 silly fetchPackageMetaData     at Request.emit (events.js:188:7)
+19 silly fetchPackageMetaData     at IncomingMessage.<anonymous> (/usr/local/lib/node_modules/npm/node_modules/request/request.js:1001:12) pkgid: 'testinterface1', statusCode: 404, code: 'E404' }
+20 verbose stack Error: Not found : testinterface1
+20 verbose stack     at makeError (/usr/local/lib/node_modules/npm/node_modules/npm-registry-client/lib/request.js:302:12)
+20 verbose stack     at CachingRegistryClient.<anonymous> (/usr/local/lib/node_modules/npm/node_modules/npm-registry-client/lib/request.js:290:14)
+20 verbose stack     at Request._callback (/usr/local/lib/node_modules/npm/node_modules/npm-registry-client/lib/request.js:210:14)
+20 verbose stack     at Request.self.callback (/usr/local/lib/node_modules/npm/node_modules/request/request.js:186:22)
+20 verbose stack     at emitTwo (events.js:106:13)
+20 verbose stack     at Request.emit (events.js:191:7)
+20 verbose stack     at Request.<anonymous> (/usr/local/lib/node_modules/npm/node_modules/request/request.js:1081:10)
+20 verbose stack     at emitOne (events.js:96:13)
+20 verbose stack     at Request.emit (events.js:188:7)
+20 verbose stack     at IncomingMessage.<anonymous> (/usr/local/lib/node_modules/npm/node_modules/request/request.js:1001:12)
+21 verbose statusCode 404
+22 verbose pkgid testinterface1
+23 verbose cwd /home/lim7/AICoach/gameEngine
+24 error Linux 4.4.0-21-generic
+25 error argv "/usr/local/bin/node" "/usr/local/bin/npm" "bugs" "testinterface1"
+26 error node v7.4.0
+27 error npm  v4.0.5
+28 error code E404
+29 error 404 Not found : testinterface1
+30 error 404
+31 error 404 'testinterface1' is not in the npm registry.
+32 error 404 You should bug the author to publish it (or use the name yourself!)
+33 error 404 Note that you can also install from a
+34 error 404 tarball, folder, http url, or git url.
+35 verbose exit [ 1, true ]

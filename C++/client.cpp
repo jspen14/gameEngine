@@ -392,7 +392,7 @@ int main(int argc,char *argv[])
       cout << "Matrix: " << roundMatrixStr << endl;
 
       // Make Decision
-      roundOptionInt = rand() % 2; //computeRiskyOption(roundMatrixStr, stoi(whichStr));
+      roundOptionInt = rand() % 2; 
       roundOptionStr = to_string(roundOptionInt);
       myChoices.push_back(roundOptionStr);
       cout << "Option A: " << roundOptionStr << endl;
