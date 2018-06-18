@@ -6,23 +6,23 @@ Game::Game() {
 Game::Game(char *entry) {
     printf("entry: %s\n", entry); fflush(stdout);
 
-    char *token = strtok(entry, "{ \",:");
-    tipoString = strtok(NULL, " \",:");
-    strtok(NULL, " \",:");
-    payoffString = strtok(NULL, " \":");
+    //char *token = strtok(entry, "{ \",:");
+    tipoString = "Matrix2x2";//strtok(NULL, " \",:");
+    //strtok(NULL, " \",:");
+    payoffString = entry;//strtok(NULL, " \":");
 
     M = NULL;
     char tmp[1024];
     strcpy(tmp, payoffString);
     instantiateGame(tipoString, tmp);
-    
+
     printf("compute strategies\n"); fflush(stdout);
-    
+
     minmax[0] = new minimaxLog(A, 0);
     minmax[0]->getMinimax(A, 0, M[0]);
     minmax[1] = new minimaxLog(A, 1);
     minmax[1]->getMinimax(A, 1, M[1]);
-    
+
     attack[0] = new minimaxLog(A, 0);
     attack[0]->getAttack(A, 0, M[1]);
     attack[1] = new minimaxLog(A, 1);
@@ -31,7 +31,7 @@ Game::Game(char *entry) {
     nbs = new NBS(M, A);
     printf("NBS = (%lf, %lf)\n", nbs->sol->R[0], nbs->sol->R[1]); fflush(stdout);
     printGame();
-	
+
     // find all of the 2-solutions that can be sustained as rNE
     //printf("rNE offers:\n");
     computeRNEoffers();
@@ -39,7 +39,7 @@ Game::Game(char *entry) {
 
 Game::~Game() {
 	int i, j;
-	
+
     if (M != NULL) {
         for (i = 0; i < 2; i++) {
             for (j = 0; j < A[0]; j++)
@@ -48,10 +48,10 @@ Game::~Game() {
         }
         delete M;
     }
-    
+
     delete minmax[0];
     delete minmax[1];
-    
+
     for (i = 0; i < numSolutions; i++)
         delete gameSolutions[i];
     delete gameSolutions;
@@ -65,7 +65,7 @@ void Game::instantiateGame(char* tipoString, char *payoffString) {
     if (!strncmp(tipoString, "Matrix", 6)) {
         A[0] = tipoString[6] - '0';
         A[1] = tipoString[8] - '0';
-        
+
         M = new double**[2];
         int i, j;
         for (i = 0; i < 2; i++) {
@@ -74,7 +74,7 @@ void Game::instantiateGame(char* tipoString, char *payoffString) {
                 M[i][j] = new double[A[0]];
             }
         }
-        
+
         char *token;
         for (i = 0; i < A[0]; i++) {
             for (j = 0; j < A[1]; j++) {
@@ -85,7 +85,7 @@ void Game::instantiateGame(char* tipoString, char *payoffString) {
                 M[1][i][j] = atof(strtok(NULL, "[],"));
             }
         }
-        
+
         // set up game solutions
         gameSolutions = new Solution*[A[0]*A[1]];
         numSolutions = 0;
@@ -104,9 +104,9 @@ void Game::instantiateGame(char* tipoString, char *payoffString) {
 
 void Game::printGame() {
     int i, j;
-    
+
     printf("\n   |      ");
-    
+
     for (i = 0; i < A[1]; i++)
         printf("%i      |      ", i);
     printf("\n");
@@ -138,7 +138,7 @@ void Game::computeRNEoffers() {
     double vals[2];
     int a1[2], a2[2];
     double p1[2], p2[2], w[2] = {0.5, 0.5};
-    
+
     numrNEoffers = 0;
     rNEoffers = new Solution*[100]; // make sure I allocate enough memory
     for (i = 0; i < numSolutions; i++) {
@@ -146,7 +146,7 @@ void Game::computeRNEoffers() {
             rNEoffers[numrNEoffers] = new Solution(gameSolutions[i]->actions[0][0], gameSolutions[i]->actions[0][1], gameSolutions[i]->R[0], gameSolutions[i]->R[1]);
             numrNEoffers ++;
         }
-        
+
         for (j = i+1; j < numSolutions; j++) {
             vals[0] = (gameSolutions[i]->R[0] + gameSolutions[j]->R[0]) / 2.0;
             vals[1] = (gameSolutions[i]->R[1] + gameSolutions[j]->R[1]) / 2.0;
@@ -159,9 +159,9 @@ void Game::computeRNEoffers() {
                 p1[1] = gameSolutions[j]->R[0];
                 p2[0] = gameSolutions[i]->R[1];
                 p2[1] = gameSolutions[j]->R[1];
-            
+
                 rNEoffers[numrNEoffers] = new Solution(a1, a2, p1, p2, w);
-                numrNEoffers ++;            
+                numrNEoffers ++;
             }
         }
     }

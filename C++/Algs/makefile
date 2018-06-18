@@ -3,8 +3,8 @@ cpp_FILES = main.cpp client_socket.cpp Game.cpp Player.cpp RandomPlayer.cpp Expe
 c_FILES =
 CC = g++
 
-CFLAGS = -O -g
-LIBs = 
+CFLAGS = -std=c++0x -O -g
+LIBs =
 
 OBJECTS = $(c_FILES:.c=.o) $(cpp_FILES:.cpp=.o)
 
