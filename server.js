@@ -331,7 +331,7 @@ class Game {
 // Data
 
 let gameModels= [];
-let availableUsers = [];
+let availableUsers = [{"name":"No Coach","id":-1,"role":"Coach"}];
 
 // Non-Endpoint Functions
 function getName(userID){
@@ -353,7 +353,8 @@ function removeFromAvailableUsers(id){
       index=x;
   }
   if(index != null){
-    availableUsers.splice(index,1);
+    if (availableUsers[index].name != "No Coach")
+      availableUsers.splice(index,1);
   }
 }
 
@@ -462,30 +463,51 @@ app.post('/api/inGameStatus', (req,res)=>{ // Change this and then test function
 // START JSPENCER CHAT STUFF
 app.post('/api/coachChatID',(req,res) => {
   var coachID;
+  var coachName;
 
   knex('games').where('id',req.body.gameID).then(response => {
     if (req.body.userID == response[0].player1ID){
-      coachID = response[0].coach1ID;
+      coachID = parseInt(response[0].coach1ID);
     }
     else if (req.body.userID == response[0].player2ID){
-      coachID = response[0].coach2ID;
+      coachID = parseInt(response[0].coach2ID);
     }
     else {
       res.status(500);
       return;
     }
+
+    for (var i = 0; i <gameModels.length; i++){
+      if (gameModels[i].coach1 == coachID){
+        coachName = gameModels[i].coach1Name;
+        break;
+      }
+      else if(gameModels[i].coach2 == coachID){
+        coachName = gameModels[i].coach2Name;
+        break;
+      }
+    }
+
+    if (coachName == "No Coach"){
+      res.status(200).json({id: -1});
+      return;
+    }
+
   }).then(query => {
-    return knex('chatID').insert({
-      gameID: req.body.gameID,
-      user1: req.body.userID,
-      user2: coachID,
-      chatType: 'P/C'
-    }).then(chatID => {
-      res.status(200).json({id: chatID[0]});
-    }).catch(err => {
-      console.log("Error in /api/coachChatID: " + err)
-      res.status(500);
-    });
+
+    if (!isNaN(coachID)) {
+      return knex('chatID').insert({
+        gameID: req.body.gameID,
+        user1: req.body.userID,
+        user2: coachID,
+        chatType: 'P/C'
+      }).then(chatID => {
+        res.status(200).json({id: chatID[0]});
+      }).catch(err => {
+        console.log("Error in /api/coachChatID: " + err)
+        res.status(500);
+      });
+    }
 
   }).catch(err => {
     console.log("Error in /api/coachChatID: " + err)
@@ -493,6 +515,17 @@ app.post('/api/coachChatID',(req,res) => {
 });
 
 app.get('/api/coachChatID/:userID/:gameID',(req,res) => {
+
+  for (var i = 0; i < gameModels.length; i++){
+      if((gameModels[i].player1 == req.params.userID) && gameModels[i]._coach1Name == 'No Coach'){
+        res.status(200).json({id: -1});
+        return;
+      }
+      else if(gameModels[i].player2 == req.params.userID && gameModels[i]._coach2Name == 'No Coach'){
+        res.status(200).json({id: -1});
+        return;
+      }
+  }
 
   knex('chatID').where({
     gameID: req.params.gameID,

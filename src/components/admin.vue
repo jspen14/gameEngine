@@ -196,8 +196,10 @@ export default{
       console.log(this.selectedPlayer1);
         swal("Error","Please enter users for all player and coach fields.","warning")
       }
-      else if (this.selectedPlayer1.name == this.selectedPlayer2.name ||
-               this.selectedCoach1.name == this.selectedCoach2.name){
+      else if (this.selectedPlayer1.name == this.selectedPlayer2.name){
+        swal("Error","Please enter UNIQUE users for all player and coach fields.","warning")
+      }
+      else if (this.selectedCoach1.name != "No Coach" && this.selectedCoach1.name == this.selectedCoach2.name){
         swal("Error","Please enter UNIQUE users for all player and coach fields.","warning")
       }
       else{

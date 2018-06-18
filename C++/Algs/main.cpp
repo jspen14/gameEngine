@@ -490,7 +490,7 @@ int main(int argc,char *argv[])
                 waiting = false;
             }
 
-            sleep (3);
+            sleep (2);
         }
 
         /********************************************************************/
@@ -542,7 +542,7 @@ int main(int argc,char *argv[])
             waiting = false;
           }
 
-          sleep(3);
+          sleep(2);
         }
 
         gameIsDoneStr = stripHeader(getGameStatus(gameIDStr));
@@ -550,8 +550,6 @@ int main(int argc,char *argv[])
         if (gameIsDoneStr == "true"){
           done = true;
         }
-
-        sleep(3);
 
     }
 

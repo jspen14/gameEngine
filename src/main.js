@@ -14,7 +14,7 @@ Vue.config.productionTip = false
 
 Vue.component('chatDisplay',chatDisplay);
 Vue.component('gameBoard1', gameBoard1);
-Vue.component('gameBoard2', gameBoard2);
+Vue.component('gameBoard2', gameBoard2); // This is where Elizabeth should look to change the code for the display
 Vue.component('earnings',earnings);
 /* eslint-disable no-new */
 new Vue({

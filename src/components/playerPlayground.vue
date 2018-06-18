@@ -21,7 +21,7 @@
 
     <div v-if="gameAborted != true" class="row">
 
-      <div class="col-lg-5 col-md-5 col-sm-5 col-xs-5">
+      <div v-if="hasCoach" class="col-lg-5 col-md-5 col-sm-5 col-xs-5">
         <chatDisplay></chatDisplay>
       </div>
 
@@ -84,6 +84,17 @@ import axios from 'axios'
 
       gameState: function() {
         return this.$store.getters.gameState;
+      },
+
+      hasCoach: function(){
+        console.log(this.$store.getters.coachChatID);
+        if(this.$store.getters.coachChatID == -1){
+          return false;
+        }
+        else{
+          return true;
+        }
+
       },
 
       isLastRound: function(){
