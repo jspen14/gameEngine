@@ -22,16 +22,16 @@ export default new Vuex.Store({
     p2Choice: '',
     gameState: 'unsubmitted',
     matrix: [],
-    coachChatMsgs: [],
-    playerChatMsgs: [],
     whichPlayer: null,
     numberOfRounds: '',
     roundEarnings: '-',
     totalEarnings: 0,
     coachChatID: '',
+    coachChatMsgs: [],
     partnerChatID: '',
     partnerChatMsgs: [],
     gameAborted: false,
+    ptpChatEnabled: '',
   },
   getters: {
     inGameStatus: state => state.inGameStatus,
@@ -39,16 +39,16 @@ export default new Vuex.Store({
     currentGame: state => state.currentGame,
     user: state => state.user,
     coachChatID: state => state.coachChatID,
-    partnerChatID: state => state.partnerChatID,
-    matrix: state => state.matrix,
     coachChatMsgs: state => state.coachChatMsgs,
-    playerChatMsgs: state => state.playerChatMsgs,
+    partnerChatID: state => state.partnerChatID,
+    partnerChatMsgs: state => state.partnerChatMsgs,
+    ptpChatEnabled: state => state.ptpChatEnabled,
+    matrix: state => state.matrix,
     gameState: state =>state.gameState,
     p1Choice: state =>state.p1Choice,
     p2Choice: state =>state.p2Choice,
     numberOfRounds: state =>state.numberOfRounds,
     partnerChatMsgs: state => state.partnerChatMsgs,
-
 
     //added for registration
     getToken: state => state.token,
@@ -98,6 +98,12 @@ export default new Vuex.Store({
     },
     setPartnerChatMsgs (state, partnerChatMsgs){
       state.partnerChatMsgs = partnerChatMsgs;
+    },
+    setPartnerChatID(state, partnerChatID){
+      state.partnerChatID = partnerChatID;
+    },
+    setPTPChatEnabled(state, ptpChatEnabled){
+      state.ptpChatEnabled = ptpChatEnabled;
     },
     //added for login and registration
     setUser (state, user) {
@@ -178,6 +184,7 @@ export default new Vuex.Store({
         context.commit('setGameAborted',response.data.isAborted);
       });
     },
+
     //needs to update game
     updateGame(context){
       let timerID = setInterval(() => {
@@ -208,7 +215,7 @@ export default new Vuex.Store({
         axios.get('/api/gameState/'+context.state.currentGame+'/'+context.state.whichPlayer).then(response => {
           context.commit('setGameState',response.data.gameState);
         });
-        
+
         axios.get('/api/game/'+context.state.currentGame+'/'+context.state.whichPlayer).then(response =>{
           context.commit('setRoundEarnings', response.data.roundEarnings);
           context.commit('setTotalEarnings', response.data.totalEarnings);
@@ -288,7 +295,6 @@ export default new Vuex.Store({
         context.commit('setGameState','unsubmitted');
         context.commit('setMatrix',[]);
         context.commit('setCoachChatMsgs',[]);
-        context.commit('setPlayerChatMsgs',[]);
         context.commit('setWhichPlayer', null);
     },
 
@@ -326,6 +332,11 @@ export default new Vuex.Store({
         which: context.state.whichPlayer,
         choice: choice,
         game: context.state.currentGame,
+        /* For some reason this isn't being updated properly. So I have two options.
+              - One, change the submit choice to run off name of players or playerIDs instead of the gameID
+              - Two, (this is probably the better fix) find out where the gameID is being assigned and make it so that it is assigned at the beginning of a game instead of at the end.
+
+        */
       }
       axios.post("/api/game",choiceInfo).then(response =>
       {
@@ -391,7 +402,33 @@ export default new Vuex.Store({
       });
     },
 
-    addChatMsg(context, msgInfo){
+    getPartnerChatID(context){
+      console.log(context.state.ptp);
+      if (!context.state.ptpChatEnabled) {
+        axios.get('/api/partnerChatID/'+ context.state.user.id +'/'+ context.state.currentGame).then(response => { // context.state.user.id/context.state.currentGame
+          context.commit('setPartnerChatID', response.data.id);
+          console.log("PCID", context.state.partnerChatID);
+        }).catch(err => {
+          console.log("getPartnerChatID Failed: " + err);
+
+        });
+      }
+
+    },
+
+
+    retrievePTPChatEnabled(context){
+      console.log("Made it");
+      axios.get('/api/ptpChatEnabled/'+context.state.currentGame).then(response =>{
+        console.log("response: ");
+        console.log(response.data);
+        context.commit('setPTPChatEnabled',response.data.ptpChatEnabled);
+      }).catch(err =>{
+        console.log("retrievePTPChatEnabled", err);
+      })
+    },
+
+    addChatMsgToCoach(context, msgInfo){
       if(msgInfo.text != ''){
         axios.post('/api/coachChatMsgs', {
           text: msgInfo.text,
@@ -402,7 +439,24 @@ export default new Vuex.Store({
 
           return true;
         }).catch(err => {
-          console.log("error from addChatMsg: " + err);
+          console.log("error from addChatMsgToCoach: " + err);
+        });
+      }
+
+    },
+
+    addChatMsgToPartner(context, msgInfo){
+      if(msgInfo.text != ''){
+        axios.post('/api/partnerChatMsgs', {
+          text: msgInfo.text,
+          chatID: context.state.partnerChatID,
+          userID: context.state.user.id, //msgInfo.userID
+        }).then(response => {
+          //possibly call getChatMsgs from
+
+          return true;
+        }).catch(err => {
+          console.log("error from addChatMsgToCoach: " + err);
         });
       }
 
@@ -418,6 +472,15 @@ export default new Vuex.Store({
       });
     },
 
+    getPartnerChatMsgs(context){
+      axios.get('/api/partnerChatMsgs/' + context.state.partnerChatID).then(response => {
+        context.commit('setPartnerChatMsgs',response.data.messages);
+
+        return true;
+      }).catch(err => {
+        console.log("STORE: getPartnerChatMsgs: " + err);
+      });
+    },
 
     getCoachChatMsgsSize(context){
       axios.get('/api/coachChatMsgs/' + context.state.coachChatID).then(response => {
@@ -428,6 +491,17 @@ export default new Vuex.Store({
         console.log("STORE: getCoachChatMsgsSize: " + err);
       });
     },
+
+    getPartnerChatMsgsSize(context){
+      axios.get('/api/coachChatMsgs/' + context.state.partnerChatID).then(response => {
+        //Check the format of this.
+        return response.messages.length;
+
+      }).catch(err => {
+        console.log("STORE: getPartnerChatMsgsSize: " + err);
+      });
+    },
+
 
 
 //END JSPENCER CHAT STUFF

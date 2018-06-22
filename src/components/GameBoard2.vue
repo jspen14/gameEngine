@@ -49,14 +49,14 @@
                 @mouseenter="Row1=true"
                 @mouseleave="Row1=false"
 
-                class = "col-lg-2 col-md-2 col-sm-5 col-xs-5 boardRow unsubp1">
+                class = "col-lg-2 col-md-2 col-sm-2 col-xs-2 boardRow unsubp1">
                   <h2>1</h2>
                 </div>
                 <div v-else
                 @mouseenter="Row1=true"
                 @mouseleave="Row1=false"
                 v-bind:class="{rowX: rowActive(Row1)}"
-                class = "col-lg-2 col-md-2 col-sm-5 col-xs-5 boardRow p1">
+                class = "col-lg-2 col-md-2 col-sm-2 col-xs-2 boardRow p1">
                   <h2>1</h2>
                 </div>
 
@@ -85,14 +85,14 @@
                 @mouseenter="Row2=true"
                 @mouseleave="Row2=false"
 
-                class = "col-lg-2 col-md-2 col-sm-5 col-xs-5 boardRow unsubp1">
+                class = "col-lg-2 col-md-2 col-sm-2 col-xs-2 boardRow unsubp1">
                 <h2>2</h2>
                 </div>
                 <div v-else
                 @mouseenter="Row2=true"
                 @mouseleave="Row2=false"
                 v-bind:class="{rowX: rowActive(Row2)}"
-                class = "col-lg-2 col-md-2 col-sm-5 col-xs-5 boardRow p1">
+                class = "col-lg-2 col-md-2 col-sm-2 col-xs-2 boardRow p1">
                   <h2>2</h2>
                 </div>
 

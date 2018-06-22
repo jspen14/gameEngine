@@ -6,7 +6,7 @@ ExpertAlg::ExpertAlg() {
 
 ExpertAlg::ExpertAlg(int _me, char *playerString) {
     me = _me;
-    
+
     if (!strcmp("bully", playerString)) {
         setOfExperts = new Expert*[1];
         setOfExperts[0] = new TriggerStrat(me, BULLY1_V, &ignbs, true, 0.25);
@@ -55,17 +55,17 @@ ExpertAlg::ExpertAlg(int _me, char *playerString) {
         printf("unknown ExpertAlg\n");
         exit(1);
     }
-    
+
     selMech = new PlusPlusSelector(me, setOfExperts, numExperts);
     //selMech = new RandomSelector(setOfExperts, numExperts);
 }
 
 ExpertAlg::~ExpertAlg() {
     printf("ExpertAlg destructor\n");
-    
+
     for (int i = 0; i < numExperts; i++)
         delete setOfExperts[i];
-    
+
     delete setOfExperts;
     delete selMech;
 }
@@ -88,7 +88,7 @@ bool ExpertAlg::orient2Game(char *gameString) {
     }
 
     games[currentTime] = new Game(gameString);
-    
+
     ignbs.updateWithGame(games[currentTime]);
 
     int i;
@@ -97,7 +97,7 @@ bool ExpertAlg::orient2Game(char *gameString) {
         for (i = 0; i < numExperts; i++) {
             setOfExperts[i]->init(games[currentTime]);
         }
-    
+
     }
 
     selMech->selectExpert(games[currentTime]);
@@ -107,7 +107,7 @@ bool ExpertAlg::orient2Game(char *gameString) {
         printf("\nExpert %i selectAction (%s):\n", i, setOfExperts[i]->whoAmI());
         setOfExperts[i]->selectAction(games[currentTime]);
     }
-    
+
     return true;
 }
 
@@ -125,7 +125,7 @@ void ExpertAlg::processStartCheapTalk(char buf[10000]) {
     // tell all of the experts
     for (int i = 0; i < numExperts; i++)
         setOfExperts[i]->processStartCheapTalk(buf);
-    
+
     // see if we want to switch experts
     selMech->evaluateProposal(buf);
 }
@@ -139,9 +139,9 @@ int ExpertAlg::Move() {
 
 void ExpertAlg::moveUpdate(int actions[2], double dollars[2]) {
     currentTime ++;
-    
+
     //printf("ExpertAlg moveUpdate\n"); fflush(stdout);
-    
+
     // we need to update all of the experts
     //printf("Potentials:\n");
     for (int i = 0; i < numExperts; i++) {
@@ -155,7 +155,7 @@ void ExpertAlg::moveUpdate(int actions[2], double dollars[2]) {
         }
         //printf("%i: %lf\n", i, setOfExperts[i]->getPotential());
     }
-    
+
     // update the expert-selection mechanism
     selMech->update(actions, dollars);
 }

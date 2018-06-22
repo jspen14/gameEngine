@@ -37,7 +37,7 @@
     <div v-if="gameAborted != true" class="row">
 
       <div class="col-lg-5 col-md-5 col-sm-5 col-xs-5">
-        <chatDisplay></chatDisplay>
+        <ptcChatDisplay></ptcChatDisplay>
       </div>
 
       <div class="col-lg-2 col-md-2 col-sm-2 col-xs-2"></div>

@@ -24,7 +24,7 @@ if (jwtSecret === undefined) {
 
 //------------Game--------------------------
 class Game {
-  constructor(gameID, player1, player1Name, player2, player2Name, coach1, coach1Name, coach2, coach2Name){
+  constructor(gameID, player1, player1Name, player2, player2Name, coach1, coach1Name, coach2, coach2Name, ptpChatEnabled){
     this._gameID = gameID;
     this._player1 = player1;
     this._player1Name = player1Name;
@@ -46,6 +46,8 @@ class Game {
     this._matrix=[];
     this.getMatrix();
     this._numberOfRounds=this.setNumberOfRounds();
+    console.log("ptp Check 1: ", ptpChatEnabled);
+    this._ptpChatEnabled = ptpChatEnabled;
   }
   //Getters
   get player1() {
@@ -95,6 +97,9 @@ class Game {
   }
   get matrix(){
     return this._matrix;
+  }
+  get ptpChatEnabled(){
+    return this._ptpChatEnabled;
   }
   //Setters
   set gameID(newgameID){
@@ -383,8 +388,15 @@ const verifyToken = (req, res, next) => {
   });
 }
 
-const getGameIndex = (gameID) =>{
-  return gameModels.findIndex(x=> x.gameID ==gameID);
+function getGameIndex(id){
+
+  let gameID = parseInt(id);
+
+  for(var i = 0; i < gameModels.length; i++){
+    if (gameModels[i]._gameID == gameID){
+      return i;
+    }
+  }
 }
 
 // Endpoint Functions
@@ -514,6 +526,20 @@ app.post('/api/coachChatID',(req,res) => {
   });
 });
 
+app.post('/api/playersChatID',(req,res) => {
+  return knex('chatID').insert({
+    gameID: req.body.gameID,
+    user1: req.body.user1ID,
+    user2: req.body.user2ID,
+    chatType: 'P/P'
+  }).then(chatID => {
+    res.status(200).json({id: chatID[0]});
+  }).catch(err => {
+    console.log("Error in /api/coachChatID: " + err)
+    res.status(500);
+  });
+});
+
 app.get('/api/coachChatID/:userID/:gameID',(req,res) => {
 
   for (var i = 0; i < gameModels.length; i++){
@@ -542,8 +568,51 @@ app.get('/api/coachChatID/:userID/:gameID',(req,res) => {
 
 });
 
+app.get('/api/partnerChatID/:userID/:gameID',(req,res) => {
+  knex('chatID').where({
+    gameID: req.params.gameID,
+    user1: req.params.userID,
+    chatType: 'P/P',
+  }).orWhere({
+    gameID: req.params.gameID,
+    user2: req.params.userID,
+    chatType: 'P/P',
+  }).then(response => {
+    res.status(200).json({id: response[0].id});
+    return;
+  });
+
+});
+
+app.get('/api/ptpChatEnabled/:gameID',(req,res) => {
+  let index = getGameIndex(req.params.gameID); //getGameIndex(req.params.gameID);
+
+  res.status(200).json({ptpChatEnabled: gameModels[index]._ptpChatEnabled});
+  return;
+});
+
 app.post('/api/coachChatMsgs', (req,res) => {
 
+  knex('chats').insert({
+    chatID: req.body.chatID,
+    userID: req.body.userID,
+    message: req.body.text,
+    created: new Date()
+  }).then(response => {
+    // I might want to have a return here, but I'm not sure yet
+    res.status(200);
+    return;
+  }).catch(err => {
+    console.log("POST /api/coachChat Failed: " + err);
+    res.status(500);
+    return;
+  });
+
+});
+
+app.post('/api/partnerChatMsgs', (req,res) => {
+  console.log("Message Info:");
+  console.log(req.body);
   knex('chats').insert({
     chatID: req.body.chatID,
     userID: req.body.userID,
@@ -574,6 +643,18 @@ app.get('/api/coachChatMsgs/:chatID',(req,res) => {
 
 });
 
+app.get('/api/partnerChatMsgs/:chatID',(req,res) => {
+  let chatID = parseInt(req.params.chatID);
+
+  knex('chats').where('chatID',chatID).then(response => {
+
+    res.status(200).json({messages: response});
+  }).catch(err => {
+    console.log("GET /api/partnerChat/:chatID Failed: " + err);
+    res.status(500);
+  })
+
+});
 // END JSPENCER CHAT STUFF
 
 //update Coach
@@ -612,6 +693,11 @@ app.get('/api/gameState/:id/:which',(req,res)=>{
   let id =parseInt(req.params.id);
   let index=getGameIndex(id);
   let which=parseInt(req.params.which);
+
+  // console.log("index: ", index);
+  // console.log("object");
+  // console.log(gameModels[index]);
+
   if(gameModels[index].bothSubmitted())
   {
     gameModels[index].updateEarnings();
@@ -704,6 +790,7 @@ app.post('/api/createGame', (req,res) =>{
       coach1ID:knex('users').where('id',req.body.coach1ID).select('id'),
       player2ID:knex('users').where('id',req.body.player2ID).select('id'),
       coach2ID:knex('users').where('id',req.body.coach2ID).select('id'),
+      // Put player to player chat bool here
       created:new Date()})
 
     .then(ids => {
@@ -711,7 +798,10 @@ app.post('/api/createGame', (req,res) =>{
       let p2Name = '';
       let c1Name = '';
       let c2Name = '';
+      console.log('ptp Check 3: ', req.body);
+      let ptpChatEnabled = req.body.ptpChatEnabled;
 
+      console.log("ptp Check 2: ", ptpChatEnabled);
       let gID=parseInt(ids[0]);
 
       let p1ID=parseInt(req.body.player1ID);
@@ -726,15 +816,15 @@ app.post('/api/createGame', (req,res) =>{
       let c2ID=parseInt(req.body.coach2ID);
       c2Name = getName(req.body.coach2ID);
 
-      console.log("NEW GAME CREATED ... ");
-
       removeFromAvailableUsers(p1ID);
       removeFromAvailableUsers(p2ID);
       removeFromAvailableUsers(c1ID);
       removeFromAvailableUsers(c2ID);
-      console.log(availableUsers); // possibly come back and check htis.
+      // console.log(availableUsers); // possibly come back and check this.
 
-      let game= new Game(gID, p1ID, p1Name, p2ID, p2Name, c1ID, c1Name, c2ID, c2Name);
+      let game= new Game(gID, p1ID, p1Name, p2ID, p2Name, c1ID, c1Name, c2ID, c2Name, ptpChatEnabled); // find out where gID is defined
+
+      console.log("NEW GAME CREATED ... ");
 
       gameModels.push(game);
       // Send gameID to admin so he can view game progress
@@ -978,6 +1068,9 @@ app.post('/api/AIsetRoundOption/:gameID/:playerNum/:option', (req,res)=> {
   var option = parseInt(req.params.option);
   var index = getGameIndex(gameID);
 
+  console.log("gameID:" , gameID);
+  console.log("playerNum:" , playerNum);
+  console.log("option: ", option);
   if(gameModels[index]==null)
   {
     res.send("Bad Request!")
@@ -1037,6 +1130,8 @@ app.get('/api/AIroundEarnings/:gameID/:playerNum', (req,res)=> {
   var playerNum = parseInt(req.params.playerNum);
   var index = getGameIndex(gameID);
 
+  console.log("Player 1: ", gameModels[index].p1Earnings[gameModels[index].currentRound - 1]);
+  console.log("Player 2: ", gameModels[index].p2Earnings[gameModels[index].currentRound - 1]);
   if (playerNum == 1){
     res.send("^^^" + gameModels[index].p1Earnings[gameModels[index].currentRound - 1]);
   }

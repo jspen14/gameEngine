@@ -2,34 +2,34 @@
   <div class="earnings">
     <br><br>
     <div class="row">
-      <div class="col-lg-4 col-md-4"></div>
-      <div class="col-lg-4 col-md-4">
+      <div class="col-lg-4 col-md-4 col-sm-4 col-xs-4"></div>
+      <div class="col-lg-4 col-md-4 col-sm-4 col-xs-4">
         <h3>Earnings </h3>
         <hr>
       </div>
-      <div class="col-lg-4 col-md-4"></div>
+      <div class="col-lg-4 col-md-4 col-sm-4 col-xs-4"></div>
     </div>
       <div class="">
         <div class="row">
-          <div class="col-lg-4 col-md-4 boardHeader">
+          <div class="col-lg-4 col-md-4 col-sm-4 col-xs-4 boardHeader">
             <h4>Round </h4>
           </div>
-          <div class="col-lg-4 col-md-4 boardHeader">
+          <div class="col-lg-4 col-md-4 col-sm-4 col-xs-4 boardHeader">
             <h4>Avg. </h4>
           </div>
-          <div class="col-lg-4 col-md-4 boardHeader">
+          <div class="col-lg-4 col-md-4 col-sm-4 col-xs-4 boardHeader">
             <h4>Total </h4>
           </div>
         </div>
         <div class="row">
-          <div class="col-lg-4 col-md-4 boardHeader">
+          <div class="col-lg-4 col-md-4 col-sm-4 col-xs-4 boardHeader">
             <h4>  ${{roundEarnings}}</h4>
           </div>
-          <div class="col-lg-4 col-md-4 boardHeader">
+          <div class="col-lg-4 col-md-4 col-sm-4 col-xs-4 boardHeader">
             <h4  v-if="unsubmitted">${{averageEarnings}}</h4>
             <h4 v-else>$<img style="margin: 0.5vh;" src="/static/images/ajax-loader.gif"/></h4>
           </div>
-          <div class="col-lg-4 col-md-4 boardHeader">
+          <div class="col-lg-4 col-md-4 col-sm-4 col-xs-4 boardHeader">
             <h4> ${{totalEarnings}}</h4>
           </div>
         </div>

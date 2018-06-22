@@ -30,7 +30,7 @@ let users= [
 		name: "Thumper"
 	},
 	{
-		role: "Coach",
+		role: "Player",
 		name: "Mellon"
 	}
 ]

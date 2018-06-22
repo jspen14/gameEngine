@@ -81,7 +81,7 @@
 <template>
   <div>
     <br>
-    <h2>{{name}}'s {{title}} </h2>
+    <h4>{{name}}'s {{title}} </h4>
 
     <hr>
 
@@ -129,7 +129,7 @@ import axios from 'axios'
 export default{
   data() {
     return {
-      title: 'Chat Display',
+      title: 'Coach Chat',
       msgText: '',
       messages: [],
       pastLength: 0,
@@ -187,7 +187,7 @@ export default{
         swal("Error","Message is too long to send.","warning");
       }
       else{
-        this.$store.dispatch('addChatMsg', {
+        this.$store.dispatch('addChatMsgToCoach', {
           text: this.msgText,
         }).then(func => {
           this.msgText = '';

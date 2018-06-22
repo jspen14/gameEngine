@@ -14,6 +14,7 @@
 
   <div class="container">
     <h3>  Objective: Win as much money as possible. </h3>
+    <h3>  User: {{name}} </h3>
     <hr>
     <div v-if="gameAborted === true">
       <h2>You have been logged out of the game by the administrator. Thank you for playing.</h2>
@@ -21,13 +22,22 @@
 
     <div v-if="gameAborted != true" class="row">
 
-      <div v-if="hasCoach" class="col-lg-5 col-md-5 col-sm-5 col-xs-5">
-        <chatDisplay></chatDisplay>
+      <div class="col-lg-3 col-md-3 col-sm-3 col-xs-3">
+        <div v-if="hasCoach">
+          <ptcChatDisplay></ptcChatDisplay>
+        </div>
+        <div v-else>
+          <br><br><br><hr>
+          <img src="http://www.civilorganizations.com/wp-content/uploads/2017/07/0bf2a93.jpg" class="img-fluid">
+          <br><br>
+          <h4>Unfortunately, your coach didn't show up to work today. :/</h4>
+        </div>
+
       </div>
 
-      <div class="col-lg-2 col-md-2 col-sm-2 col-xs-2"></div>
+      <div class="col-lg-1 col-md-1 col-sm-1 col-xs-1"></div>
 
-      <div class='col-lg-5 col-md-5 col-sm-5 col-xs-5'>
+      <div class='col-lg-4 col-md-4 col-sm-4 col-xs-4'>
         <div v-if="player1">
           <gameBoard1></gameBoard1>
         </div>
@@ -48,6 +58,16 @@
           <button class="btn btn-danger" v-on:click="logout()">Logout</button>
 
       </div>
+
+      <div class="col-lg-1 col-md-1 col-sm-1 col-xs-1"></div>
+
+      <!-- <div v-if="ptpChatEnabled"> -->
+        <div v-show="ptpChatEnabled " class="col-lg-3 col-md-3 col-sm-3 col-xs-3">
+            <ptpChatDisplay></ptpChatDisplay>
+
+        </div>
+      <!-- </div> -->
+
     </div>
   </div>
 
@@ -66,10 +86,13 @@ import axios from 'axios'
         msgText: '',
         messages: [],
         isAborted: false,
+        ptpChatEnabled: '',
       }
     },
     created: function() {
-      this.updateGame();
+      this.updateGame()
+      .then(this.$store.dispatch('retrievePTPChatEnabled'))
+      .then(this.ptpChatEnabled = this.$store.getters.ptpChatEnabled);
     },
     computed: {
       player1: function() {
@@ -87,7 +110,6 @@ import axios from 'axios'
       },
 
       hasCoach: function(){
-        console.log(this.$store.getters.coachChatID);
         if(this.$store.getters.coachChatID == -1){
           return false;
         }

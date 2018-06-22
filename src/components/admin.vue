@@ -76,17 +76,29 @@
           <div class='col-lg-1 col-md-1 col-sm-1 col-xs-1'></div>
   </div>
     <hr>
-  <div class="vertSpacer1"></div>
+  <div class="row vertSpacer1">
+    <div class="col-lg-1 col-md-1 col-sm-1 col-xs-1 "></div>
+    <div class="col-lg-4 col-md-4 col-sm-4 col-xs-4 ">
+      <div v-if="ptpChatEnabled === false">
+        <button type="button" class="btn btn-success btn-block" v-on:click="changeptpChatEnabled()">Click to Allow Player to Player Chat</button>
+      </div>
+      <div v-else>
+        <button type="button" class="btn btn-danger btn-block" v-on:click="changeptpChatEnabled()">Click to Restrict Player to Player Chat</button>
+      </div>
+
+    </div>
+  </div>
 
   <div class="row">
           <div class='col-lg-1 col-md-1 col-sm-1 col-xs-1'></div>
 
       <div class='col-lg-4 col-md-4 col-sm-4 col-xs-4 selectedUsersOutline'>
-        <h4>Selected Players</h4>
 
-
+        <div class="">
+          <h4>Selected Players</h4>
           <h5 class="selectedUsers">Player 1: {{selectedPlayer1.name}}</h5>
           <h5 class="selectedUsers">Player 2: {{selectedPlayer2.name}}</h5>
+        </div>
 
       </div>
 
@@ -126,6 +138,7 @@ export default{
       selectedCoach1: '',
       selectedPlayer2: '',
       selectedCoach2: '',
+      ptpChatEnabled: true,
     }
   },
   created: function(){
@@ -157,6 +170,16 @@ export default{
         this.updateAvailableUsers();
       }, 2000);
     },
+
+    changeptpChatEnabled: function(){
+      if (this.ptpChatEnabled == true){
+        this.ptpChatEnabled = false;
+      }
+      else {
+          this.ptpChatEnabled = true;
+      }
+    },
+
     setPlayer: function(player){
       if(player == this.selectedPlayer1 || player == this.selectedPlayer2){
         return;
@@ -204,12 +227,14 @@ export default{
       }
       else{
         //Axios call
+        console.log("ptp Check 4: ", this.ptpChatEnabled);
         axios.post('/api/createGame',{
           // Use the calls to get these players' ids
           player1ID: this.selectedPlayer1.id,
           coach1ID: this.selectedCoach1.id,
           player2ID: this.selectedPlayer2.id,
           coach2ID: this.selectedCoach2.id,
+          ptpChatEnabled: this.ptpChatEnabled,
         }).then(response => {
 
           axios.post('/api/coachChatID', {
@@ -225,6 +250,19 @@ export default{
           }).catch(err => {
             console.log("Error setting up player 2's coachChat: " + err);
           });
+
+
+
+          if(this.ptpChatEnabled){
+            console.log("Player Chat Activated");
+            axios.post('/api/playersChatID', {
+              gameID: response.data.gameID,
+              user1ID: this.selectedPlayer1.id,
+              user2ID: this.selectedPlayer2.id,
+            }).catch(err => {
+              console.log("Error setting up playersChat: " + err);
+            });
+          }
 
 
           // Reset data

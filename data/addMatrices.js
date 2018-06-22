@@ -16,7 +16,6 @@ for(let i=0; i<temp.numGames; i++)
 
 }
 
-
 let deleteMatrices = () => {
   return knex('matrices').del();
 }

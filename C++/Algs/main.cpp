@@ -342,6 +342,7 @@ int main(int argc,char *argv[])
     // Get userID
     userIDStr = stripHeader(getUserID(argv));
 
+    //system('open hhtp')\// figure out how to change default browser on this
     // Set userID
 
     if (userIDStr == "undefined"){
