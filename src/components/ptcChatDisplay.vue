@@ -81,7 +81,7 @@
 <template>
   <div>
     <br>
-    <h4>{{name}}'s {{title}} </h4>
+    <h4>{{title}} </h4>
 
     <hr>
 
@@ -129,7 +129,6 @@ import axios from 'axios'
 export default{
   data() {
     return {
-      title: 'Coach Chat',
       msgText: '',
       messages: [],
       pastLength: 0,
@@ -149,6 +148,14 @@ export default{
       // this might be expensive
       return this.messages;
     },
+    title: function(){
+      if(this.$store.getters.user.role == 'Player'){
+        return "Send Message to: \n Your Coach";
+      }
+      else {
+        return "Send Message to Coach your Player"
+      }
+    }
 
 
   },

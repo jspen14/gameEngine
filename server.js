@@ -569,6 +569,15 @@ app.get('/api/coachChatID/:userID/:gameID',(req,res) => {
 });
 
 app.get('/api/partnerChatID/:userID/:gameID',(req,res) => {
+
+  for (var i = 0; i < gameModels.length; i++){
+      if((gameModels[i]._gameID== req.params.gameID) && gameModels[i]._ptpChatEnabled == false){
+        res.status(200).json({id: -1});
+        return;
+      }
+
+  }
+
   knex('chatID').where({
     gameID: req.params.gameID,
     user1: req.params.userID,
@@ -578,6 +587,7 @@ app.get('/api/partnerChatID/:userID/:gameID',(req,res) => {
     user2: req.params.userID,
     chatType: 'P/P',
   }).then(response => {
+    console.log("userID: ", req.params.userID);
     res.status(200).json({id: response[0].id});
     return;
   });
@@ -636,9 +646,11 @@ app.get('/api/coachChatMsgs/:chatID',(req,res) => {
   knex('chats').where('chatID',chatID).then(response => {
 
     res.status(200).json({messages: response});
+    return;
   }).catch(err => {
     console.log("GET /api/coachChat/:chatID Failed: " + err);
     res.status(500);
+    return;
   })
 
 });
@@ -649,9 +661,11 @@ app.get('/api/partnerChatMsgs/:chatID',(req,res) => {
   knex('chats').where('chatID',chatID).then(response => {
 
     res.status(200).json({messages: response});
+    return;
   }).catch(err => {
     console.log("GET /api/partnerChat/:chatID Failed: " + err);
     res.status(500);
+    return;
   })
 
 });

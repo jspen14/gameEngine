@@ -164,12 +164,15 @@ export default new Vuex.Store({
           context.dispatch('getMatrix',context.state.currentRound);
           //context.commit('setGameState','unsubmitted');
           context.dispatch('getCoachChatID');
+          if(context.state.user == "Player"){
+            context.dispatch('getPartnerChatID');
+          }
+          context.dispatch('retrievePTPChatEnabled');
           clearInterval(updateDataTimer);
           context.dispatch('updateGame');
           context.dispatch('abortCheck');
         }
       });
-        console.log("did this stop?");
       }, 1500);
     },
 
@@ -403,11 +406,9 @@ export default new Vuex.Store({
     },
 
     getPartnerChatID(context){
-      console.log(context.state.ptp);
       if (!context.state.ptpChatEnabled) {
         axios.get('/api/partnerChatID/'+ context.state.user.id +'/'+ context.state.currentGame).then(response => { // context.state.user.id/context.state.currentGame
           context.commit('setPartnerChatID', response.data.id);
-          console.log("PCID", context.state.partnerChatID);
         }).catch(err => {
           console.log("getPartnerChatID Failed: " + err);
 
@@ -418,10 +419,7 @@ export default new Vuex.Store({
 
 
     retrievePTPChatEnabled(context){
-      console.log("Made it");
       axios.get('/api/ptpChatEnabled/'+context.state.currentGame).then(response =>{
-        console.log("response: ");
-        console.log(response.data);
         context.commit('setPTPChatEnabled',response.data.ptpChatEnabled);
       }).catch(err =>{
         console.log("retrievePTPChatEnabled", err);

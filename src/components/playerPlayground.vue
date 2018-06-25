@@ -12,64 +12,129 @@
 
 <template>
 
-  <div class="container">
-    <h3>  Objective: Win as much money as possible. </h3>
-    <h3>  User: {{name}} </h3>
-    <hr>
-    <div v-if="gameAborted === true">
-      <h2>You have been logged out of the game by the administrator. Thank you for playing.</h2>
+<div class="container">
+  <h3>  Objective: Win as much money as possible. </h3>
+  <hr>
+  <div v-if="gameAborted === true">
+    <h2>You have been logged out of the game by the administrator. Thank you for playing.</h2>
+  </div>
+
+  <div v-if="gameAborted != true">
+    <div class="row" v-if="!ptcChatEnabled && ptpChatEnabled">
+
+        <div class="col-lg-1 col-md-1 col-sm-1 col-xs-1"></div>
+
+        <div class='col-lg-5 col-md-5 col-sm-5 col-xs-5'>
+          <div v-if="player1">
+            <gameBoard1></gameBoard1>
+          </div>
+          <div v-else>
+            <gameBoard2></gameBoard2>
+          </div>
+              <earnings></earnings>
+
+            <br>
+            <div v-show="gameState==='done'">
+              <button v-if="isLastRound" class="btn btn-success" v-on:click="gotoEndGame()">Finish Game</button>
+              <button v-else class="btn btn-success" v-on:click="readyForNextRound()">Go to Next Round</button>
+            </div>
+
+            <h3 v-show="gameState==='submitted'">Waiting for other player...</h3>
+            <h3 v-show="gameState==='isReady'">Waiting for other player...</h3>
+            <br>
+            <button class="btn btn-danger" v-on:click="logout()">Logout</button>
+
+        </div>
+
+        <div class="col-lg-1 col-md-1 col-sm-1 col-xs-1"></div>
+
+        <div class="col-lg-4 col-md-4 col-sm-4 col-xs-4">
+          <ptpChatDisplay></ptpChatDisplay>
+        </div>
+
+        <div class="col-lg-1 col-md-1 col-sm-1 col-xs-1"></div>
+
+
     </div>
 
-    <div v-if="gameAborted != true" class="row">
+    <div class="row" v-else-if="ptcChatEnabled && !ptpChatEnabled">
 
-      <div class="col-lg-3 col-md-3 col-sm-3 col-xs-3">
-        <div v-if="hasCoach">
+        <div class="col-lg-1 col-md-1 col-sm-1 col-xs-1"></div>
+
+        <div class="col-lg-4 col-md-4 col-sm-4 col-xs-4">
           <ptcChatDisplay></ptcChatDisplay>
         </div>
-        <div v-else>
-          <br><br><br><hr>
-          <img src="http://www.civilorganizations.com/wp-content/uploads/2017/07/0bf2a93.jpg" class="img-fluid">
-          <br><br>
-          <h4>Unfortunately, your coach didn't show up to work today. :/</h4>
-        </div>
 
-      </div>
+        <div class="col-lg-1 col-md-1 col-sm-1 col-xs-1"></div>
 
-      <div class="col-lg-1 col-md-1 col-sm-1 col-xs-1"></div>
-
-      <div class='col-lg-4 col-md-4 col-sm-4 col-xs-4'>
-        <div v-if="player1">
-          <gameBoard1></gameBoard1>
-        </div>
-        <div v-else>
-          <gameBoard2></gameBoard2>
-        </div>
-            <earnings></earnings>
-
-          <br>
-          <div v-show="gameState==='done'">
-            <button v-if="isLastRound" class="btn btn-success" v-on:click="gotoEndGame()">Finish Game</button>
-            <button v-else class="btn btn-success" v-on:click="readyForNextRound()">Go to Next Round</button>
+        <div class='col-lg-5 col-md-5 col-sm-5 col-xs-5'>
+          <div v-if="player1">
+            <gameBoard1></gameBoard1>
           </div>
+          <div v-else>
+            <gameBoard2></gameBoard2>
+          </div>
+              <earnings></earnings>
 
-          <h3 v-show="gameState==='submitted'">Waiting for other player...</h3>
-          <h3 v-show="gameState==='isReady'">Waiting for other player...</h3>
-          <br>
-          <button class="btn btn-danger" v-on:click="logout()">Logout</button>
+            <br>
+            <div v-show="gameState==='done'">
+              <button v-if="isLastRound" class="btn btn-success" v-on:click="gotoEndGame()">Finish Game</button>
+              <button v-else class="btn btn-success" v-on:click="readyForNextRound()">Go to Next Round</button>
+            </div>
 
-      </div>
-
-      <div class="col-lg-1 col-md-1 col-sm-1 col-xs-1"></div>
-
-      <!-- <div v-if="ptpChatEnabled"> -->
-        <div v-show="ptpChatEnabled " class="col-lg-3 col-md-3 col-sm-3 col-xs-3">
-            <ptpChatDisplay></ptpChatDisplay>
+            <h3 v-show="gameState==='submitted'">Waiting for other player...</h3>
+            <h3 v-show="gameState==='isReady'">Waiting for other player...</h3>
+            <br>
+            <button class="btn btn-danger" v-on:click="logout()">Logout</button>
 
         </div>
-      <!-- </div> -->
+
+        <div class="col-lg-1 col-md-1 col-sm-1 col-xs-1"></div>
 
     </div>
+
+    <div class="row" v-else="ptcChatEnabled && ptpChatEnabled">
+
+        <div class="col-lg-3 col-md- col-sm-3 col-xs-3">
+          <ptcChatDisplay></ptcChatDisplay>
+        </div>
+
+        <div class="col-lg-1 col-md-1 col-sm-1 col-xs-1"></div>
+
+        <div class='col-lg-4 col-md-4 col-sm-4 col-xs-4'>
+          <div v-if="player1">
+            <gameBoard1></gameBoard1>
+          </div>
+          <div v-else>
+            <gameBoard2></gameBoard2>
+          </div>
+              <earnings></earnings>
+
+            <br>
+            <div v-show="gameState==='done'">
+              <button v-if="isLastRound" class="btn btn-success" v-on:click="gotoEndGame()">Finish Game</button>
+              <button v-else class="btn btn-success" v-on:click="readyForNextRound()">Go to Next Round</button>
+            </div>
+
+            <h3 v-show="gameState==='submitted'">Waiting for other player...</h3>
+            <h3 v-show="gameState==='isReady'">Waiting for other player...</h3>
+            <br>
+            <button class="btn btn-danger" v-on:click="logout()">Logout</button>
+
+        </div>
+
+        <div class="col-lg-1 col-md-1 col-sm-1 col-xs-1"></div>
+
+        <div class="col-lg-3 col-md-3 col-sm-3 col-xs-3">
+          <ptpChatDisplay></ptpChatDisplay>
+        </div>
+
+    </div>
+
   </div>
+
+</div>
+
 
 
 </template>
@@ -86,17 +151,15 @@ import axios from 'axios'
         msgText: '',
         messages: [],
         isAborted: false,
-        ptpChatEnabled: '',
+
       }
     },
     created: function() {
-      this.updateGame()
-      .then(this.$store.dispatch('retrievePTPChatEnabled'))
-      .then(this.ptpChatEnabled = this.$store.getters.ptpChatEnabled);
+      this.updateGame();
+
     },
     computed: {
       player1: function() {
-        console.log("Which player: " + this.$store.getters.whichPlayer);
         if (this.$store.getters.whichPlayer == "0"){
           return true;
         }
@@ -109,15 +172,19 @@ import axios from 'axios'
         return this.$store.getters.gameState;
       },
 
-      hasCoach: function(){
+      ptcChatEnabled: function(){
         if(this.$store.getters.coachChatID == -1){
           return false;
         }
         else{
           return true;
         }
-
       },
+
+      ptpChatEnabled: function(){
+        return this.$store.getters.ptpChatEnabled;
+      },
+
 
       isLastRound: function(){
         return this.$store.getters.currentRound==this.$store.getters.numberOfRounds;
@@ -133,6 +200,11 @@ import axios from 'axios'
 
     },
     methods: {
+      updatePTPchatEnabled: function(){
+        var timer = setInterval(()=>{
+          this.ptpChatDisplay = this.$store.getters.ptpChatEnabled;
+        }, 1000);
+      },
       gotoEndGame: function(){
         this.$store.dispatch('gotoEndGame');
       },

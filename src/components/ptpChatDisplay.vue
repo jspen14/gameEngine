@@ -81,7 +81,7 @@
 <template>
   <div>
     <br>
-    <h4> {{name}}'s {{title}} </h4>
+    <h4> {{title}} </h4>
 
     <hr>
 
@@ -129,7 +129,7 @@ import axios from 'axios'
 export default{
   data() {
     return {
-      title: 'Partner Chat',
+      title: 'Send Message to: \n Your Partner',
       msgText: '',
       messages: [],
       pastLength: 0,

@@ -32,5 +32,5 @@ let insertMatrices = () => {
 deleteMatrices().then(() => {
   return insertMatrices();
 }).then(() => {
-  console.log("OK, matrices created");
+  console.log("Inserted Matrices");
 });
