@@ -133,7 +133,7 @@ string getWhich(string userIDStr){
     char message[1024];
 
 
-    sprintf(message,message_fmt,userIDArg); //argv[1]
+    sprintf(message,message_fmt,userIDArg);
 
     response = httpCall(message);
 
@@ -159,11 +159,34 @@ string getMatrix(string gameIDStr){
     char *gameIDArg = (char *) gameIDStr.c_str();
     char message[1024];
 
-    sprintf(message,message_fmt,gameIDArg); //argv[1]
+    sprintf(message,message_fmt,gameIDArg);
 
     response = httpCall(message);
 
     return response;
+}
+
+string sendCheapTalk(string gameIDStr, string userIDStr, string cheapTalkMessageStr){
+  char *message_fmt = (char *) "POST /api/AIcheapTalk/%s/%s/%s HTTP/1.0\r\n\r\n";
+  string response;
+  // This is version specific
+    // The intent behind these next couple lines of code is to take the newLine characters off the string
+
+  string revisedStr = "";
+  revisedStr.push_back(cheapTalkMessageStr[0]);
+  revisedStr.push_back(cheapTalkMessageStr[1]);
+
+  char *cheapTalkMessageArg = (char *) revisedStr.c_str();
+  char *gameIDArg = (char *) gameIDStr.c_str();
+  char *userIDArg = (char *) userIDStr.c_str();
+
+  char message[1024];
+
+  sprintf(message,message_fmt,gameIDArg, userIDArg, cheapTalkMessageArg);
+
+  response = httpCall(message);
+
+  return response;
 }
 
 string submitRoundOption(string gameIDStr, string playerNumStr, string optionStr){
@@ -174,7 +197,7 @@ string submitRoundOption(string gameIDStr, string playerNumStr, string optionStr
     char *optionArg = (char *) optionStr.c_str();
     char message[1024];
 
-    sprintf(message,message_fmt,gameIDArg,playerNumArg,optionArg); //argv[1]
+    sprintf(message,message_fmt,gameIDArg,playerNumArg,optionArg);
 
     response = httpCall(message);
 
@@ -188,7 +211,7 @@ string getSubmittedStatus(string gameIDStr, string playerNumStr){
     char *playerNumArg = (char *) playerNumStr.c_str();
     char message[1024];
 
-    sprintf(message,message_fmt,gameIDArg,playerNumArg); //argv[1]
+    sprintf(message,message_fmt,gameIDArg,playerNumArg);
 
     response = httpCall(message);
 
@@ -202,7 +225,7 @@ string getSubmittedStatus(string gameIDStr, string playerNumStr){
   char *playerNumArg = (char *) playerNumStr.c_str();
   char message[1024];
 
-  sprintf(message,message_fmt,gameIDArg,playerNumArg); //argv[1]
+  sprintf(message,message_fmt,gameIDArg,playerNumArg);
 
   response = httpCall(message);
 
@@ -216,7 +239,7 @@ string getOtherPlayersOption(string gameIDStr, string otherPlayerNumStr){
   char *otherPlayerNumArg = (char *) otherPlayerNumStr.c_str();
   char message[1024];
 
-  sprintf(message,message_fmt,gameIDArg,otherPlayerNumArg); //argv[1]
+  sprintf(message,message_fmt,gameIDArg,otherPlayerNumArg);
 
   response = httpCall(message);
 
@@ -230,7 +253,7 @@ string getReadyStatus(string gameIDStr, string playerNumStr){
     char *playerNumArg = (char *) playerNumStr.c_str();
     char message[1024];
 
-    sprintf(message,message_fmt,gameIDArg,playerNumArg); //argv[1]
+    sprintf(message,message_fmt,gameIDArg,playerNumArg);
 
     response = httpCall(message);
 
@@ -334,6 +357,7 @@ int main(int argc,char *argv[])
     int roundOptionInt = 0;
     bool done = false;
     bool waiting = true;
+    bool cheapTalk = true;
     vector<string> myEarnings;
     vector<string> myChoices;
     vector<string> theirEarnings;
@@ -403,13 +427,7 @@ int main(int argc,char *argv[])
 
         cout << "Matrix: " << roundMatrixStr << endl;
 
-        // Make Decision
-        /*
-        roundOptionInt = computeBestOption(roundMatrixStr, stoi(whichStr));
-        roundOptionStr = to_string(roundOptionInt);
-        myChoices.push_back(roundOptionStr);
-        cout << "Option: " << roundOptionStr << endl;
-        */
+
 
         printf("\n\nGame %i\n", g);
 
@@ -419,24 +437,24 @@ int main(int argc,char *argv[])
             break;
 
         //printf("Oriented\n"); fflush(stdout);
-        /*
+
         if (cheapTalk) {
           printf("before-game cheap talks\n");
-          //printf("que pasa?\n"); fflush(stdout);
-          // send a message
           player->produceStartCheapTalk(buf);
-          //printf("produced\n"); fflush(stdout);
-          cs->SendMessage(buf, strlen(buf));
 
-          printf("sent message: %s\n", buf); fflush(stdout);
+          string cheapTalkMessage(buf);
+
+          cout << "CTM: " << cheapTalkMessage << endl;
+
+          sendCheapTalk(gameIDStr, userIDStr, cheapTalkMessage);
 
           // receive a message
-          cs->ReadMessage(buf);
-          player->processStartCheapTalk(buf);
 
-          printf("received cheap talk: %s\n", buf);
+          //player->processStartCheapTalk(buf);
+
+          //printf("received cheap talk: %s\n", buf);
         }
-        */
+
 
         // select and send an action
         int act = player->Move();
@@ -496,27 +514,69 @@ int main(int argc,char *argv[])
 
         /********************************************************************/
 
-        // Get earnings here
-        if (whichStr == "1"){
-          // Get earnings
-          myEarnings.push_back(stripHeader(getRoundEarnings(gameIDStr, "1")));
-          theirEarnings.push_back(stripHeader(getRoundEarnings(gameIDStr, "2")));
+        /*
+            - put this in a while loop
+            - make a goodToContinue bool
+            - reset bool true at the beginning of the if statement (at the beginning of each iteration of for loop)
+            - if any of the values return as undefined, change the bool to false so that it'll query the server again
+              - this should work because there are the correct amount of entries in these arrays on the server
+            - if we have to repeat, sleep for 2 seconds or so.
+        */
 
-          // Get other player's choice
-          theirChoices.push_back(stripHeader(getOtherPlayersOption(gameIDStr, "2")));
-        }
-        else if (whichStr == "2"){
-          // Get earnings
-          myEarnings.push_back(stripHeader(getRoundEarnings(gameIDStr, "2")));
-          theirEarnings.push_back(stripHeader(getRoundEarnings(gameIDStr, "1")));
+        do {
+          waiting = false;
+          string temp = "" ;
 
-          //Get other player's choice
-          theirChoices.push_back(stripHeader(getOtherPlayersOption(gameIDStr, "1")));
-        }
+          if (whichStr == "1"){
+
+            temp = stripHeader(getRoundEarnings(gameIDStr, "1"));
+            if (temp != "undefined"){
+              myEarnings.push_back(temp);
+            }
+            else {
+              waiting = true;
+            }
+
+            temp = stripHeader(getRoundEarnings(gameIDStr, "2"));
+            if(temp != "undefined"){
+              theirEarnings.push_back(temp);
+            }
+            else{
+              waiting = true;
+            }
+
+            temp = stripHeader(getOtherPlayersOption(gameIDStr, "2"));
+            if(temp != "undefined"){
+              theirChoices.push_back(temp);
+            }
+            else{
+              waiting = true;
+            }
+
+          }
+          else if (whichStr == "2"){
+            myEarnings.push_back(stripHeader(getRoundEarnings(gameIDStr, "2")));
+            theirEarnings.push_back(stripHeader(getRoundEarnings(gameIDStr, "1")));
+            theirChoices.push_back(stripHeader(getOtherPlayersOption(gameIDStr, "1")));
+          }
+
+          if(waiting){
+            sleep(2);
+          }
+        } while(waiting);
 
 
         actuar[me] = act;
         actuar[1-me] = stoi(theirChoices[theirChoices.size()-1]);
+
+        // Have an error check here that sees if there is a nulled value
+        if( myEarnings[myEarnings.size()-1] == "undefined"){
+          cout << "yes 2" << endl;
+        }
+
+
+        cout << "My: " << myEarnings[myEarnings.size()-1] << endl;
+        cout << "Their: " << theirEarnings[theirEarnings.size()-1] << endl;
 
         dineros[me] = stod(myEarnings[myEarnings.size()-1]);
         dineros[1-me] = stod(theirEarnings[theirEarnings.size()-1]);

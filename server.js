@@ -1,9 +1,11 @@
-const express = require('express');
+/apiconst express = require('express');
 const bodyParser = require('body-parser');
 
 const app = express();
 app.use(bodyParser.json());
 app.use(bodyParser.urlencoded({extended: false}));
+
+app.use(express.static('dist'));
 
 // Knex Setup
 const env = process.env.NODE_ENV || 'development';
@@ -144,14 +146,6 @@ class Game {
   set matrix(m){
     this._matrix=m;
   }
-  addP1Earnings(earnings)
-  {
-    this.p1Earnings.push(earnings);
-  }
-  addP2Earings(earnings)
-  {
-    this.p2Earnings.push(earnings);
-  }
   getP1RoundEarnings()
   {
     return this.p1Earnings[this.currentRound-1];
@@ -212,7 +206,7 @@ class Game {
   {
     if(this.bothSubmitted() && this.p1Earnings.length<this.currentRound && this.p2Earnings.length<this.currentRound)
     {
-      this.p1Earnings.push(this.matrix[this.p1Choice][this.p2Choice][0]);
+      this.p1Earnings.push(this.matrix[this.p1Choice][this.p2Choice][0]); // Possible put a log here
       this.p2Earnings.push(this.matrix[this.p1Choice][this.p2Choice][1]);
       knex('rounds').insert({gameID: this.gameID,
         matrixID:this.currentRound,
@@ -569,7 +563,9 @@ app.get('/api/coachChatID/:userID/:gameID',(req,res) => {
 });
 
 app.get('/api/partnerChatID/:userID/:gameID',(req,res) => {
-
+  console.log("Log from pcid");
+  console.log(req.params.userID);
+  console.log(req.params.gameID);
   for (var i = 0; i < gameModels.length; i++){
       if((gameModels[i]._gameID== req.params.gameID) && gameModels[i]._ptpChatEnabled == false){
         res.status(200).json({id: -1});
@@ -587,7 +583,7 @@ app.get('/api/partnerChatID/:userID/:gameID',(req,res) => {
     user2: req.params.userID,
     chatType: 'P/P',
   }).then(response => {
-    console.log("userID: ", req.params.userID);
+    console.log("response in pcid", response);
     res.status(200).json({id: response[0].id});
     return;
   });
@@ -1076,15 +1072,42 @@ app.get('/api/AImatrix/:gameID', (req,res)=> {
   });
 });
 
+app.post('/api/AIcheapTalk/:gameID/:userID/:message', (req,res)=>{
+  var gameID = parseInt(req.params.gameID);
+  var userID = parseInt(req.params.userID);
+
+  console.log(req.params);
+  knex('chatID').where('gameID',gameID).andWhere('chatType','P/P').select('id').then(response => {
+    console.log(response[0]);
+    knex('chats').insert({
+      chatID: parseInt(response[0].id),
+      userID: req.params.userID,
+      message: req.params.message,
+      created: new Date()
+    }).then(response => {
+      // I might want to have a return here, but I'm not sure yet
+      res.status(200);
+      return;
+    }).catch(err => {
+      console.log("POST /api/coachChat Failed: " + err);
+      res.status(500);
+      return;
+    });
+  });
+
+  res.send("^^^Hello");
+  return;
+
+});
+
+
 app.post('/api/AIsetRoundOption/:gameID/:playerNum/:option', (req,res)=> {
   var gameID = parseInt(req.params.gameID);
   var playerNum = parseInt(req.params.playerNum);
   var option = parseInt(req.params.option);
   var index = getGameIndex(gameID);
 
-  console.log("gameID:" , gameID);
-  console.log("playerNum:" , playerNum);
-  console.log("option: ", option);
+
   if(gameModels[index]==null)
   {
     res.send("Bad Request!")
@@ -1225,4 +1248,6 @@ app.get('/api/AIgameIsDone/:gameID',(req,res)=> {
   }
 });
 
-app.listen(3000, () => console.log("Server listening on port 3000!"));
+app.listen(3000, () =>{
+    console.log("Server listening on port 3000!")
+});
