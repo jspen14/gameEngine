@@ -25,13 +25,10 @@
         <div class="col-lg-1 col-md-1 col-sm-1 col-xs-1"></div>
 
         <div class='col-lg-5 col-md-5 col-sm-5 col-xs-5'>
-          <div v-if="player1">
+
             <gameBoard1></gameBoard1>
-          </div>
-          <div v-else>
-            <gameBoard2></gameBoard2>
-          </div>
-              <earnings></earnings>
+
+            <earnings></earnings>
 
             <br>
             <div v-show="gameState==='done'">
@@ -68,13 +65,9 @@
         <div class="col-lg-1 col-md-1 col-sm-1 col-xs-1"></div>
 
         <div class='col-lg-5 col-md-5 col-sm-5 col-xs-5'>
-          <div v-if="player1">
+
             <gameBoard1></gameBoard1>
-          </div>
-          <div v-else>
-            <gameBoard2></gameBoard2>
-          </div>
-              <earnings></earnings>
+            <earnings></earnings>
 
             <br>
             <div v-show="gameState==='done'">
@@ -102,13 +95,9 @@
         <div class="col-lg-1 col-md-1 col-sm-1 col-xs-1"></div>
 
         <div class='col-lg-4 col-md-4 col-sm-4 col-xs-4'>
-          <div v-if="player1">
+
             <gameBoard1></gameBoard1>
-          </div>
-          <div v-else>
-            <gameBoard2></gameBoard2>
-          </div>
-              <earnings></earnings>
+            <earnings></earnings>
 
             <br>
             <div v-show="gameState==='done'">
