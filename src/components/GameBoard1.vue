@@ -1,114 +1,57 @@
 <template>
-	<div
-	<div class="gameboard">
-		<br>
-          <h2>Game Board</h2>
-          <hr>
-          <div class = "row">
-            <div class = "col-lg-2 col-md-2 col-sm-2 col-xs-2 boardHeader" ></div>
-
-            <div v-if="isUnsubmitted && $store.getters.whichPlayer===1 && isPlayer"
-            @mouseenter="Col1=true"
-            @mouseleave="Col1=false"
-
-            v-on:click="submitChoice(0)"
-            class = "col-lg-5 col-md-5 col-sm-5 col-xs-5 boardHeader unsubp2">
-              <h2>A</h2>
-            </div>
-            <div v-else
-            @mouseenter="Col1=true"
-            @mouseleave="Col1=false"
-            v-bind:class="{colX: colActive(Col1)}"
-            class = "col-lg-5 col-md-5 col-sm-5 col-xs-5 boardHeader p2">
-              <h2>A</h2>
-            </div>
+	<div>
+		<div class="gameboard">
+			<br>
+      <h2>Game Board 1</h2>
+			{{this.$store.getters.gameState}}
+      <hr>
+      <div class = "row">
+      	<div class = "col-lg-2 col-md-2 col-sm-2 col-xs-2 boardHeader" ></div>
+				<div class = "col-lg-5 col-md-5 col-sm-5 col-xs-5 boardHeader"> <h2> A </h2> </div>
+				<div class = "col-lg-5 col-md-5 col-sm-5 col-xs-5 boardHeader"> <h2> B </h2> </div>
+      </div>
 
 
-            <div v-if="isUnsubmitted && $store.getters.whichPlayer===1 && isPlayer"
-            @mouseenter="Col2=true"
-            @mouseleave="Col2=false"
-            v-on:click="submitChoice(1)"
-
-            class = "col-lg-5 col-md-5 col-sm-5 col-xs-5 boardHeader unsubp2">
-              <h2>B</h2>
-            </div>
-            <div v-else
-            @mouseenter="Col2=true"
-            @mouseleave="Col2=false"
-            v-bind:class="{colX: colActive(Col2)}"
-            class = "col-lg-5 col-md-5 col-sm-5 col-xs-5 boardHeader p2">
-              <h2>B</h2>
-            </div>
-          </div>
-
-
-            <div>
+            <div v-if="$store.getters.whichPlayer===0"> <!-- IF PLAYER 1 -->
               <div class = "row">
-                <div v-if="isUnsubmitted && $store.getters.whichPlayer===0 && isPlayer"
-                v-on:click="submitChoice(0)"
-                @mouseenter="Row1=true"
-                @mouseleave="Row1=false"
-
-                class = "col-lg-2 col-md-2 col-sm-2 col-xs-2 boardRow unsubp1">
+								<div v-if="isUnsubmitted && isPlayer" v-on:click="submitChoice(0)" @mouseenter="Row1=true" @mouseleave="Row1=false" class = "col-lg-2 col-md-2 col-sm-2 col-xs-2 boardRow unsubp1">
                   <h2>1</h2>
                 </div>
-                <div v-else
-                @mouseenter="Row1=true"
-                @mouseleave="Row1=false"
-                v-bind:class="{rowX: rowActive(Row1)}"
-                class = "col-lg-2 col-md-2 col-sm-2 col-xs-2 boardRow p1">
+                <div v-else v-bind:class="{rowX: rowActive(Row1)}" class = "col-lg-2 col-md-2 col-sm-2 col-xs-2 boardRow p1">
                   <h2>1</h2>
                 </div>
 
-                <div v-bind:class="{selected: zero_zero, colX: colActive(Col1), rowX: rowActive(Row1)}"
-                @mouseenter="activate(0,0)"
-                @mouseleave="deactivate(0,0)"
-                class = "col-lg-5 col-md-5 col-sm-5 col-xs-5 boardRow">
+
+  						<div v-bind:class="{selected: zero_zero, colX: colActive(Col1), rowX: rowActive(Row1)}" class = "col-lg-5 col-md-5 col-sm-5 col-xs-5 boardRow">
                   <br>
                   <h5 class="p2">{{$store.getters.matrix[0][0][other]}}</h5>
                   <h5 class="p1">{{$store.getters.matrix[0][0][me]}}</h5>
                 </div>
 
-                <div v-bind:class="{selected: zero_one, colX: colActive(Col2), rowX: rowActive(Row1)}"
-                @mouseenter="activate(0,1)"
-                @mouseleave="deactivate(0,1)"
-                class = "col-lg-5 col-md-5 col-sm-5 col-xs-5 boardRow">
+                <div v-bind:class="{selected: zero_one, colX: colActive(Col2), rowX: rowActive(Row1)}"  class = "col-lg-5 col-md-5 col-sm-5 col-xs-5 boardRow">
                   <br>
                   <h5 class="p2">{{$store.getters.matrix[0][1][other]}}</h5>
                   <h5 class="p1">{{$store.getters.matrix[0][1][me]}}</h5>
                 </div>
+
+
               </div>
 
               <div class = "row">
-                <div v-if="isUnsubmitted && $store.getters.whichPlayer===0 && isPlayer"
-                v-on:click="submitChoice(1)"
-                @mouseenter="Row2=true"
-                @mouseleave="Row2=false"
-
-                class = "col-lg-2 col-md-2 col-sm-2 col-xs-2 boardRow unsubp1">
-                <h2>2</h2>
+								<div v-if="isUnsubmitted && isPlayer" v-on:click="submitChoice(1)" @mouseenter="Row2=true" @mouseleave="Row2=false" class = "col-lg-2 col-md-2 col-sm-2 col-xs-2 boardRow unsubp1">
+                	<h2>2</h2>
                 </div>
-                <div v-else
-                @mouseenter="Row2=true"
-                @mouseleave="Row2=false"
-                v-bind:class="{rowX: rowActive(Row2)}"
-                class = "col-lg-2 col-md-2 col-sm-2 col-xs-2 boardRow p1">
+                <div v-else v-bind:class="{rowX: rowActive(Row2)}" class = "col-lg-2 col-md-2 col-sm-2 col-xs-2 boardRow p1">
                   <h2>2</h2>
                 </div>
 
-                <div v-bind:class="{selected: one_zero, colX: colActive(Col1), rowX: rowActive(Row2)}"
-                @mouseenter="activate(1,0)"
-                @mouseleave="deactivate(1,0)"
-                class = "col-lg-5 col-md-5 col-sm-5 col-xs-5 boardRow">
+                <div v-bind:class="{selected: one_zero, colX: colActive(Col1), rowX: rowActive(Row2)}"  class = "col-lg-5 col-md-5 col-sm-5 col-xs-5 boardRow">
                   <br>
                   <h5 class="p2">{{$store.getters.matrix[1][0][other]}}</h5>
                   <h5 class="p1">{{$store.getters.matrix[1][0][me]}}</h5>
                 </div>
 
-                <div v-bind:class="{selected: one_one, colX: colActive(Col2), rowX: rowActive(Row2)}"
-                @mouseenter="activate(1,1)"
-                @mouseleave="deactivate(1,1)"
-                class = "col-lg-5 col-md-5 col-sm-5 col-xs-5 boardRow">
+                <div v-bind:class="{selected: one_one, colX: colActive(Col2), rowX: rowActive(Row2)}"  class = "col-lg-5 col-md-5 col-sm-5 col-xs-5 boardRow">
                   <br>
                   <h5 class="p2">{{$store.getters.matrix[1][1][other]}}</h5>
                   <h5 class="p1">{{$store.getters.matrix[1][1][me]}}</h5>
@@ -116,8 +59,11 @@
               </div>
             </div>
 
-      </div>
-    </div>
+						
+		</div>
+
+	</div>
+
 
 </template>
 <script>
@@ -138,9 +84,16 @@
     computed: {
 
       isUnsubmitted: function(){
-        if(this.$store.getters.gameState==="unsubmitted")
-          return true;
-        return false;
+        if(this.$store.getters.gameState==="unsubmitted"){
+					return true;
+				}
+				else if(this.$store.getters.gameState==="isReady"){
+						this.deactivate();
+
+				}
+
+				return false;
+
       },
       me: function(){
         return this.$store.getters.whichPlayer;
@@ -168,7 +121,7 @@
           return true;
         return false;
       },
-        zero_one: function(){
+      zero_one: function(){
         let which=this.$store.getters.whichPlayer;
         let p1Choice= this.$store.getters.p1Choice;
         let p2Choice= this.$store.getters.p2Choice;
@@ -225,17 +178,14 @@
           this.Col2=true;
       },
       deactivate:function(row,col){
-        if(row===0)
           this.Row1=false;
-        else
           this.Row2=false;
-        if(col===0)
           this.Col1=false;
-        else
           this.Col2=false;
       },
 			submitChoice: function(choice){
         this.$store.dispatch("submitChoice", choice);
+
 			},
       getMatrix: function(){
           this.$store.dispatch('getMatrix', this.$store.getters.currentRound);
@@ -281,7 +231,7 @@
 .unsubp2{
   transition: background-color 0.2s ease;
   color: white;
-  background: #007bff;
+
 }
 .unsubp2:hover{
   background: #0057B5;

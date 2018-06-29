@@ -5,7 +5,7 @@ const app = express();
 app.use(bodyParser.json());
 app.use(bodyParser.urlencoded({extended: false}));
 
-app.use(express.static('dist'));
+// app.use(express.static('dist'));
 
 // Knex Setup
 const env = process.env.NODE_ENV || 'development';
@@ -1076,9 +1076,7 @@ app.post('/api/AIcheapTalk/:gameID/:userID/:message', (req,res)=>{
   var gameID = parseInt(req.params.gameID);
   var userID = parseInt(req.params.userID);
 
-  console.log(req.params);
   knex('chatID').where('gameID',gameID).andWhere('chatType','P/P').select('id').then(response => {
-    console.log(response[0]);
     knex('chats').insert({
       chatID: parseInt(response[0].id),
       userID: req.params.userID,
@@ -1167,8 +1165,6 @@ app.get('/api/AIroundEarnings/:gameID/:playerNum', (req,res)=> {
   var playerNum = parseInt(req.params.playerNum);
   var index = getGameIndex(gameID);
 
-  console.log("Player 1: ", gameModels[index].p1Earnings[gameModels[index].currentRound - 1]);
-  console.log("Player 2: ", gameModels[index].p2Earnings[gameModels[index].currentRound - 1]);
   if (playerNum == 1){
     res.send("^^^" + gameModels[index].p1Earnings[gameModels[index].currentRound - 1]);
   }
