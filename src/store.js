@@ -506,9 +506,11 @@ export default new Vuex.Store({
 //END JSPENCER CHAT STUFF
 
     getMatrix(context, matrixID){
-      axios.get("/api/matrix/" + matrixID).then(response => {
-        let data= response.data.matrix[0];
-        let mx=data.matrix;
+      axios.get("/api/matrix/" + context.state.currentGame).then(response => { // Changed this to be gameID
+
+        console.log(response);
+        let data= response.data.matrix;
+        let mx=data.payoffs;
 
         let type= data.type;
         let dimensions= type.split('x');
@@ -558,6 +560,8 @@ export default new Vuex.Store({
           }
           matrix.push(row);
         }
+        console.log("Matrix");
+        console.log(matrix);
         context.commit('setMatrix', matrix);
       }).catch(err => {
         console.log("getMatrix Failed:", err);

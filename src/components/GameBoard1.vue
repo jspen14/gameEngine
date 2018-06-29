@@ -74,7 +74,7 @@
                   <h5 class="p1">{{$store.getters.matrix[0][0][1-other]}}</h5>
                 </div>
 
-                <div v-bind:class="{selected: zero_one, colX: colActive(Col2), rowX: rowActive(Row1)}"  class = "col-lg-5 col-md-5 col-sm-5 col-xs-5 boardRow">
+                <div v-bind:class="{selected: one_zero, colX: colActive(Col2), rowX: rowActive(Row1)}"  class = "col-lg-5 col-md-5 col-sm-5 col-xs-5 boardRow">
                   <br>
 									<h5 class="p2">{{$store.getters.matrix[1][0][1-me]}}</h5>
                   <h5 class="p1">{{$store.getters.matrix[1][0][1-other]}}</h5>
@@ -91,7 +91,7 @@
                   <h2>2</h2>
                 </div>
 
-                <div v-bind:class="{selected: one_zero, colX: colActive(Col1), rowX: rowActive(Row2)}"  class = "col-lg-5 col-md-5 col-sm-5 col-xs-5 boardRow">
+                <div v-bind:class="{selected: zero_one, colX: colActive(Col1), rowX: rowActive(Row2)}"  class = "col-lg-5 col-md-5 col-sm-5 col-xs-5 boardRow">
                   <br>
 									<h5 class="p2">{{$store.getters.matrix[0][1][1-me]}}</h5>
 									<h5 class="p1">{{$store.getters.matrix[0][1][1-other]}}</h5>
