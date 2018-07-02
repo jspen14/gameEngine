@@ -9,9 +9,7 @@ app.use(bodyParser.urlencoded({extended: false}));
 var matrixFile = process.argv[2];
 var filePath = "./data/" + matrixFile;
 
-var jsonVar = require(filePath); 
-
-console.log(jsonVar);
+var jsonVar = require(filePath); //with path
 
 // app.use(express.static('dist'));
 
@@ -1039,6 +1037,9 @@ app.get('/api/AIround/:gameID', (req,res)=> {
 app.get('/api/AImatrix/:gameID', (req,res)=> {
   var gameID = parseInt(req.params.gameID);
   var index = getGameIndex(gameID);
+
+  console.log("^^^{type:" + jsonVar.games[gameModels[index]._currentRound -1].type + ","
+              " payoffs: " + jsonVar.games[gameModels[index]._currentRound -1].payoffs + "}");
 
   res.send("^^^" + jsonVar.games[gameModels[index]._currentRound -1].payoffs);
 
