@@ -1039,6 +1039,9 @@ app.get('/api/AImatrix/:gameID', (req,res)=> {
   var gameID = parseInt(req.params.gameID);
   var index = getGameIndex(gameID);
 
+  console.log("^^^{type:" + jsonVar.games[gameModels[index]._currentRound -1].type + ","
+              " payoffs: " + jsonVar.games[gameModels[index]._currentRound -1].payoffs + "}");
+
   res.send("^^^" + jsonVar.games[gameModels[index]._currentRound -1].payoffs);
 
 });
