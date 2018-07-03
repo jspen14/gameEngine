@@ -11,8 +11,6 @@ var filePath = "./data/" + matrixFile;
 
 var jsonVar = require(filePath);
 
-console.log(jsonVar);
-
 // app.use(express.static('dist'));
 
 // Knex Setup
@@ -879,7 +877,7 @@ app.post('/api/login', (req, res) => {
   console.log("hey");
   if (!req.body.name || !req.body.password)
     return res.status(400).send();
-    
+
   knex('users').where('name',req.body.name).first().then(user => {
     if (user === undefined) {
       res.status(403).send("Invalid credentials");

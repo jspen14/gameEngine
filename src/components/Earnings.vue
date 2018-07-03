@@ -4,7 +4,8 @@
     <br>
     <br>
     <hr>
-
+      <h4>Game State: {{gameState}}</h4>
+      <br>
       <h4>Average Earnings: $ {{averageEarnings}} </h4>
       <br>
       <h4>Total Earnings: ${{totalEarnings}}</h4>
@@ -17,6 +18,9 @@
     name: 'Earnings',
 
     computed: {
+      gameState: function() {
+        return this.$store.getters.gameState;
+      },
       roundEarnings: function(){
         return this.$store.getters.roundEarnings;
       },
@@ -26,6 +30,9 @@
       averageEarnings: function(){
           if(this.$store.getters.currentRound===1 || this.$store.getters.currentRound === 0){
             return this.$store.getters.totalEarnings;
+          }
+          else if(this.$store.getters.gameState === 'done' || this.$store.getters.gameState === 'isReady'){
+            return Math.round((this.$store.getters.totalEarnings/(this.$store.getters.currentRound))*100)/100
           }
           else {
             return Math.round((this.$store.getters.totalEarnings/(this.$store.getters.currentRound-1))*100)/100;

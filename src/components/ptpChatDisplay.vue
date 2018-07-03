@@ -59,8 +59,6 @@
     padding-right: 10px;
   }
 
-
-  /* Attempt to get chat looking like an actual chat (iMessage)*/
   #chatbox {
     overflow:   none;
     position:   relative;
