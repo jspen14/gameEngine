@@ -409,14 +409,17 @@ export default new Vuex.Store({
 
     getPartnerChatID(context){ //Make sure this has a value before continuing
       if (!context.state.ptpChatEnabled) {
-        console.log(context.state.user);
-        axios.get('/api/partnerChatID/'+ context.state.user.id +'/'+ context.state.currentGame).then(response => { // context.state.user.id/context.state.currentGame
-          console.log("repsonse from gpcID", response.data.id);
-          context.commit('setPartnerChatID', response.data.id);
-        }).catch(err => {
-          console.log("getPartnerChatID Failed: " + err);
+        while (this.$store.partnerChatID != ''){
+          console.log(context.state.user);
+          axios.get('/api/partnerChatID/'+ context.state.user.id +'/'+ context.state.currentGame).then(response => { // context.state.user.id/context.state.currentGame
+            console.log("repsonse from gpcID", response.data.id);
+            context.commit('setPartnerChatID', response.data.id);
+          }).catch(err => {
+            console.log("getPartnerChatID Failed: " + err);
 
-        });
+          });
+        }
+
       }
 
     },
