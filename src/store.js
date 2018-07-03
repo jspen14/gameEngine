@@ -164,7 +164,9 @@ export default new Vuex.Store({
           context.dispatch('getMatrix',context.state.currentRound);
           //context.commit('setGameState','unsubmitted');
           context.dispatch('getCoachChatID');
-          if(context.state.user == "Player"){
+          console.log("sUSers");
+          console.log(context.state.user);
+          if(context.state.user.role == "Player"){
             context.dispatch('getPartnerChatID');
           }
           context.dispatch('retrievePTPChatEnabled');
@@ -405,8 +407,9 @@ export default new Vuex.Store({
       });
     },
 
-    getPartnerChatID(context){
+    getPartnerChatID(context){ //Make sure this has a value before continuing
       if (!context.state.ptpChatEnabled) {
+        console.log(context.state.user);
         axios.get('/api/partnerChatID/'+ context.state.user.id +'/'+ context.state.currentGame).then(response => { // context.state.user.id/context.state.currentGame
           console.log("repsonse from gpcID", response.data.id);
           context.commit('setPartnerChatID', response.data.id);

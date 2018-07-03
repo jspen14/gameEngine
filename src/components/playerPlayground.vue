@@ -1,13 +1,5 @@
 <style scoped>
-  .boardHeader{
-    min-height: 5vh;
-    border: solid 1px black;
-  }
 
-  .boardRow{
-    min-height: 10vh;
-    border: solid 1px black;
-  }
 </style>
 
 <template>
@@ -108,6 +100,7 @@
             <h3 v-show="gameState==='submitted'">Waiting for other player...</h3>
             <h3 v-show="gameState==='isReady'">Waiting for other player...</h3>
             <br>
+            
             <button class="btn btn-danger" v-on:click="logout()">Logout</button>
 
         </div>

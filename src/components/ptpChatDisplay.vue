@@ -32,6 +32,7 @@
     clear: left;
     text-align: left;
     border-radius: 6px;
+    border: 2px solid #FE6120;
     background-color: #E5E5EA;
     color: black;
     padding-top: 7px;
@@ -81,8 +82,8 @@
 <template>
   <div>
     <br>
-    <h4> {{title}} </h4>
-
+    <h4> Send Message to:</h4>
+    <h4 style="color:#FE6120"> Your Partner</h4>
     <hr>
 
     <div class = "msgsBox" id = "chatbox">
@@ -129,7 +130,6 @@ import axios from 'axios'
 export default{
   data() {
     return {
-      title: 'Send Message to: \n Your Partner',
       msgText: '',
       messages: [],
       pastLength: 0,

@@ -9,7 +9,7 @@ app.use(bodyParser.urlencoded({extended: false}));
 var matrixFile = process.argv[2];
 var filePath = "./data/" + matrixFile;
 
-var jsonVar = require(filePath); 
+var jsonVar = require(filePath);
 
 console.log(jsonVar);
 
@@ -876,9 +876,10 @@ app.delete('/api/game/:id', (req,res)=>
 
 // Login
 app.post('/api/login', (req, res) => {
-
+  console.log("hey");
   if (!req.body.name || !req.body.password)
     return res.status(400).send();
+    
   knex('users').where('name',req.body.name).first().then(user => {
     if (user === undefined) {
       res.status(403).send("Invalid credentials");
@@ -894,7 +895,7 @@ app.post('/api/login', (req, res) => {
        //Add to availableUsers here
        if(!userIsInAvaiablePlayers(user.id))
           availableUsers.push(user);
-
+          console.log(user);
       res.status(200).json({user:{name:user.name,id:user.id,role:user.role},token:token});
     }
     else
