@@ -271,8 +271,9 @@ class Game {
   setNumberOfRounds(){
     return jsonVar.games.length;
   }
+
   getMatrix(){
-    let data=jsonVar.games[0];
+    let data=jsonVar.games[this.currentRound-1];
     let mx=data.payoffs;
     let type= data.type;
     let dimensions= type.split('x');
@@ -316,8 +317,8 @@ class Game {
       }
       matrix.push(row);
     }
-    this.matrix=matrix;
 
+    this.matrix=matrix;
 
   }
 }
@@ -874,10 +875,9 @@ app.delete('/api/game/:id', (req,res)=>
 
 // Login
 app.post('/api/login', (req, res) => {
-  console.log("hey");
+
   if (!req.body.name || !req.body.password)
     return res.status(400).send();
-
   knex('users').where('name',req.body.name).first().then(user => {
     if (user === undefined) {
       res.status(403).send("Invalid credentials");
@@ -893,7 +893,7 @@ app.post('/api/login', (req, res) => {
        //Add to availableUsers here
        if(!userIsInAvaiablePlayers(user.id))
           availableUsers.push(user);
-          console.log(user);
+
       res.status(200).json({user:{name:user.name,id:user.id,role:user.role},token:token});
     }
     else
@@ -1038,9 +1038,6 @@ app.get('/api/AIround/:gameID', (req,res)=> {
 app.get('/api/AImatrix/:gameID', (req,res)=> {
   var gameID = parseInt(req.params.gameID);
   var index = getGameIndex(gameID);
-
-  console.log("^^^{type:" + jsonVar.games[gameModels[index]._currentRound -1].type + ","
-              " payoffs: " + jsonVar.games[gameModels[index]._currentRound -1].payoffs + "}");
 
   res.send("^^^" + jsonVar.games[gameModels[index]._currentRound -1].payoffs);
 

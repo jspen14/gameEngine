@@ -4,6 +4,8 @@
     <br>
     <br>
     <hr>
+      <h4>Round Earnings: {{roundEarnings}}</h4>
+      <br>
       <h4>Game State: {{gameState}}</h4>
       <br>
       <h4>Average Earnings: $ {{averageEarnings}} </h4>
