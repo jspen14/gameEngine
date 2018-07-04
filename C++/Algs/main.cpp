@@ -556,9 +556,30 @@ int main(int argc,char *argv[])
 
           }
           else if (whichStr == "2"){
-            myEarnings.push_back(stripHeader(getRoundEarnings(gameIDStr, "2")));
-            theirEarnings.push_back(stripHeader(getRoundEarnings(gameIDStr, "1")));
-            theirChoices.push_back(stripHeader(getOtherPlayersOption(gameIDStr, "1")));
+            temp = stripHeader(getRoundEarnings(gameIDStr, "2"));
+            if (temp != "undefined"){
+              myEarnings.push_back(temp);
+            }
+            else {
+              waiting = true;
+            }
+
+            temp = stripHeader(getRoundEarnings(gameIDStr, "1"));
+            if(temp != "undefined"){
+              theirEarnings.push_back(temp);
+            }
+            else{
+              waiting = true;
+            }
+
+            temp = stripHeader(getOtherPlayersOption(gameIDStr, "1"));
+            if(temp != "undefined"){
+              theirChoices.push_back(temp);
+            }
+            else{
+              waiting = true;
+            }
+            
           }
 
           if(waiting){

@@ -26,9 +26,9 @@ export default new Vuex.Store({
     numberOfRounds: '',
     roundEarnings: '-',
     totalEarnings: 0,
-    coachChatID: '',
+    coachChatID: -1,
     coachChatMsgs: [],
-    partnerChatID: '',
+    partnerChatID: -1,
     partnerChatMsgs: [],
     gameAborted: false,
     ptpChatEnabled: '',
@@ -162,10 +162,8 @@ export default new Vuex.Store({
           context.commit('setCurrentRound',response.data.round);
           context.dispatch('getNumberOfRounds');
           context.dispatch('getMatrix',context.state.currentRound);
-          //context.commit('setGameState','unsubmitted');
           context.dispatch('getCoachChatID');
-          console.log("sUSers");
-          console.log(context.state.user);
+
           if(context.state.user.role == "Player"){
             context.dispatch('getPartnerChatID');
           }
@@ -408,19 +406,13 @@ export default new Vuex.Store({
     },
 
     getPartnerChatID(context){ //Make sure this has a value before continuing
-      if (!context.state.ptpChatEnabled) {
-        while (this.$store.partnerChatID != ''){
-          console.log(context.state.user);
-          axios.get('/api/partnerChatID/'+ context.state.user.id +'/'+ context.state.currentGame).then(response => { // context.state.user.id/context.state.currentGame
-            console.log("repsonse from gpcID", response.data.id);
-            context.commit('setPartnerChatID', response.data.id);
-          }).catch(err => {
-            console.log("getPartnerChatID Failed: " + err);
 
-          });
-        }
+      axios.get('/api/partnerChatID/'+ context.state.user.id +'/'+ context.state.currentGame).then(response => { // context.state.user.id/context.state.currentGame
+        context.commit('setPartnerChatID', response.data.id);
+      }).catch(err => {
+        console.log("getPartnerChatID Failed: " + err);
 
-      }
+      });
 
     },
 

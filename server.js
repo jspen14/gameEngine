@@ -432,10 +432,12 @@ app.get('/api/availableUsers',(req,res) => {
   }
 
   res.send(availableUsers);
+  return;
 });
 
 app.get('/api/gameModels',(req,res) => {
   res.status(200).json({activeGames: gameModels});
+  return;
 });
 
 
@@ -516,6 +518,8 @@ app.post('/api/coachChatID',(req,res) => {
   }).catch(err => {
     console.log("Error in /api/coachChatID: " + err)
   });
+
+  return;
 });
 
 app.post('/api/playersChatID',(req,res) => {
@@ -530,6 +534,8 @@ app.post('/api/playersChatID',(req,res) => {
     console.log("Error in /api/coachChatID: " + err)
     res.status(500);
   });
+
+  return;
 });
 
 app.get('/api/coachChatID/:userID/:gameID',(req,res) => {
@@ -558,6 +564,8 @@ app.get('/api/coachChatID/:userID/:gameID',(req,res) => {
     return;
   });
 
+  return;
+
 });
 
 app.get('/api/partnerChatID/:userID/:gameID',(req,res) => {
@@ -582,6 +590,7 @@ app.get('/api/partnerChatID/:userID/:gameID',(req,res) => {
     return;
   });
 
+  return;
 });
 
 app.get('/api/ptpChatEnabled/:gameID',(req,res) => {
@@ -608,6 +617,7 @@ app.post('/api/coachChatMsgs', (req,res) => {
     return;
   });
 
+  return;
 });
 
 app.post('/api/partnerChatMsgs', (req,res) => {
@@ -626,6 +636,7 @@ app.post('/api/partnerChatMsgs', (req,res) => {
     return;
   });
 
+  return;
 });
 
 app.get('/api/coachChatMsgs/:chatID',(req,res) => {
@@ -641,6 +652,7 @@ app.get('/api/coachChatMsgs/:chatID',(req,res) => {
     return;
   })
 
+  return;
 });
 
 app.get('/api/partnerChatMsgs/:chatID',(req,res) => {
@@ -656,6 +668,7 @@ app.get('/api/partnerChatMsgs/:chatID',(req,res) => {
     return;
   })
 
+  return;
 });
 // END JSPENCER CHAT STUFF
 
@@ -677,8 +690,10 @@ app.get('/api/game/:id/:which',(req,res)=>
     totalEarnings=gameModels[index].getP2TotalEarnings();
     roundEarnings=gameModels[index].getP2RoundEarnings();
   }
+
   res.status(200).json({p1Choice:gameModels[index].p1Choice, p2Choice:gameModels[index].p2Choice,
     roundEarnings: roundEarnings, totalEarnings: totalEarnings, round:gameModels[index].currentRound});
+  return;
 });
 
 app.get('/api/matrix/:gameID', (req,res)=> {
@@ -688,7 +703,7 @@ app.get('/api/matrix/:gameID', (req,res)=> {
 
 
   res.status(200).json({matrix: jsonVar.games[gameModels[index]._currentRound -1]})
-
+  return;
 });
 
 app.get('/api/gameState/:id/:which',(req,res)=>{
@@ -708,6 +723,8 @@ app.get('/api/gameState/:id/:which',(req,res)=>{
     res.status(200).json({gameState:'submitted'});
   else
     res.status(200).json({gameState:'unsubmitted'});
+
+    return;
 });
 
 // This indicates player is ready for the next round
@@ -726,9 +743,9 @@ app.post('/api/ready', (req,res)=>{
     res.status(200).send("success");
   }
   else
-  {
     res.status(500).send("error in /ready");
-  }
+
+  return;
 });
 
 // This gets current round
@@ -739,17 +756,22 @@ app.get('/api/ready/:gameID',(req,res)=>{
   {
       gameModels[index].goToNextRound();
   }
+
   res.status(200).json({currentRound: gameModels[index].currentRound});
-})
+  return;
+});
 
 app.get('/api/numberOfRounds/:gameID',(req,res)=>{
   let id= parseInt(req.params.gameID);
   let index= getGameIndex(id);
+
   res.status(200).json({numberOfRounds:gameModels[index].numberOfRounds});
+  return;
 })
 
 app.post('/api/test/:message', (req, res)=>{
   res.send("Your message was: " + req.params.message);
+  return;
 });
 
 app.get('/api/totalEarnings/:gameID/:which', (req,res)=>{
@@ -778,6 +800,8 @@ app.get('/api/totalEarnings/:gameID/:which', (req,res)=>{
   }
   else
     res.status(500).send("error");
+
+  return;
 })
 
 app.post('/api/createGame', (req,res) =>{
@@ -829,6 +853,8 @@ app.post('/api/createGame', (req,res) =>{
       console.log(error);
       res.status(500).json({error})
     });
+
+    return;
 });
 
 //submit Choice
@@ -857,8 +883,9 @@ app.post('/api/game',(req,res)=>
   else{
     console.log("error in submit choice server side");
     res.status(500).send('failure');
-
   }
+
+  return;
 });
 
 app.delete('/api/game/:id', (req,res)=>
@@ -870,7 +897,9 @@ app.delete('/api/game/:id', (req,res)=>
   {
     gameModels.splice(index,1);
   }
+
   res.status(200).send("deletedGame");
+  return;
 })
 
 // Login
@@ -907,6 +936,8 @@ app.post('/api/login', (req, res) => {
       res.status(500).json({ error });
     }
   });
+
+  return;
 });
 
 //Register
@@ -938,8 +969,9 @@ app.post('/api/users', (req, res) => {
         console.log(error);
         res.status(500).json({ error });
       }
-
     });
+
+    return;
 });
 
 app.get('/api/me', verifyToken, (req,res) => {
@@ -948,6 +980,8 @@ app.get('/api/me', verifyToken, (req,res) => {
   }).catch(error => {
     res.status(500).json({ error });
   });
+
+  return;
 });
 
 //AI Functions
@@ -983,6 +1017,8 @@ app.post('/api/AIlogin/:name', (req, res)=>{
       return;
     }
   });
+
+  return;
 });
 
   // AI - Check if in game
@@ -1040,7 +1076,7 @@ app.get('/api/AImatrix/:gameID', (req,res)=> {
   var index = getGameIndex(gameID);
 
   res.send("^^^" + jsonVar.games[gameModels[index]._currentRound -1].payoffs);
-
+  return;
 });
 
 app.post('/api/AIcheapTalk/:gameID/:userID/:message', (req,res)=>{
@@ -1128,6 +1164,7 @@ app.get('/api/AIsubmittedStatus/:gameID/:playerNum', (req,res)=> {
   }
 
   res.send("^^^error");
+  return;
 });
 
 // AI earnings function(s)
@@ -1198,6 +1235,7 @@ app.get('/api/AIreadyStatus/:gameID/:playerNum', (req,res)=> {
   }
 
   res.send("^^^error");
+  return;
 });
 
 // AI game Done
@@ -1213,6 +1251,7 @@ app.get('/api/AIgameIsDone/:gameID',(req,res)=> {
     res.send("^^^false");
     return;
   }
+  return;
 });
 
 app.listen(3000, () =>{
