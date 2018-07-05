@@ -219,7 +219,6 @@ import axios from 'axios'
         this.$store.dispatch('updateGame');
       },
       submitOption: function(param){
-      console.log(param);
         axios.put('/api/p1roundOption',{
           roundOption: param,
         });

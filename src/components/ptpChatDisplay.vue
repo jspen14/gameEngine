@@ -90,8 +90,12 @@
 
 
           <div v-if="!isMe(msg.userID)">
-            <div class="partnerMsgWrap">
-              <h6 class="partnerMsgDisplay">  {{msg.message}}</h6>
+            <div v-if="isCheapTalk(msg.message)">
+              <h6 class="partnerMsgDisplay">  {{formatCheapTalk(msg.message)}} </h6>
+              <br><br>
+            </div>
+            <div v-else class="partnerMsgWrap">
+              <h6 class="partnerMsgDisplay">  {{msg.message}} </h6>
               <br><br>
             </div>
 
@@ -180,8 +184,44 @@ export default{
       }
     },
 
+    isCheapTalk: function(message){
+      if((message[0] == 0 || message[0] == 1) && (message[1] == 0 || message[1] == 1)){
+        return true;
+      }
+      else{
+        return false;
+      }
+    },
+
+    formatCheapTalk: function(message){
+      var retString;
+      var aiOption;
+
+      if (this.$store.getters.whichPlayer == "0"){
+        if (parseInt(message.charAt(1)) == 0){
+          aiOption = "A";
+        }
+        else{
+          aiOption = "B";
+        }
+
+        retString = "You play " + (parseInt(message[0])+1) + ", and I'll play " + aiOption;
+      }
+      else {
+        if (parseInt(message.charAt(0)) == 0){
+          aiOption = "A";
+        }
+        else{
+          aiOption = "B";
+        }
+
+        retString = "You play " + (parseInt(message[1])+1) + ", and I'll play " + aiOption;
+      }
+
+      return retString;
+    },
+
     addChatMsg: function(){
-      console.log("Length: ", this.msgText.length);
       if(this.msgText.length > 254){
         swal("Error","Message is too long to send.","warning");
       }

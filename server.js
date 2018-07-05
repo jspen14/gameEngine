@@ -11,7 +11,7 @@ var filePath = "./data/" + matrixFile;
 
 var jsonVar = require(filePath);
 
-app.use(express.static('dist'));
+// app.use(express.static('dist'));
 
 // Knex Setup
 const env = process.env.NODE_ENV || 'development';
@@ -900,21 +900,42 @@ app.delete('/api/game/:id', (req,res)=>
 // Login
 app.post('/api/login', (req, res) => {
 
+  console.log("Request: ");
+  console.log(req.body);
+
   if (!req.body.name || !req.body.password)
     return res.status(400).send();
+
+  console.log("Marker 1"); //Error Check
+
   knex('users').where('name',req.body.name).first().then(user => {
+    console.log("Marker 2: "); // Error Check
+    console.log(user); // Error Check
+
     if (user === undefined) {
       res.status(403).send("Invalid credentials");
       throw new Error('abort');
     }
+
+    let resp = [bcrypt.compare(req.body.password, user.hash),user];
+    console.log("Marker 3: ");
+    console.log(resp);
+
     return [bcrypt.compare(req.body.password, user.hash),user];
   }).spread((result,user) => {
-        if (result) {
+    console.log("Marker 4");
+    console.log("Result", result);
+    console.log("User: ");
+    console.log(user);
+
+    if (result) {
        let token = jwt.sign({ id: user.id }, jwtSecret, {
-        expiresIn: 86400 // expires in 24 hours
+        expiresIn: 86400 // jwtSecret expires in 24 hours
        });
 
-       //Add to availableUsers here
+       console.log("M5. Token:");
+       console.log(token);
+
        if(!userIsInAvaiablePlayers(user.id))
           availableUsers.push(user);
 
@@ -924,6 +945,7 @@ app.post('/api/login', (req, res) => {
     {
       res.status(403).send("Invalid credentials");
     }
+
     return;
   }).catch(error => {
     if (error.message !== 'abort') {
@@ -1085,8 +1107,7 @@ app.post('/api/AIcheapTalk/:gameID/:userID/:message', (req,res)=>{
       message: req.params.message,
       created: new Date()
     }).then(response => {
-      // I might want to have a return here, but I'm not sure yet
-      res.status(200);
+      res.status(200).send(); 
       return;
     }).catch(err => {
       console.log("POST /api/coachChat Failed: " + err);
