@@ -366,8 +366,8 @@ int main(int argc,char *argv[])
     // Get userID
     userIDStr = stripHeader(getUserID(argv));
 
-    system("open http://localhost:8080"); // figure out how to change default browser on this
-    system("open http://localhost:8080/#/admin");
+    system("open http://localhost:3000"); // figure out how to change default browser on this
+    system("open http://localhost:3000/#/admin");
     // Set userID
 
     if (userIDStr == "undefined"){
@@ -579,7 +579,7 @@ int main(int argc,char *argv[])
             else{
               waiting = true;
             }
-            
+
           }
 
           if(waiting){

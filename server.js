@@ -11,7 +11,7 @@ var filePath = "./data/" + matrixFile;
 
 var jsonVar = require(filePath);
 
-// app.use(express.static('dist'));
+app.use(express.static('dist'));
 
 // Knex Setup
 const env = process.env.NODE_ENV || 'development';
@@ -601,22 +601,19 @@ app.get('/api/ptpChatEnabled/:gameID',(req,res) => {
 });
 
 app.post('/api/coachChatMsgs', (req,res) => {
-
   knex('chats').insert({
     chatID: req.body.chatID,
     userID: req.body.userID,
     message: req.body.text,
     created: new Date()
   }).then(response => {
-    // I might want to have a return here, but I'm not sure yet
-    res.status(200);
+    res.status(200).json({response: response});
     return;
   }).catch(err => {
     console.log("POST /api/coachChat Failed: " + err);
     res.status(500);
     return;
   });
-
   return;
 });
 
@@ -627,15 +624,13 @@ app.post('/api/partnerChatMsgs', (req,res) => {
     message: req.body.text,
     created: new Date()
   }).then(response => {
-    // I might want to have a return here, but I'm not sure yet
-    res.status(200);
+    res.status(200).json({response: response});
     return;
   }).catch(err => {
-    console.log("POST /api/coachChat Failed: " + err);
+    console.log("POST /api/partnerChat Failed: " + err);
     res.status(500);
     return;
   });
-
   return;
 });
 

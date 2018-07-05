@@ -196,6 +196,7 @@ export default{
         swal("Error","Message is too long to send.","warning");
       }
       else{
+        console.log("Marker 1"); // Error check
         this.$store.dispatch('addChatMsgToCoach', {
           text: this.msgText,
         }).then(func => {
@@ -205,7 +206,9 @@ export default{
           $('#chatmessages').scrollTop($('#chatmessages')[0].scrollHeight);
         });
       }
+      return;
     },
+
   },
 }
 </script>

@@ -195,6 +195,7 @@ export default{
           $('#chatmessages').scrollTop($('#chatmessages')[0].scrollHeight);
         });
       }
+      return;
     },
   },
 }

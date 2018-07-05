@@ -431,10 +431,8 @@ export default new Vuex.Store({
           text: msgInfo.text,
           chatID: context.state.coachChatID,
           userID: context.state.user.id, //msgInfo.userID
-        }).then(response => {
-          //possibly call getChatMsgs from
-
-          return true;
+        }).then(action =>{
+          //console.log(action.data.response);
         }).catch(err => {
           console.log("error from addChatMsgToCoach: " + err);
         });
@@ -448,12 +446,10 @@ export default new Vuex.Store({
           text: msgInfo.text,
           chatID: context.state.partnerChatID,
           userID: context.state.user.id, //msgInfo.userID
-        }).then(response => {
-          //possibly call getChatMsgs from
-
-          return true;
+        }).then(action =>{
+          //console.log(action.data.response);
         }).catch(err => {
-          console.log("error from addChatMsgToCoach: " + err);
+          console.log("error from addChatMsgToPartner: " + err);
         });
       }
 
