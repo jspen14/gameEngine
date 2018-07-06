@@ -94,10 +94,12 @@
 						<div v-if="$store.getters.whichPlayer===1"> <!-- IF PLAYER 1 -->
               <div class = "row">
 								<div v-if="isUnsubmitted && isPlayer" v-on:click="submitChoice(0)" @mouseenter="Row1=true" @mouseleave="Row1=false" class = "col-lg-2 col-md-2 col-sm-2 col-xs-2 boardRow unsubp1">
-                  <h2>1</h2>
+									<br>
+									<h1>A</h1>
                 </div>
                 <div v-else v-bind:class="{rowX: rowActive(Row1)}" class = "col-lg-2 col-md-2 col-sm-2 col-xs-2 boardRow p1">
-                  <h2>1</h2>
+									<br>
+									<h1>A</h1>
                 </div>
 
 
@@ -106,10 +108,10 @@
 									<div class="row">
 										<div class="col-lg-6 col-md-6 col-sm-6 col-xs-6">
 											<br>
-											<h3 class="p1">{{$store.getters.matrix[0][0][1-other]}}</h3>
+											<h1 class="p1">{{$store.getters.matrix[0][0][1-other]}}</h1>
 										</div>
 										<div class="col-lg-6 col-md-6 col-sm-6 col-xs-6">
-											<h5 class="p2">{{$store.getters.matrix[0][0][1-me]}}</h5>
+											<h3 class="p2">{{$store.getters.matrix[0][0][1-me]}}</h3>
 										</div>
 									</div>
                 </div>
@@ -119,10 +121,10 @@
 									<div class="row">
 										<div class="col-lg-6 col-md-6 col-sm-6 col-xs-6">
 											<br>
-											<h3 class="p1">{{$store.getters.matrix[1][0][1-other]}}</h3>
+											<h1 class="p1">{{$store.getters.matrix[1][0][1-other]}}</h1>
 										</div>
 										<div class="col-lg-6 col-md-6 col-sm-6 col-xs-6">
-											<h5 class="p2">{{$store.getters.matrix[1][0][1-me]}}</h5>
+											<h3 class="p2">{{$store.getters.matrix[1][0][1-me]}}</h3>
 										</div>
 									</div>
                 </div>
@@ -132,10 +134,12 @@
 
               <div class = "row">
 								<div v-if="isUnsubmitted && isPlayer" v-on:click="submitChoice(1)" @mouseenter="Row2=true" @mouseleave="Row2=false" class = "col-lg-2 col-md-2 col-sm-2 col-xs-2 boardRow unsubp1">
-                	<h2>2</h2>
+									<br>
+									<h1>B</h1>
                 </div>
                 <div v-else v-bind:class="{rowX: rowActive(Row2)}" class = "col-lg-2 col-md-2 col-sm-2 col-xs-2 boardRow p1">
-                  <h2>2</h2>
+									<br>
+									<h1>B</h1>
                 </div>
 
                 <div v-bind:class="{selected: zero_one, colX: colActive(Col1), rowX: rowActive(Row2)}"  class = "col-lg-5 col-md-5 col-sm-5 col-xs-5 boardRow">
