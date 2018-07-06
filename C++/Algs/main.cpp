@@ -218,7 +218,7 @@ string getSubmittedStatus(string gameIDStr, string playerNumStr){
     return response;
 }
 
- string getRoundEarnings(string gameIDStr, string playerNumStr){
+string getRoundEarnings(string gameIDStr, string playerNumStr){
   char *message_fmt = (char *) "GET /api/AIroundEarnings/%s/%s HTTP/1.0\r\n\r\n";
   string response;
   char *gameIDArg = (char *) gameIDStr.c_str();
@@ -366,8 +366,8 @@ int main(int argc,char *argv[])
     // Get userID
     userIDStr = stripHeader(getUserID(argv));
 
-    system("open http://localhost:3000"); // figure out how to change default browser on this
-    system("open http://localhost:3000/#/admin");
+    // system("open http://localhost:3000"); // figure out how to change default browser on this
+    // system("open http://localhost:3000/#/admin");
     // Set userID
 
     if (userIDStr == "undefined"){

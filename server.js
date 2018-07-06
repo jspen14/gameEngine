@@ -11,7 +11,7 @@ var filePath = "./data/" + matrixFile;
 
 var jsonVar = require(filePath);
 
-// app.use(express.static('dist'));
+app.use(express.static('dist'));
 
 // Knex Setup
 const env = process.env.NODE_ENV || 'development';
@@ -1107,7 +1107,7 @@ app.post('/api/AIcheapTalk/:gameID/:userID/:message', (req,res)=>{
       message: req.params.message,
       created: new Date()
     }).then(response => {
-      res.status(200).send(); 
+      res.send("^^^Message Added");
       return;
     }).catch(err => {
       console.log("POST /api/coachChat Failed: " + err);

@@ -196,26 +196,43 @@ export default{
     formatCheapTalk: function(message){
       var retString;
       var aiOption;
+      var myOption;
 
       if (this.$store.getters.whichPlayer == "0"){
         if (parseInt(message.charAt(1)) == 0){
-          aiOption = "A";
+          aiOption = "X";
         }
         else{
-          aiOption = "B";
+          aiOption = "Y";
         }
 
-        retString = "You play " + (parseInt(message[0])+1) + ", and I'll play " + aiOption;
+        if (parseInt(message.charAt(0)) == 0){
+          myOption = "A";
+        }
+        else{
+          myOption = "B";
+        }
+
+
+        retString = "You play " + myOption + ", and I'll play " + aiOption;
       }
       else {
         if (parseInt(message.charAt(0)) == 0){
-          aiOption = "A";
+          aiOption = "X";
         }
         else{
-          aiOption = "B";
+          aiOption = "Y";
         }
 
-        retString = "You play " + (parseInt(message[1])+1) + ", and I'll play " + aiOption;
+        if (parseInt(message.charAt(1)) == 0){
+          myOption = "A";
+        }
+        else{
+          myOption = "B";
+        }
+
+
+        retString = "You play " + myOption + ", and I'll play " + aiOption;
       }
 
       return retString;

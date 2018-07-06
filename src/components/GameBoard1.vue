@@ -147,10 +147,10 @@
 									<div class="row">
 										<div class="col-lg-6 col-md-6 col-sm-6 col-xs-6">
 											<br>
-											<h3 class="p1">{{$store.getters.matrix[0][1][1-other]}}</h3>
+											<h1 class="p1">{{$store.getters.matrix[0][1][1-other]}}</h1>
 										</div>
 										<div class="col-lg-6 col-md-6 col-sm-6 col-xs-6">
-											<h5 class="p2">{{$store.getters.matrix[0][1][1-me]}}</h5>
+											<h3 class="p2">{{$store.getters.matrix[0][1][1-me]}}</h3>
 										</div>
 									</div>
                 </div>
@@ -160,10 +160,10 @@
 									<div class="row">
 										<div class="col-lg-6 col-md-6 col-sm-6 col-xs-6">
 											<br>
-											<h3 class="p1">{{$store.getters.matrix[1][1][1-other]}}</h3>
+											<h1 class="p1">{{$store.getters.matrix[1][1][1-other]}}</h1>
 										</div>
 										<div class="col-lg-6 col-md-6 col-sm-6 col-xs-6">
-											<h5 class="p2">{{$store.getters.matrix[1][1][1-me]}}</h5>
+											<h3 class="p2">{{$store.getters.matrix[1][1][1-me]}}</h3>
 										</div>
 									</div>
                 </div>
