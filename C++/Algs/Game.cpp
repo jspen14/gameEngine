@@ -1,4 +1,7 @@
 #include "Game.h"
+#include <iostream>
+
+using namespace std;
 
 Game::Game() {
 }
@@ -6,10 +9,16 @@ Game::Game() {
 Game::Game(char *entry) {
     printf("entry: %s\n", entry); fflush(stdout);
 
-    //char *token = strtok(entry, "{ \",:");
-    tipoString = "Matrix2x2";//strtok(NULL, " \",:");
-    //strtok(NULL, " \",:");
-    payoffString = entry;//strtok(NULL, " \":");
+    char *token = strtok(entry, "{ \",:");
+    tipoString = strtok(NULL, " \",:");
+    strtok(NULL, " \",:");
+    payoffString = strtok(NULL, " \":");
+
+    cout << tipoString <<endl;
+    cout << payoffString <<endl;
+
+    //tipoString = "Matrix2x2";
+    //payoffString = entry;
 
     M = NULL;
     char tmp[1024];
@@ -62,9 +71,9 @@ Game::~Game() {
 }
 
 void Game::instantiateGame(char* tipoString, char *payoffString) {
-    if (!strncmp(tipoString, "Matrix", 6)) {
-        A[0] = tipoString[6] - '0';
-        A[1] = tipoString[8] - '0';
+    if (true/*!strncmp(tipoString, "Matrix", 6)*/) {
+        A[0] = tipoString[0] - '0';
+        A[1] = tipoString[2] - '0';
 
         M = new double**[2];
         int i, j;
