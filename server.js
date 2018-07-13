@@ -2,10 +2,16 @@ const express = require('express');
 const bodyParser = require('body-parser');
 
 const app = express();
+
 app.use(bodyParser.json());
 app.use(bodyParser.urlencoded({extended: false}));
 
-app.use(express.static('dist'));
+var matrixFile = process.argv[2];
+var filePath = "./data/" + matrixFile;
+
+var jsonVar = require(filePath); //with path
+
+// app.use(express.static('dist'));
 
 // Knex Setup
 const env = process.env.NODE_ENV || 'development';
@@ -48,7 +54,6 @@ class Game {
     this._matrix=[];
     this.getMatrix();
     this._numberOfRounds=this.setNumberOfRounds();
-    console.log("ptp Check 1: ", ptpChatEnabled);
     this._ptpChatEnabled = ptpChatEnabled;
   }
   //Getters
@@ -264,16 +269,11 @@ class Game {
     this.getMatrix();
   }
   setNumberOfRounds(){
-    knex('matrices').count('id').then(n =>{
-      this.numberOfRounds=parseInt(n[0]["count(`id`)"]);
-    })
+    return jsonVar.games.length;
   }
   getMatrix(){
-
-    knex('matrices').where('id',this.currentRound).select('type', 'matrix').then(q => {
-
-    let data=q[0];
-    let mx=data.matrix
+    let data=jsonVar.games[0];
+    let mx=data.payoffs;
     let type= data.type;
     let dimensions= type.split('x');
     for(let i=0; i<dimensions.length;i++)
@@ -318,10 +318,7 @@ class Game {
     }
     this.matrix=matrix;
 
-    }).catch(err => {
-      console.log("getMatrix Failed:", err);
 
-    });
   }
 }
 
@@ -563,9 +560,6 @@ app.get('/api/coachChatID/:userID/:gameID',(req,res) => {
 });
 
 app.get('/api/partnerChatID/:userID/:gameID',(req,res) => {
-  console.log("Log from pcid");
-  console.log(req.params.userID);
-  console.log(req.params.gameID);
   for (var i = 0; i < gameModels.length; i++){
       if((gameModels[i]._gameID== req.params.gameID) && gameModels[i]._ptpChatEnabled == false){
         res.status(200).json({id: -1});
@@ -583,7 +577,6 @@ app.get('/api/partnerChatID/:userID/:gameID',(req,res) => {
     user2: req.params.userID,
     chatType: 'P/P',
   }).then(response => {
-    console.log("response in pcid", response);
     res.status(200).json({id: response[0].id});
     return;
   });
@@ -617,8 +610,6 @@ app.post('/api/coachChatMsgs', (req,res) => {
 });
 
 app.post('/api/partnerChatMsgs', (req,res) => {
-  console.log("Message Info:");
-  console.log(req.body);
   knex('chats').insert({
     chatID: req.body.chatID,
     userID: req.body.userID,
@@ -689,24 +680,20 @@ app.get('/api/game/:id/:which',(req,res)=>
     roundEarnings: roundEarnings, totalEarnings: totalEarnings, round:gameModels[index].currentRound});
 });
 
-app.get('/api/matrix/:id', (req,res)=> {
-  //Is this 1-6?
-  let id=parseInt(req.params.id);
-  knex('matrices').where('id',id).select('type', 'matrix').then(matrix => {
-    res.status(200).json({matrix:matrix});
-  }).catch(error =>{
-    res.status(500).json({error});
-  });
+app.get('/api/matrix/:gameID', (req,res)=> {
+
+  let gameID=parseInt(req.params.gameID);
+  let index=getGameIndex(gameID);
+
+
+  res.status(200).json({matrix: jsonVar.games[gameModels[index]._currentRound -1]})
+
 });
 
 app.get('/api/gameState/:id/:which',(req,res)=>{
   let id =parseInt(req.params.id);
   let index=getGameIndex(id);
   let which=parseInt(req.params.which);
-
-  // console.log("index: ", index);
-  // console.log("object");
-  // console.log(gameModels[index]);
 
   if(gameModels[index].bothSubmitted())
   {
@@ -761,7 +748,6 @@ app.get('/api/numberOfRounds/:gameID',(req,res)=>{
 })
 
 app.post('/api/test/:message', (req, res)=>{
-  console.log(req.params.message);
   res.send("Your message was: " + req.params.message);
 });
 
@@ -808,10 +794,8 @@ app.post('/api/createGame', (req,res) =>{
       let p2Name = '';
       let c1Name = '';
       let c2Name = '';
-      console.log('ptp Check 3: ', req.body);
       let ptpChatEnabled = req.body.ptpChatEnabled;
 
-      console.log("ptp Check 2: ", ptpChatEnabled);
       let gID=parseInt(ids[0]);
 
       let p1ID=parseInt(req.body.player1ID);
@@ -830,7 +814,6 @@ app.post('/api/createGame', (req,res) =>{
       removeFromAvailableUsers(p2ID);
       removeFromAvailableUsers(c1ID);
       removeFromAvailableUsers(c2ID);
-      // console.log(availableUsers); // possibly come back and check this.
 
       let game= new Game(gID, p1ID, p1Name, p2ID, p2Name, c1ID, c1Name, c2ID, c2Name, ptpChatEnabled); // find out where gID is defined
 
@@ -946,7 +929,7 @@ app.post('/api/users', (req, res) => {
       let token = jwt.sign({ id: user.id }, jwtSecret, {
         expiresIn: 86400 // expires in 24 hours
       });
-      availableUsers.push(user); // log this
+      availableUsers.push(user);
       res.status(200).json({user:user,token:token});
       return;
     }).catch(error => {
@@ -994,7 +977,7 @@ app.post('/api/AIlogin/:name', (req, res)=>{
         }
       }
 
-      availableUsers.push(user); // log this
+      availableUsers.push(user);
       res.send("^^^" + user.id);
       return;
     }
@@ -1053,32 +1036,22 @@ app.get('/api/AIround/:gameID', (req,res)=> {
 // AI - getMatrix
 app.get('/api/AImatrix/:gameID', (req,res)=> {
   var gameID = parseInt(req.params.gameID);
-  var i = 0;
-  var roundNum = 0;
-  // Find the round that the gmae is on
+  var index = getGameIndex(gameID);
 
-  for (i = 0; i < gameModels.length; i++){
-    if (gameModels[i]._gameID = gameID){
-      roundNum = gameModels[i]._currentRound;
-      break;
-    }
-  }
+  console.log("^^^{type:" + jsonVar.games[gameModels[index]._currentRound -1].type + "," +
+              " payoffs: " + jsonVar.games[gameModels[index]._currentRound -1].payoffs + "}");
 
-  knex('matrices').where('id',roundNum).select('matrix').then(matrix => {
+  res.send("^^^{type:" + jsonVar.games[gameModels[index]._currentRound -1].type + "," +
+              " payoffs: " + jsonVar.games[gameModels[index]._currentRound -1].payoffs + "}");
+  //res.send("^^^" + jsonVar.games[gameModels[index]._currentRound -1].payoffs);
 
-    res.send("^^^" + matrix[0].matrix); // Eventually change this so that it only returns the AI's specific matrix
-  }).catch(error =>{
-    res.send("^^^failure");
-  });
 });
 
 app.post('/api/AIcheapTalk/:gameID/:userID/:message', (req,res)=>{
   var gameID = parseInt(req.params.gameID);
   var userID = parseInt(req.params.userID);
 
-  console.log(req.params);
   knex('chatID').where('gameID',gameID).andWhere('chatType','P/P').select('id').then(response => {
-    console.log(response[0]);
     knex('chats').insert({
       chatID: parseInt(response[0].id),
       userID: req.params.userID,
@@ -1167,8 +1140,6 @@ app.get('/api/AIroundEarnings/:gameID/:playerNum', (req,res)=> {
   var playerNum = parseInt(req.params.playerNum);
   var index = getGameIndex(gameID);
 
-  console.log("Player 1: ", gameModels[index].p1Earnings[gameModels[index].currentRound - 1]);
-  console.log("Player 2: ", gameModels[index].p2Earnings[gameModels[index].currentRound - 1]);
   if (playerNum == 1){
     res.send("^^^" + gameModels[index].p1Earnings[gameModels[index].currentRound - 1]);
   }

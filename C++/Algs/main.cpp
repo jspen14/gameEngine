@@ -366,7 +366,8 @@ int main(int argc,char *argv[])
     // Get userID
     userIDStr = stripHeader(getUserID(argv));
 
-    //system('open hhtp')\// figure out how to change default browser on this
+    system("open http://localhost:8080"); // figure out how to change default browser on this
+    system("open http://localhost:8080/#/admin");
     // Set userID
 
     if (userIDStr == "undefined"){
@@ -509,7 +510,7 @@ int main(int argc,char *argv[])
                 waiting = false;
             }
 
-            sleep (2);
+            sleep (1);
         }
 
         /********************************************************************/
@@ -561,7 +562,7 @@ int main(int argc,char *argv[])
           }
 
           if(waiting){
-            sleep(2);
+            sleep(1);
           }
         } while(waiting);
 
@@ -603,7 +604,7 @@ int main(int argc,char *argv[])
             waiting = false;
           }
 
-          sleep(2);
+          sleep(1);
         }
 
         gameIsDoneStr = stripHeader(getGameStatus(gameIDStr));
