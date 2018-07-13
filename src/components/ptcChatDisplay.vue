@@ -31,6 +31,7 @@
     float: left;
     clear: left;
     text-align: left;
+    border: 2px solid #52E12E;
     border-radius: 6px;
     background-color: #E5E5EA;
     color: black;
@@ -81,7 +82,15 @@
 <template>
   <div>
     <br>
-    <h4>{{title}} </h4>
+    <div v-if="this.$store.getters.user.role === 'Player'">
+      <h4> Send Message to:</h4>
+      <h4 style="color:#07CD39"> Your Coach</h4>
+    </div>
+    <div v-else>
+      <h4> Send Message to:</h4>
+      <h4 style="color:#07CD39"> Your Player</h4>
+
+    </div>
 
     <hr>
 
@@ -148,14 +157,7 @@ export default{
       // this might be expensive
       return this.messages;
     },
-    title: function(){
-      if(this.$store.getters.user.role == 'Player'){
-        return "Send Message to: \n Your Coach";
-      }
-      else {
-        return "Send Message to Coach your Player"
-      }
-    }
+
 
 
   },
@@ -189,7 +191,6 @@ export default{
     },
 
     addChatMsg: function(){
-      console.log("Length: ", this.msgText.length);
       if(this.msgText.length > 254){
         swal("Error","Message is too long to send.","warning");
       }
@@ -203,7 +204,9 @@ export default{
           $('#chatmessages').scrollTop($('#chatmessages')[0].scrollHeight);
         });
       }
+      return;
     },
+
   },
 }
 </script>

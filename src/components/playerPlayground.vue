@@ -1,13 +1,5 @@
 <style scoped>
-  .boardHeader{
-    min-height: 5vh;
-    border: solid 1px black;
-  }
 
-  .boardRow{
-    min-height: 10vh;
-    border: solid 1px black;
-  }
 </style>
 
 <template>
@@ -86,7 +78,32 @@
 
     </div>
 
-    <div class="row" v-else="ptcChatEnabled && ptpChatEnabled">
+    <div class="row" v-else-if ="!ptcChatEnabled && !ptpChatEnabled">
+        <div class="col-lg-2 col-md-2 col-sm-2 col-xs-2"></div>
+
+        <div class='col-lg-8 col-md-8 col-sm-8 col-xs-8'>
+
+            <gameBoard1></gameBoard1>
+            <earnings></earnings>
+
+            <br>
+            <div v-show="gameState==='done'">
+              <button v-if="isLastRound" class="btn btn-success" v-on:click="gotoEndGame()">Finish Game</button>
+              <button v-else class="btn btn-success" v-on:click="readyForNextRound()">Go to Next Round</button>
+            </div>
+
+            <h3 v-show="gameState==='submitted'">Waiting for other player...</h3>
+            <h3 v-show="gameState==='isReady'">Waiting for other player...</h3>
+            <br>
+
+            <button class="btn btn-danger" v-on:click="logout()">Logout</button>
+
+        </div>
+
+        <div class="col-lg-2 col-md-2 col-sm-2 col-xs-2"></div>
+    </div>
+
+    <div class="row" v-else>
 
         <div class="col-lg-3 col-md- col-sm-3 col-xs-3">
           <ptcChatDisplay></ptcChatDisplay>
@@ -108,6 +125,7 @@
             <h3 v-show="gameState==='submitted'">Waiting for other player...</h3>
             <h3 v-show="gameState==='isReady'">Waiting for other player...</h3>
             <br>
+
             <button class="btn btn-danger" v-on:click="logout()">Logout</button>
 
         </div>
@@ -201,7 +219,6 @@ import axios from 'axios'
         this.$store.dispatch('updateGame');
       },
       submitOption: function(param){
-      console.log(param);
         axios.put('/api/p1roundOption',{
           roundOption: param,
         });

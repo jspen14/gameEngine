@@ -9,9 +9,9 @@ app.use(bodyParser.urlencoded({extended: false}));
 var matrixFile = process.argv[2];
 var filePath = "./data/" + matrixFile;
 
-var jsonVar = require(filePath); //with path
+var jsonVar = require(filePath);
 
-// app.use(express.static('dist'));
+app.use(express.static('dist'));
 
 // Knex Setup
 const env = process.env.NODE_ENV || 'development';
@@ -271,8 +271,9 @@ class Game {
   setNumberOfRounds(){
     return jsonVar.games.length;
   }
+
   getMatrix(){
-    let data=jsonVar.games[0];
+    let data=jsonVar.games[this.currentRound-1];
     let mx=data.payoffs;
     let type= data.type;
     let dimensions= type.split('x');
@@ -316,8 +317,8 @@ class Game {
       }
       matrix.push(row);
     }
-    this.matrix=matrix;
 
+    this.matrix=matrix;
 
   }
 }
@@ -431,10 +432,12 @@ app.get('/api/availableUsers',(req,res) => {
   }
 
   res.send(availableUsers);
+  return;
 });
 
 app.get('/api/gameModels',(req,res) => {
   res.status(200).json({activeGames: gameModels});
+  return;
 });
 
 
@@ -515,6 +518,8 @@ app.post('/api/coachChatID',(req,res) => {
   }).catch(err => {
     console.log("Error in /api/coachChatID: " + err)
   });
+
+  return;
 });
 
 app.post('/api/playersChatID',(req,res) => {
@@ -529,6 +534,8 @@ app.post('/api/playersChatID',(req,res) => {
     console.log("Error in /api/coachChatID: " + err)
     res.status(500);
   });
+
+  return;
 });
 
 app.get('/api/coachChatID/:userID/:gameID',(req,res) => {
@@ -557,6 +564,8 @@ app.get('/api/coachChatID/:userID/:gameID',(req,res) => {
     return;
   });
 
+  return;
+
 });
 
 app.get('/api/partnerChatID/:userID/:gameID',(req,res) => {
@@ -581,6 +590,7 @@ app.get('/api/partnerChatID/:userID/:gameID',(req,res) => {
     return;
   });
 
+  return;
 });
 
 app.get('/api/ptpChatEnabled/:gameID',(req,res) => {
@@ -591,22 +601,20 @@ app.get('/api/ptpChatEnabled/:gameID',(req,res) => {
 });
 
 app.post('/api/coachChatMsgs', (req,res) => {
-
   knex('chats').insert({
     chatID: req.body.chatID,
     userID: req.body.userID,
     message: req.body.text,
     created: new Date()
   }).then(response => {
-    // I might want to have a return here, but I'm not sure yet
-    res.status(200);
+    res.status(200).json({response: response});
     return;
   }).catch(err => {
     console.log("POST /api/coachChat Failed: " + err);
     res.status(500);
     return;
   });
-
+  return;
 });
 
 app.post('/api/partnerChatMsgs', (req,res) => {
@@ -616,15 +624,14 @@ app.post('/api/partnerChatMsgs', (req,res) => {
     message: req.body.text,
     created: new Date()
   }).then(response => {
-    // I might want to have a return here, but I'm not sure yet
-    res.status(200);
+    res.status(200).json({response: response});
     return;
   }).catch(err => {
-    console.log("POST /api/coachChat Failed: " + err);
+    console.log("POST /api/partnerChat Failed: " + err);
     res.status(500);
     return;
   });
-
+  return;
 });
 
 app.get('/api/coachChatMsgs/:chatID',(req,res) => {
@@ -640,6 +647,7 @@ app.get('/api/coachChatMsgs/:chatID',(req,res) => {
     return;
   })
 
+  return;
 });
 
 app.get('/api/partnerChatMsgs/:chatID',(req,res) => {
@@ -655,6 +663,7 @@ app.get('/api/partnerChatMsgs/:chatID',(req,res) => {
     return;
   })
 
+  return;
 });
 // END JSPENCER CHAT STUFF
 
@@ -676,8 +685,10 @@ app.get('/api/game/:id/:which',(req,res)=>
     totalEarnings=gameModels[index].getP2TotalEarnings();
     roundEarnings=gameModels[index].getP2RoundEarnings();
   }
+
   res.status(200).json({p1Choice:gameModels[index].p1Choice, p2Choice:gameModels[index].p2Choice,
     roundEarnings: roundEarnings, totalEarnings: totalEarnings, round:gameModels[index].currentRound});
+  return;
 });
 
 app.get('/api/matrix/:gameID', (req,res)=> {
@@ -687,7 +698,7 @@ app.get('/api/matrix/:gameID', (req,res)=> {
 
 
   res.status(200).json({matrix: jsonVar.games[gameModels[index]._currentRound -1]})
-
+  return;
 });
 
 app.get('/api/gameState/:id/:which',(req,res)=>{
@@ -707,6 +718,8 @@ app.get('/api/gameState/:id/:which',(req,res)=>{
     res.status(200).json({gameState:'submitted'});
   else
     res.status(200).json({gameState:'unsubmitted'});
+
+    return;
 });
 
 // This indicates player is ready for the next round
@@ -725,9 +738,9 @@ app.post('/api/ready', (req,res)=>{
     res.status(200).send("success");
   }
   else
-  {
     res.status(500).send("error in /ready");
-  }
+
+  return;
 });
 
 // This gets current round
@@ -738,17 +751,22 @@ app.get('/api/ready/:gameID',(req,res)=>{
   {
       gameModels[index].goToNextRound();
   }
+
   res.status(200).json({currentRound: gameModels[index].currentRound});
-})
+  return;
+});
 
 app.get('/api/numberOfRounds/:gameID',(req,res)=>{
   let id= parseInt(req.params.gameID);
   let index= getGameIndex(id);
+
   res.status(200).json({numberOfRounds:gameModels[index].numberOfRounds});
+  return;
 })
 
 app.post('/api/test/:message', (req, res)=>{
   res.send("Your message was: " + req.params.message);
+  return;
 });
 
 app.get('/api/totalEarnings/:gameID/:which', (req,res)=>{
@@ -777,6 +795,8 @@ app.get('/api/totalEarnings/:gameID/:which', (req,res)=>{
   }
   else
     res.status(500).send("error");
+
+  return;
 })
 
 app.post('/api/createGame', (req,res) =>{
@@ -828,6 +848,8 @@ app.post('/api/createGame', (req,res) =>{
       console.log(error);
       res.status(500).json({error})
     });
+
+    return;
 });
 
 //submit Choice
@@ -856,8 +878,9 @@ app.post('/api/game',(req,res)=>
   else{
     console.log("error in submit choice server side");
     res.status(500).send('failure');
-
   }
+
+  return;
 });
 
 app.delete('/api/game/:id', (req,res)=>
@@ -869,27 +892,50 @@ app.delete('/api/game/:id', (req,res)=>
   {
     gameModels.splice(index,1);
   }
+
   res.status(200).send("deletedGame");
+  return;
 })
 
 // Login
 app.post('/api/login', (req, res) => {
 
+  console.log("Request: ");
+  console.log(req.body);
+
   if (!req.body.name || !req.body.password)
     return res.status(400).send();
+
+  console.log("Marker 1"); //Error Check
+
   knex('users').where('name',req.body.name).first().then(user => {
+    console.log("Marker 2: "); // Error Check
+    console.log(user); // Error Check
+
     if (user === undefined) {
       res.status(403).send("Invalid credentials");
       throw new Error('abort');
     }
+
+    let resp = [bcrypt.compare(req.body.password, user.hash),user];
+    console.log("Marker 3: ");
+    console.log(resp);
+
     return [bcrypt.compare(req.body.password, user.hash),user];
   }).spread((result,user) => {
-        if (result) {
+    console.log("Marker 4");
+    console.log("Result", result);
+    console.log("User: ");
+    console.log(user);
+
+    if (result) {
        let token = jwt.sign({ id: user.id }, jwtSecret, {
-        expiresIn: 86400 // expires in 24 hours
+        expiresIn: 86400 // jwtSecret expires in 24 hours
        });
 
-       //Add to availableUsers here
+       console.log("M5. Token:");
+       console.log(token);
+
        if(!userIsInAvaiablePlayers(user.id))
           availableUsers.push(user);
 
@@ -899,6 +945,7 @@ app.post('/api/login', (req, res) => {
     {
       res.status(403).send("Invalid credentials");
     }
+
     return;
   }).catch(error => {
     if (error.message !== 'abort') {
@@ -906,6 +953,8 @@ app.post('/api/login', (req, res) => {
       res.status(500).json({ error });
     }
   });
+
+  return;
 });
 
 //Register
@@ -937,8 +986,9 @@ app.post('/api/users', (req, res) => {
         console.log(error);
         res.status(500).json({ error });
       }
-
     });
+
+    return;
 });
 
 app.get('/api/me', verifyToken, (req,res) => {
@@ -947,6 +997,8 @@ app.get('/api/me', verifyToken, (req,res) => {
   }).catch(error => {
     res.status(500).json({ error });
   });
+
+  return;
 });
 
 //AI Functions
@@ -982,6 +1034,8 @@ app.post('/api/AIlogin/:name', (req, res)=>{
       return;
     }
   });
+
+  return;
 });
 
   // AI - Check if in game
@@ -1038,6 +1092,7 @@ app.get('/api/AImatrix/:gameID', (req,res)=> {
   var gameID = parseInt(req.params.gameID);
   var index = getGameIndex(gameID);
 
+<<<<<<< HEAD
   console.log("^^^{type:" + jsonVar.games[gameModels[index]._currentRound -1].type + "," +
               " payoffs: " + jsonVar.games[gameModels[index]._currentRound -1].payoffs + "}");
 
@@ -1045,6 +1100,10 @@ app.get('/api/AImatrix/:gameID', (req,res)=> {
               " payoffs: " + jsonVar.games[gameModels[index]._currentRound -1].payoffs + "}");
   //res.send("^^^" + jsonVar.games[gameModels[index]._currentRound -1].payoffs);
 
+=======
+  res.send("^^^" + jsonVar.games[gameModels[index]._currentRound -1].payoffs);
+  return;
+>>>>>>> 0093dfc0b807454d75ca9b2c919a8bf2060dec6d
 });
 
 app.post('/api/AIcheapTalk/:gameID/:userID/:message', (req,res)=>{
@@ -1058,8 +1117,7 @@ app.post('/api/AIcheapTalk/:gameID/:userID/:message', (req,res)=>{
       message: req.params.message,
       created: new Date()
     }).then(response => {
-      // I might want to have a return here, but I'm not sure yet
-      res.status(200);
+      res.send("^^^Message Added");
       return;
     }).catch(err => {
       console.log("POST /api/coachChat Failed: " + err);
@@ -1132,6 +1190,7 @@ app.get('/api/AIsubmittedStatus/:gameID/:playerNum', (req,res)=> {
   }
 
   res.send("^^^error");
+  return;
 });
 
 // AI earnings function(s)
@@ -1202,6 +1261,7 @@ app.get('/api/AIreadyStatus/:gameID/:playerNum', (req,res)=> {
   }
 
   res.send("^^^error");
+  return;
 });
 
 // AI game Done
@@ -1217,6 +1277,7 @@ app.get('/api/AIgameIsDone/:gameID',(req,res)=> {
     res.send("^^^false");
     return;
   }
+  return;
 });
 
 app.listen(3000, () =>{

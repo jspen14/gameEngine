@@ -32,6 +32,7 @@
     clear: left;
     text-align: left;
     border-radius: 6px;
+    border: 2px solid #FE7223;
     background-color: #E5E5EA;
     color: black;
     padding-top: 7px;
@@ -58,8 +59,6 @@
     padding-right: 10px;
   }
 
-
-  /* Attempt to get chat looking like an actual chat (iMessage)*/
   #chatbox {
     overflow:   none;
     position:   relative;
@@ -81,8 +80,8 @@
 <template>
   <div>
     <br>
-    <h4> {{title}} </h4>
-
+    <h4> Send Message to:</h4>
+    <h4 style="color:#FE7223"> Your Partner</h4>
     <hr>
 
     <div class = "msgsBox" id = "chatbox">
@@ -91,8 +90,12 @@
 
 
           <div v-if="!isMe(msg.userID)">
-            <div class="partnerMsgWrap">
-              <h6 class="partnerMsgDisplay">  {{msg.message}}</h6>
+            <div v-if="isCheapTalk(msg.message)">
+              <h6 class="partnerMsgDisplay">  {{formatCheapTalk(msg.message)}} </h6>
+              <br><br>
+            </div>
+            <div v-else class="partnerMsgWrap">
+              <h6 class="partnerMsgDisplay">  {{msg.message}} </h6>
               <br><br>
             </div>
 
@@ -129,7 +132,6 @@ import axios from 'axios'
 export default{
   data() {
     return {
-      title: 'Send Message to: \n Your Partner',
       msgText: '',
       messages: [],
       pastLength: 0,
@@ -182,8 +184,61 @@ export default{
       }
     },
 
+    isCheapTalk: function(message){
+      if((message[0] == 0 || message[0] == 1) && (message[1] == 0 || message[1] == 1)){
+        return true;
+      }
+      else{
+        return false;
+      }
+    },
+
+    formatCheapTalk: function(message){
+      var retString;
+      var aiOption;
+      var myOption;
+
+      if (this.$store.getters.whichPlayer == "0"){
+        if (parseInt(message.charAt(1)) == 0){
+          aiOption = "X";
+        }
+        else{
+          aiOption = "Y";
+        }
+
+        if (parseInt(message.charAt(0)) == 0){
+          myOption = "A";
+        }
+        else{
+          myOption = "B";
+        }
+
+
+        retString = "You play " + myOption + ", and I'll play " + aiOption;
+      }
+      else {
+        if (parseInt(message.charAt(0)) == 0){
+          aiOption = "X";
+        }
+        else{
+          aiOption = "Y";
+        }
+
+        if (parseInt(message.charAt(1)) == 0){
+          myOption = "A";
+        }
+        else{
+          myOption = "B";
+        }
+
+
+        retString = "You play " + myOption + ", and I'll play " + aiOption;
+      }
+
+      return retString;
+    },
+
     addChatMsg: function(){
-      console.log("Length: ", this.msgText.length);
       if(this.msgText.length > 254){
         swal("Error","Message is too long to send.","warning");
       }
@@ -197,6 +252,7 @@ export default{
           $('#chatmessages').scrollTop($('#chatmessages')[0].scrollHeight);
         });
       }
+      return;
     },
   },
 }

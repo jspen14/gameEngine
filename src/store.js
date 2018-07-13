@@ -26,9 +26,9 @@ export default new Vuex.Store({
     numberOfRounds: '',
     roundEarnings: '-',
     totalEarnings: 0,
-    coachChatID: '',
+    coachChatID: -1,
     coachChatMsgs: [],
-    partnerChatID: '',
+    partnerChatID: -1,
     partnerChatMsgs: [],
     gameAborted: false,
     ptpChatEnabled: '',
@@ -162,9 +162,9 @@ export default new Vuex.Store({
           context.commit('setCurrentRound',response.data.round);
           context.dispatch('getNumberOfRounds');
           context.dispatch('getMatrix',context.state.currentRound);
-          //context.commit('setGameState','unsubmitted');
           context.dispatch('getCoachChatID');
-          if(context.state.user == "Player"){
+
+          if(context.state.user.role == "Player"){
             context.dispatch('getPartnerChatID');
           }
           context.dispatch('retrievePTPChatEnabled');
@@ -266,26 +266,34 @@ export default new Vuex.Store({
 
 
   login(context,user) {
-    return axios.post("/api/login",user).then(response => {
+    //console.log("APPLE");
+
+    axios.post("/api/login",user).then(response => {
+      //console.log("GRAPE");
+      //console.log(response.data);
       context.commit('setUser', response.data.user);
       context.commit('setToken',response.data.token);
       context.commit('setRegisterError',"");
       context.commit('setLoginError',"");
-      })
-    .catch(error => {
+    }).catch(error => {
+      console.log(error);
       context.commit('setUser',{});
       context.commit('setToken','');
       context.commit('setRegisterError',"");
-    if (error.response) {
-      if (error.response.status === 403 || error.response.status === 400)
-        context.commit('setLoginError',"Invalid login.");
-        context.commit('setRegisterError',"");
-          return;
-    }
+
+      if (error.response) {
+        if (error.response.status === 403 || error.response.status === 400)
+          context.commit('setLoginError',"Invalid login.");
+          context.commit('setRegisterError',"");
+            return;
+      }
+
       context.commit('setLoginError',"Sorry, your request failed. We will look into it.");
 
-      });
-    },
+    });
+
+    return;
+  },
 
     logout(context) {
         context.commit('setInGameStatus', false);
@@ -302,20 +310,22 @@ export default new Vuex.Store({
     },
 
     register(context,user) {
+
       return axios.post("/api/users",user).then(response => {
-      context.commit('setUser', response.data.user);
-      context.commit('setToken',response.data.token);
-      context.commit('setRegisterError',"");
-      context.commit('setLoginError',"");
-          }).catch(error => {
-      context.commit('setLoginError',"");
-      context.commit('setUser',{});
-      context.commit('setToken','');
-      if (error.response) {
-        if (error.response.status === 409)
-          context.commit('setRegisterError',"That user name is already taken.");
-        return;
-      }
+        context.commit('setUser', response.data.user);
+        context.commit('setToken',response.data.token);
+        context.commit('setRegisterError',"");
+        context.commit('setLoginError',"");
+      }).catch(error => {
+        console.log("M2");
+        context.commit('setLoginError',"");
+        context.commit('setUser',{});
+        context.commit('setToken','');
+        if (error.response) {
+          if (error.response.status === 409)
+            context.commit('setRegisterError',"That user name is already taken.");
+          return;
+        }
         context.commit('setRegisterError',"Sorry, your request failed. We will look into it.");
       });
 
@@ -343,7 +353,6 @@ export default new Vuex.Store({
       }
       axios.post("/api/game",choiceInfo).then(response =>
       {
-        console.log(response.data);
         context.commit('setGameState','submitted');
 
       }).catch(err =>{
@@ -353,7 +362,6 @@ export default new Vuex.Store({
     },
     readyForNextRound(context){
       let readyInfo={gameID:context.state.currentGame, which: context.state.whichPlayer}
-      console.log(readyInfo);
 
       axios.post("/api/ready", readyInfo).then(response =>{
         context.commit('setGameState','isReady');
@@ -370,7 +378,6 @@ export default new Vuex.Store({
           if(newRound>context.state.currentRound)
           {
             clearInterval(timerID);
-            console.log("got to nextRound");
             context.commit('setCurrentRound', newRound);
             context.commit('setP1Choice', null);
             context.commit('setP2Choice',null);
@@ -405,16 +412,14 @@ export default new Vuex.Store({
       });
     },
 
-    getPartnerChatID(context){
-      if (!context.state.ptpChatEnabled) {
-        axios.get('/api/partnerChatID/'+ context.state.user.id +'/'+ context.state.currentGame).then(response => { // context.state.user.id/context.state.currentGame
-          console.log("repsonse from gpcID", response.data.id);
-          context.commit('setPartnerChatID', response.data.id);
-        }).catch(err => {
-          console.log("getPartnerChatID Failed: " + err);
+    getPartnerChatID(context){ //Make sure this has a value before continuing
 
-        });
-      }
+      axios.get('/api/partnerChatID/'+ context.state.user.id +'/'+ context.state.currentGame).then(response => { // context.state.user.id/context.state.currentGame
+        context.commit('setPartnerChatID', response.data.id);
+      }).catch(err => {
+        console.log("getPartnerChatID Failed: " + err);
+
+      });
 
     },
 
@@ -433,10 +438,8 @@ export default new Vuex.Store({
           text: msgInfo.text,
           chatID: context.state.coachChatID,
           userID: context.state.user.id, //msgInfo.userID
-        }).then(response => {
-          //possibly call getChatMsgs from
-
-          return true;
+        }).then(action =>{
+          //console.log(action.data.response);
         }).catch(err => {
           console.log("error from addChatMsgToCoach: " + err);
         });
@@ -450,12 +453,10 @@ export default new Vuex.Store({
           text: msgInfo.text,
           chatID: context.state.partnerChatID,
           userID: context.state.user.id, //msgInfo.userID
-        }).then(response => {
-          //possibly call getChatMsgs from
-
-          return true;
+        }).then(action =>{
+          //console.log(action.data.response);
         }).catch(err => {
-          console.log("error from addChatMsgToCoach: " + err);
+          console.log("error from addChatMsgToPartner: " + err);
         });
       }
 
@@ -508,7 +509,6 @@ export default new Vuex.Store({
     getMatrix(context, matrixID){
       axios.get("/api/matrix/" + context.state.currentGame).then(response => { // Changed this to be gameID
 
-        console.log(response);
         let data= response.data.matrix;
         let mx=data.payoffs;
 
@@ -560,8 +560,6 @@ export default new Vuex.Store({
           }
           matrix.push(row);
         }
-        console.log("Matrix");
-        console.log(matrix);
         context.commit('setMatrix', matrix);
       }).catch(err => {
         console.log("getMatrix Failed:", err);
