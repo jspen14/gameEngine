@@ -1092,8 +1092,12 @@ app.get('/api/AImatrix/:gameID', (req,res)=> {
   var gameID = parseInt(req.params.gameID);
   var index = getGameIndex(gameID);
 
-  res.send("^^^" + jsonVar.games[gameModels[index]._currentRound -1].payoffs);
-  return;
+  console.log("^^^{type:" + jsonVar.games[gameModels[index]._currentRound -1].type + "," +
+              " payoffs: " + jsonVar.games[gameModels[index]._currentRound -1].payoffs + "}");
+
+  res.send("^^^{type:" + jsonVar.games[gameModels[index]._currentRound -1].type + "," +
+              " payoffs: " + jsonVar.games[gameModels[index]._currentRound -1].payoffs + "}");
+  //res.send("^^^" + jsonVar.games[gameModels[index]._currentRound -1].payoffs);
 });
 
 app.post('/api/AIcheapTalk/:gameID/:userID/:message', (req,res)=>{
