@@ -4,10 +4,10 @@
     <br>
     <br>
     <hr>
-  
-      <h4>Average Earnings: $ {{averageEarnings}} </h4>
+
+      <h4>Your Average Earnings: $ {{averageEarnings}} </h4>
       <br>
-      <h4>Total Earnings: ${{totalEarnings}}</h4>
+      <h4>Your Total Earnings: ${{totalEarnings}}</h4>
 
       <hr>
   </div>

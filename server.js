@@ -11,7 +11,7 @@ var filePath = "./data/" + matrixFile;
 
 var jsonVar = require(filePath);
 
-app.use(express.static('dist'));
+//app.use(express.static('dist')); // Add this line in to allow front end to be served over port 3000 in addition to backend
 
 // Knex Setup
 const env = process.env.NODE_ENV || 'development';
@@ -1097,28 +1097,31 @@ app.get('/api/AImatrix/:gameID', (req,res)=> {
 });
 
 app.post('/api/AIcheapTalk/:gameID/:userID/:message', (req,res)=>{
+  // check there to see if chat is even enabled
   var gameID = parseInt(req.params.gameID);
   var userID = parseInt(req.params.userID);
+  var gameIndex = getGameIndex(gameID);
 
-  knex('chatID').where('gameID',gameID).andWhere('chatType','P/P').select('id').then(response => {
-    knex('chats').insert({
-      chatID: parseInt(response[0].id),
-      userID: req.params.userID,
-      message: req.params.message,
-      created: new Date()
-    }).then(response => {
-      res.send("^^^Message Added");
-      return;
-    }).catch(err => {
-      console.log("POST /api/coachChat Failed: " + err);
-      res.status(500);
-      return;
+  if (!gameModels[gameIndex].ptpChatEnabled) {
+    res.send("^^^Chat Disabled");
+  }
+  else {
+    knex('chatID').where('gameID',gameID).andWhere('chatType','P/P').select('id').then(response => {
+      knex('chats').insert({
+        chatID: parseInt(response[0].id),
+        userID: req.params.userID,
+        message: req.params.message,
+        created: new Date()
+      }).then(response => {
+        res.send("^^^Message Added");
+        return;
+      }).catch(err => {
+        console.log("POST /api/AIcoachChat Failed: " + err);
+        res.status(500);
+        return;
+      });
     });
-  });
-
-  res.send("^^^Hello");
-  return;
-
+  }
 });
 
 

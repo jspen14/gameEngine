@@ -270,6 +270,7 @@ export default{
           this.selectedCoach1 = '';
           this.selectedPlayer2 = '';
           this.selectedCoach2 = '';
+          this.ptpChatEnabled = true;
         }).catch(error => {
           swal("Error","Please update users then try again.","warning");
           console.log('createGame failed: ', error);

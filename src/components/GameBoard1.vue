@@ -31,7 +31,7 @@
 											<h1 class="p1">{{$store.getters.matrix[0][0][me]}}</h1>
 										</div>
 										<div class="col-lg-6 col-md-6 col-sm-6 col-xs-6">
-											<h3 class="p2">{{$store.getters.matrix[0][0][other]}}</h3>
+											<h2 class="p2">{{$store.getters.matrix[0][0][other]}}</h2>
 										</div>
 									</div>
 
@@ -45,7 +45,7 @@
 											<h1 class="p1">{{$store.getters.matrix[0][1][me]}}</h1>
 										</div>
 										<div class="col-lg-6 col-md-6 col-sm-6 col-xs-6">
-											<h3 class="p2">{{$store.getters.matrix[0][1][other]}}</h3>
+											<h2 class="p2">{{$store.getters.matrix[0][1][other]}}</h2>
 										</div>
 									</div>
                 </div>
@@ -71,7 +71,7 @@
 											<h1 class="p1">{{$store.getters.matrix[1][0][me]}}</h1>
 										</div>
 										<div class="col-lg-6 col-md-6 col-sm-6 col-xs-6">
-											<h3 class="p2">{{$store.getters.matrix[1][0][other]}}</h3>
+											<h2 class="p2">{{$store.getters.matrix[1][0][other]}}</h2>
 										</div>
 									</div>
                 </div>
@@ -84,7 +84,7 @@
 											<h1 class="p1">{{$store.getters.matrix[1][1][me]}}</h1>
 										</div>
 										<div class="col-lg-6 col-md-6 col-sm-6 col-xs-6">
-											<h3 class="p2">{{$store.getters.matrix[1][1][other]}}</h3>
+											<h2 class="p2">{{$store.getters.matrix[1][1][other]}}</h2>
 										</div>
 									</div>
                 </div>
@@ -111,7 +111,7 @@
 											<h1 class="p1">{{$store.getters.matrix[0][0][1-other]}}</h1>
 										</div>
 										<div class="col-lg-6 col-md-6 col-sm-6 col-xs-6">
-											<h3 class="p2">{{$store.getters.matrix[0][0][1-me]}}</h3>
+											<h2 class="p2">{{$store.getters.matrix[0][0][1-me]}}</h2>
 										</div>
 									</div>
                 </div>
@@ -124,7 +124,7 @@
 											<h1 class="p1">{{$store.getters.matrix[1][0][1-other]}}</h1>
 										</div>
 										<div class="col-lg-6 col-md-6 col-sm-6 col-xs-6">
-											<h3 class="p2">{{$store.getters.matrix[1][0][1-me]}}</h3>
+											<h2 class="p2">{{$store.getters.matrix[1][0][1-me]}}</h2>
 										</div>
 									</div>
                 </div>
@@ -150,7 +150,7 @@
 											<h1 class="p1">{{$store.getters.matrix[0][1][1-other]}}</h1>
 										</div>
 										<div class="col-lg-6 col-md-6 col-sm-6 col-xs-6">
-											<h3 class="p2">{{$store.getters.matrix[0][1][1-me]}}</h3>
+											<h2 class="p2">{{$store.getters.matrix[0][1][1-me]}}</h2>
 										</div>
 									</div>
                 </div>
@@ -163,7 +163,7 @@
 											<h1 class="p1">{{$store.getters.matrix[1][1][1-other]}}</h1>
 										</div>
 										<div class="col-lg-6 col-md-6 col-sm-6 col-xs-6">
-											<h3 class="p2">{{$store.getters.matrix[1][1][1-me]}}</h3>
+											<h2 class="p2">{{$store.getters.matrix[1][1][1-me]}}</h2>
 										</div>
 									</div>
                 </div>
@@ -308,10 +308,6 @@
     min-height: 5vh;
     border: solid 1px #D9D9D9;
   }
-  h2{
-    line-height: 90px;
-  }
-
 
 	.p1{
 	  color:#0064F9;
@@ -330,11 +326,10 @@
 	.unsubp1:hover{
 	  background: #0135B8;
 	}
+
 	.unsubp2{
 	  transition: background-color 0.2s ease;
 	  color: #FE7223;
-
-
 	}
 
   .boardRow{
