@@ -1,22 +1,27 @@
 const express = require('express');
 const bodyParser = require('body-parser');
-
 const app = express();
+
+
+// require('dns').lookup(require('os').hostname(), function (err, add, fam) {
+//   console.log('Connection IP Address: '+add);
+// })
+
+// app.use(express.static('dist')); // Add this line in to allow front end to be served over port 3000 in addition to backend
 
 app.use(bodyParser.json());
 app.use(bodyParser.urlencoded({extended: false}));
 
 var matrixFile = process.argv[2];
 var filePath = "./data/" + matrixFile;
-
 var jsonVar = require(filePath);
-
-//app.use(express.static('dist')); // Add this line in to allow front end to be served over port 3000 in addition to backend
+//
 
 // Knex Setup
 const env = process.env.NODE_ENV || 'development';
 const config = require('./knexfile')[env];
 const knex = require('knex')(config);
+
 // bcrypt setup
 let bcrypt = require('bcrypt');
 const saltRounds = 10;
@@ -275,7 +280,7 @@ class Game {
   getMatrix(){
     let data=jsonVar.games[this.currentRound-1];
     let mx=data.payoffs;
-    let type= data.type;
+    let type= data.type.substring(6);
     let dimensions= type.split('x');
     for(let i=0; i<dimensions.length;i++)
     {
@@ -696,7 +701,6 @@ app.get('/api/matrix/:gameID', (req,res)=> {
   let gameID=parseInt(req.params.gameID);
   let index=getGameIndex(gameID);
 
-
   res.status(200).json({matrix: jsonVar.games[gameModels[index]._currentRound -1]})
   return;
 });
@@ -724,6 +728,8 @@ app.get('/api/gameState/:id/:which',(req,res)=>{
 
 // This indicates player is ready for the next round
 app.post('/api/ready', (req,res)=>{
+  // Mid-Game Error Fix Here
+
   let id= parseInt(req.body.gameID);
   let which= parseInt(req.body.which);
   let index=getGameIndex(id);
@@ -900,17 +906,10 @@ app.delete('/api/game/:id', (req,res)=>
 // Login
 app.post('/api/login', (req, res) => {
 
-  console.log("Request: ");
-  console.log(req.body);
-
   if (!req.body.name || !req.body.password)
     return res.status(400).send();
 
-  console.log("Marker 1"); //Error Check
-
   knex('users').where('name',req.body.name).first().then(user => {
-    console.log("Marker 2: "); // Error Check
-    console.log(user); // Error Check
 
     if (user === undefined) {
       res.status(403).send("Invalid credentials");
@@ -918,23 +917,15 @@ app.post('/api/login', (req, res) => {
     }
 
     let resp = [bcrypt.compare(req.body.password, user.hash),user];
-    console.log("Marker 3: ");
-    console.log(resp);
+
 
     return [bcrypt.compare(req.body.password, user.hash),user];
   }).spread((result,user) => {
-    console.log("Marker 4");
-    console.log("Result", result);
-    console.log("User: ");
-    console.log(user);
 
     if (result) {
        let token = jwt.sign({ id: user.id }, jwtSecret, {
         expiresIn: 86400 // jwtSecret expires in 24 hours
        });
-
-       console.log("M5. Token:");
-       console.log(token);
 
        if(!userIsInAvaiablePlayers(user.id))
           availableUsers.push(user);
@@ -943,7 +934,7 @@ app.post('/api/login', (req, res) => {
     }
     else
     {
-      res.status(403).send("Invalid credentials");
+      res.status(403).send("Invalid Credentials");
     }
 
     return;
@@ -1091,9 +1082,6 @@ app.get('/api/AIround/:gameID', (req,res)=> {
 app.get('/api/AImatrix/:gameID', (req,res)=> {
   var gameID = parseInt(req.params.gameID);
   var index = getGameIndex(gameID);
-
-  console.log("^^^{type:" + jsonVar.games[gameModels[index]._currentRound -1].type + "," +
-              " payoffs: " + jsonVar.games[gameModels[index]._currentRound -1].payoffs + "}");
 
   res.send("^^^{type:" + jsonVar.games[gameModels[index]._currentRound -1].type + "," +
               " payoffs: " + jsonVar.games[gameModels[index]._currentRound -1].payoffs + "}");

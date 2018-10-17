@@ -510,14 +510,24 @@ export default new Vuex.Store({
       axios.get("/api/matrix/" + context.state.currentGame).then(response => { // Changed this to be gameID
 
         let data= response.data.matrix;
+        console.log(response.data);
         let mx=data.payoffs;
 
-        let type= data.type;
-        let dimensions= type.split('x');
-        for(let i=0; i<dimensions.length;i++)
-        {
-          dimensions[i]=parseInt(dimensions[i]);
-        }
+
+
+        let type= data.type.substring(6);
+        console.log("type: "+ type)
+
+        let dimensions= type.split("x");
+
+        console.log("dimensions: " + dimensions);
+        console.log(dimensions[0])
+
+        // for(let i=0; i<dimensions.length;i++)
+        // {
+        //   dimensions[i]=parseInt(dimensions[i]);
+        // }
+
         let rows=dimensions[0];
         let cols=dimensions[1];
                 //extract values
@@ -560,6 +570,7 @@ export default new Vuex.Store({
           }
           matrix.push(row);
         }
+        console.log(matrix);
         context.commit('setMatrix', matrix);
       }).catch(err => {
         console.log("getMatrix Failed:", err);

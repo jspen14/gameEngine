@@ -4,14 +4,19 @@
 			<br>
       <h2>Game Board</h2>
       <hr>
-      <div class = "row">
+      <!-- <div class = "row">
       	<div class = "col-lg-2 col-md-2 col-sm-2 col-xs-2 boardHeader" ></div>
 				<div class = "col-lg-5 col-md-5 col-sm-5 col-xs-5 boardHeader unsubp2"> <br> <h1> X </h1> </div>
 				<div class = "col-lg-5 col-md-5 col-sm-5 col-xs-5 boardHeader unsubp2"> <br> <h1> Y </h1> </div>
-      </div>
+      </div> -->
 
 
-            <div v-if="$store.getters.whichPlayer===0"> <!-- IF PLAYER 1 -->
+            <div v-if="$store.getters.whichPlayer===0">
+							<div class = "row">
+				      	<div class = "col-lg-2 col-md-2 col-sm-2 col-xs-2 boardHeader" ></div>
+								<div class = "col-lg-5 col-md-5 col-sm-5 col-xs-5 boardHeader unsubp2"> <br> <h1> X </h1> </div>
+								<div class = "col-lg-5 col-md-5 col-sm-5 col-xs-5 boardHeader unsubp2"> <br> <h1> Y </h1> </div>
+				      </div>
               <div class = "row">
 								<div v-if="isUnsubmitted && isPlayer" v-on:click="submitChoice(0)" @mouseenter="Row1=true" @mouseleave="Row1=false" class = "col-lg-2 col-md-2 col-sm-2 col-xs-2 boardRow unsubp1">
 									<br>
@@ -91,15 +96,20 @@
               </div>
             </div>
 
-						<div v-if="$store.getters.whichPlayer===1"> <!-- IF PLAYER 1 -->
+						<div v-if="$store.getters.whichPlayer===1">
+							<div class = "row">
+				      	<div class = "col-lg-2 col-md-2 col-sm-2 col-xs-2 boardHeader" ></div>
+								<div class = "col-lg-5 col-md-5 col-sm-5 col-xs-5 boardHeader unsubp2"> <br> <h1> A </h1> </div>
+								<div class = "col-lg-5 col-md-5 col-sm-5 col-xs-5 boardHeader unsubp2"> <br> <h1> B </h1> </div>
+				      </div>
               <div class = "row">
 								<div v-if="isUnsubmitted && isPlayer" v-on:click="submitChoice(0)" @mouseenter="Row1=true" @mouseleave="Row1=false" class = "col-lg-2 col-md-2 col-sm-2 col-xs-2 boardRow unsubp1">
 									<br>
-									<h1>A</h1>
+									<h1>X</h1>
                 </div>
                 <div v-else v-bind:class="{rowX: rowActive(Row1)}" class = "col-lg-2 col-md-2 col-sm-2 col-xs-2 boardRow p1">
 									<br>
-									<h1>A</h1>
+									<h1>X</h1>
                 </div>
 
 
@@ -135,11 +145,11 @@
               <div class = "row">
 								<div v-if="isUnsubmitted && isPlayer" v-on:click="submitChoice(1)" @mouseenter="Row2=true" @mouseleave="Row2=false" class = "col-lg-2 col-md-2 col-sm-2 col-xs-2 boardRow unsubp1">
 									<br>
-									<h1>B</h1>
+									<h1>Y</h1>
                 </div>
                 <div v-else v-bind:class="{rowX: rowActive(Row2)}" class = "col-lg-2 col-md-2 col-sm-2 col-xs-2 boardRow p1">
 									<br>
-									<h1>B</h1>
+									<h1>Y</h1>
                 </div>
 
                 <div v-bind:class="{selected: zero_one, colX: colActive(Col1), rowX: rowActive(Row2)}"  class = "col-lg-5 col-md-5 col-sm-5 col-xs-5 boardRow">
