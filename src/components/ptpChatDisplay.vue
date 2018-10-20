@@ -218,17 +218,17 @@ export default{
       }
       else {
         if (parseInt(message.charAt(0)) == 0){
-          aiOption = "X";
+          aiOption = "A";
         }
         else{
-          aiOption = "Y";
+          aiOption = "B";
         }
 
         if (parseInt(message.charAt(1)) == 0){
-          myOption = "A";
+          myOption = "X";
         }
         else{
-          myOption = "B";
+          myOption = "Y";
         }
 
 

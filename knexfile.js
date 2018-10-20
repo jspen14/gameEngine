@@ -3,7 +3,7 @@
 module.exports = {
 
   development: {
-    client: 'mariasql', // do this matter?
+    client: 'mariasql', // does this matter?
     connection: {
       host: '127.0.0.1',
       user: 'root',
