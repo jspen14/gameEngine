@@ -1,0 +1,5643 @@
+#include "Expert.h"
+
+Expert::Expert() {
+    printf("Expert constructor\n");
+    potential = 0.0;
+}
+
+Expert::~Expert() {}
+
+void Expert::init(Game *_g) {}
+
+void Expert::Reset() {}
+
+double Expert::getPotential() {
+    return potential;
+}
+
+void Expert::selectAction(Game *_g) {
+}
+
+void Expert::update(int acts[2], double payoffs[2], bool active) {}
+
+void Expert::produceStartCheapTalk(char *buf) {
+    strcpy(buf, "--\n");
+}
+
+void Expert::processStartCheapTalk(char *buf) {}
+
+const char *Expert::whoAmI() {
+    return "Generic Expert";
+}
+
+void Expert::resetInternalExpectation() {
+    internalExpectationTally = 0.0;
+}
+
+bool Expert::matchesPlan(int proposal[2]) {
+    return false;
+}
+#include "ExpertAlg.h"
+
+ExpertAlg::ExpertAlg() {
+    printf("ExpertAlg constructor\n");
+}
+
+ExpertAlg::ExpertAlg(int _me, char *playerString) {
+    me = _me;
+    
+    if (!strcmp("bully", playerString)) {
+        setOfExperts = new Expert*[1];
+        setOfExperts[0] = new TriggerStrat(me, BULLY1_V, &ignbs, true, 0.50);
+        numExperts = 1;
+    }
+    else if (!strcmp("bullied", playerString)) {
+        setOfExperts = new Expert*[1];
+        setOfExperts[0] = new TriggerStrat(me, BULLIED1_V, &ignbs, true, 0.25);
+        numExperts = 1;
+    }
+    else if (!strcmp("fair", playerString)) {
+        setOfExperts = new Expert*[1];
+        setOfExperts[0] = new TriggerStrat(me, NBS_V, &ignbs, false);//true);
+        numExperts = 1;
+    }
+    else if (!strcmp("maxmin", playerString)) {
+        setOfExperts = new Expert*[1];
+        setOfExperts[0] = new MaxMinExpert(me);
+        numExperts = 1;
+    }
+    else if (!strcmp("listener", playerString)) {
+        setOfExperts = new Expert*[1];
+        setOfExperts[0] = new ListenerExpert(me, &ignbs);
+        numExperts = 1;
+    }
+    else if (!strcmp("exploiter", playerString)) {
+        setOfExperts = new Expert*[1];
+        setOfExperts[0] = new ExploiterExpert(me, &ignbs);
+        numExperts = 1;
+    }
+    else if (!strcmp("spp", playerString)) {
+        setOfExperts = new Expert*[8];
+        setOfExperts[0] = new TriggerStrat(me, BULLY1_V, &ignbs, true, 0.25);
+        setOfExperts[1] = new TriggerStrat(me, BULLY1_V, &ignbs, true, 0.5);
+        setOfExperts[2] = new TriggerStrat(me, BULLY1_V, &ignbs, true, 0.80);
+        setOfExperts[3] = new TriggerStrat(me, NBS_V, &ignbs, true);
+        setOfExperts[4] = new TriggerStrat(me, NBS_V, &ignbs, false);
+        setOfExperts[5] = new ListenerExpert(me, &ignbs);
+        setOfExperts[6] = new MaxMinExpert(me);
+        setOfExperts[7] = new GeneralizedFP("GeF", me, true);
+        //setOfExperts[3] = new TriggerStrat(me, BULLY1_V, &ignbs, false, 0.25);
+        //setOfExperts[4] = new TriggerStrat(me, BULLY1_V, &ignbs, false, 0.80);
+        //setOfExperts[5] = new TriggerStrat(me, NBS_V, &ignbs, false);
+        //setOfExperts[0] = new ExploiterExpert(me, &ignbs);
+        numExperts = 8;
+    }
+    else {
+        printf("unknown ExpertAlg\n");
+        exit(1);
+    }
+    
+    selMech = new PlusPlusSelector(me, setOfExperts, numExperts);
+    //selMech = new RandomSelector(setOfExperts, numExperts);
+}
+
+ExpertAlg::~ExpertAlg() {
+    printf("ExpertAlg destructor\n");
+    
+    for (int i = 0; i < numExperts; i++)
+        delete setOfExperts[i];
+    
+    delete setOfExperts;
+    delete selMech;
+}
+
+void ExpertAlg::Reset() {
+}
+
+bool ExpertAlg::orient2Game(char *gameString) {
+
+    //printf("gameString: %s\n", gameString); fflush(stdout);
+
+    char gameOverTest[1024];
+    strcpy(gameOverTest, gameString);
+
+    char *token = strtok(gameOverTest, "{ \",:");
+    char *tipo = strtok(NULL, "{ \",:");
+    //printf("tipo: %s\n", tipo);
+    if (!strcmp(tipo, "Quit")) {
+        return false;
+    }
+
+    games[currentTime] = new Game(gameString);
+    
+    ignbs.updateWithGame(games[currentTime]);
+
+    int i;
+    if (currentTime == 0) {
+        // set the initial potential of each expert
+        for (i = 0; i < numExperts; i++) {
+            setOfExperts[i]->init(games[currentTime]);
+        }
+    
+    }
+
+    selMech->selectExpert(games[currentTime]);
+
+    // have each expert produce their own plan (they may change this later)
+    for (i = 0; i < numExperts; i++) {
+        printf("\nExpert %i selectAction (%s):\n", i, setOfExperts[i]->whoAmI());
+        setOfExperts[i]->selectAction(games[currentTime]);
+    }
+    
+    return true;
+}
+
+void ExpertAlg::produceStartCheapTalk(char buf[10000]) {
+    //strcpy(buf, "--\n");
+    //printf("produce start cheaptalk\n"); fflush(stdout);
+    selMech->currentExpert->produceStartCheapTalk(buf);
+}
+
+void ExpertAlg::produceEndCheapTalk(char buf[10000]) {
+    strcpy(buf, "--\n");
+}
+
+void ExpertAlg::processStartCheapTalk(char buf[10000]) {
+    // tell all of the experts
+    for (int i = 0; i < numExperts; i++)
+        setOfExperts[i]->processStartCheapTalk(buf);
+    
+    // see if we want to switch experts
+    selMech->evaluateProposal(buf);
+}
+
+void ExpertAlg::processEndCheapTalk(char buf[10000]) {
+}
+
+int ExpertAlg::Move() {
+    return selMech->currentExpert->selectedAction;
+}
+
+void ExpertAlg::moveUpdate(int actions[2], double dollars[2]) {
+    currentTime ++;
+    
+    //printf("ExpertAlg moveUpdate\n"); fflush(stdout);
+    
+    // we need to update all of the experts
+    //printf("Potentials:\n");
+    for (int i = 0; i < numExperts; i++) {
+        if (i == selMech->experto) {
+            printf("** %i: ", i);
+            setOfExperts[i]->update(actions, dollars, true);
+        }
+        else {
+            printf("%i: ", i);
+            setOfExperts[i]->update(actions, dollars, false);
+        }
+        //printf("%i: %lf\n", i, setOfExperts[i]->getPotential());
+    }
+    
+    // update the expert-selection mechanism
+    selMech->update(actions, dollars);
+}
+#include "ExploiterExpert.h"
+
+ExploiterExpert::ExploiterExpert() {
+    printf("incomplete ExploiterExpert constructor\n");
+    potential = 0.0;
+}
+
+ExploiterExpert::ExploiterExpert(int _me, igNBS *_ignbs) {
+    yo = _me;
+    t = 0;
+    
+    potential = 0.0;
+    backup = new TriggerStrat(yo, BULLIED1_V, _ignbs, false, 0.5);
+    //upperBound = 1.0;
+    //lowerBound = 0.0;
+    targetDir = 0;
+    targetInc = 0.05;
+}
+
+ExploiterExpert::~ExploiterExpert() {
+    delete backup;
+}
+
+void ExploiterExpert::init(Game *_g) {}
+
+void ExploiterExpert::Reset() {}
+
+double ExploiterExpert::getPotential() {
+    if (t != 0)
+        return potential / t;
+    else
+        return potential;
+}
+
+void ExploiterExpert::selectAction(Game *_g) {
+    g = _g;
+    
+    // infer the joint action we should play -- these will be overwridden if there's a proposal via cheap talk
+    backup->selectAction(_g);
+    //selectedAction = backup->selectedAction;
+    backup->nbsExpected(_g, 1.0 / (1.0 + (t+0.01)/50.0));
+    backup->bullyExpected(_g, yo);
+
+    ja[1-yo] = backup->expectedActions[1-yo];
+    ja[yo] = selectedAction = chooseTheBest(_g, ja[1-yo]);
+    
+    projectedPayoff[0] = g->M[0][ja[0]][ja[1]];
+    projectedPayoff[1] = g->M[1][ja[0]][ja[1]];
+    
+    //rand() % _g->A[yo]; // select a random action for now
+}
+
+void ExploiterExpert::update(int acts[2], double payoffs[2], bool active) {
+    t++;
+    
+    internalExpectationTally += projectedPayoff[yo];
+    
+    potential += projectedPayoff[yo];
+    backup->update(acts, payoffs, active);
+    
+    if (acts[1-yo] == ja[1-yo]) {
+        //    if he did what I expected him to do; do nothing
+        printf("He acted as expected\n");
+    }
+    else {
+        if (acts[1-yo] == backup->nbsExpectedActions[1-yo]) {
+            //    if he tried to play fair, but I thought he should exploit, increase bullyWeight
+            //double inc = 1.0 / (10.0 + t);
+            //if (inc < 0.005)
+            //    inc = 0.005;
+            if (targetDir == 1)
+                targetInc *= 1.1;
+            else if (targetDir == 0) {
+                targetInc /= 2.0;
+            }
+            targetDir = 1;
+            if (targetInc > 0.05)
+                targetInc = 0.05;
+
+            backup->bullyWeight += targetInc;
+            
+            //lowerBound = (lowerBound + backup->bullyWeight) / 2.0;
+            //backup->bullyWeight = (lowerBound + upperBound) / 2.0;
+            printf("increase bullyWeight\n");
+            
+            if (backup->bullyWeight > 1.0)
+                backup->bullyWeight = 1.0;
+        }
+        if (acts[1-yo] == backup->bullyExpectedActions[1-yo]) {
+            //    if he tried to exploit, but I thought he should play fair, decrease bullyWeight
+            //double inc = 1.0 / (10.0 + t);
+            //if (inc < 0.005)
+            //    inc = 0.005;
+
+            //upperBound = (upperBound + backup->bullyWeight) / 2.0;
+            //backup->bullyWeight = (lowerBound + upperBound) / 2.0;
+            if (targetDir == -1)
+                targetInc *= 1.1;
+            else if (targetDir == 1) {
+                targetInc /= 2.0;
+            }
+            targetDir = -1;
+            if (targetInc > 0.05)
+                targetInc = 0.05;
+
+            backup->bullyWeight -= targetInc;
+            
+            printf("decrease bullyWeight\n");
+
+            if (backup->bullyWeight < 0.0)
+                backup->bullyWeight = 0.0;
+        }
+    }
+    printf("bullyWeight = %lf (%lf)\n", backup->bullyWeight, targetInc);
+    
+    printf("exploitPotential: %lf\n", getPotential());
+}
+
+void ExploiterExpert::produceStartCheapTalk(char *buf) {
+    strcpy(buf, "--\n");
+}
+
+void ExploiterExpert::processStartCheapTalk(char *buf) {
+    if (buf[0] != '-') {
+        // a joint action was proposed, so listen to it
+        extractJointAction(buf);
+        selectedAction = ja[yo] = chooseTheBest(g, ja[1-yo]);
+    }
+    else {
+        // just use what I inferred previously; so nothing else to do for now
+    }
+}
+
+void ExploiterExpert::extractJointAction(char *buf) {
+    char cpy[1024];
+    
+    strcpy(cpy, buf);
+    cpy[1] = '\0';
+    ja[0] = atoi(cpy);
+    
+    strcpy(cpy, buf);
+    cpy[2] = '\0';
+    ja[1] = atoi(cpy+1);
+
+    printf("Proposed joint action: %i%i\n", ja[0], ja[1]);
+    
+    projectedPayoff[0] = g->M[0][ja[0]][ja[1]];
+    projectedPayoff[1] = g->M[1][ja[0]][ja[1]];
+    
+    //potential += projectedPayoff[yo];
+}
+
+int ExploiterExpert::chooseTheBest(Game *_g, int act_other) {
+    int myact = -1;
+    double mejor = -99999;
+    for (int i = 0; i < _g->A[yo]; i++) {
+        if (yo == 0) {
+            if (_g->M[yo][i][act_other] > mejor) {
+                myact = i;
+                mejor = _g->M[yo][i][act_other];
+            }
+        }
+        else {
+            if (_g->M[yo][act_other][i] > mejor) {
+                myact = i;
+                mejor = _g->M[yo][act_other][i];
+            }
+        }
+    }
+    
+    return myact;
+}
+
+const char *ExploiterExpert::whoAmI() {
+    return "ExploiterExpert";
+}
+
+bool ExploiterExpert::matchesPlan(int proposal[2]) {
+    return false;
+}
+#include "Game.h"
+
+Game::Game() {
+}
+
+Game::Game(char *entry) {
+    printf("entry: %s\n", entry); fflush(stdout);
+
+    char *token = strtok(entry, "{ \",:");
+    tipoString = strtok(NULL, " \",:");
+    strtok(NULL, " \",:");
+    payoffString = strtok(NULL, " \":");
+
+    M = NULL;
+    char tmp[1024];
+    strcpy(tmp, payoffString);
+    instantiateGame(tipoString, tmp);
+    
+    printf("compute strategies\n"); fflush(stdout);
+    
+    minmax[0] = new minimaxLog(A, 0);
+    minmax[0]->getMinimax(A, 0, M[0]);
+    minmax[1] = new minimaxLog(A, 1);
+    minmax[1]->getMinimax(A, 1, M[1]);
+    
+    attack[0] = new minimaxLog(A, 0);
+    attack[0]->getAttack(A, 0, M[1]);
+    attack[1] = new minimaxLog(A, 1);
+    attack[1]->getAttack(A, 1, M[0]);
+    computePureNEs();
+    computeMixedNEs();
+    computeLowHighNE();
+
+    printGame();
+
+    printf("done\n"); fflush(stdout);
+
+    nbs = new NBS(M, A);
+    printf("NBS = (%lf, %lf)\n", nbs->sol->R[0], nbs->sol->R[1]); fflush(stdout);
+	
+    // find all of the 2-solutions that can be sustained as rNE
+    //printf("rNE offers:\n");
+    computeRNEoffers();
+}
+
+Game::~Game() {
+	int i, j;
+	
+    if (M != NULL) {
+        for (i = 0; i < 2; i++) {
+            for (j = 0; j < A[0]; j++)
+                delete M[i][j];
+            delete M[i];
+        }
+        delete M;
+    }
+    
+    delete minmax[0];
+    delete minmax[1];
+    
+    //printf("-"); fflush(stdout);
+    
+    for (i = 0; i < numSolutions; i++)
+        delete gameSolutions[i];
+    delete gameSolutions;
+    
+    //printf("-"); fflush(stdout);
+
+    for (i = 0; i < numrNEoffers; i++)
+        delete rNEoffers[i];
+    delete rNEoffers;
+    
+    //printf("-"); fflush(stdout);
+}
+
+void Game::instantiateGame(char* tipoString, char *payoffString) {
+    if (!strncmp(tipoString, "Matrix", 6)) {
+        A[0] = tipoString[6] - '0';
+        A[1] = tipoString[8] - '0';
+        
+        M = new double**[2];
+        int i, j;
+        for (i = 0; i < 2; i++) {
+            M[i] = new double*[A[0]];
+            for (j = 0; j < A[0]; j++) {
+                M[i][j] = new double[A[0]];
+            }
+        }
+        
+        char *token;
+        for (i = 0; i < A[0]; i++) {
+            for (j = 0; j < A[1]; j++) {
+                if ((i == 0) && (j == 0))
+                    M[0][i][j] = atof(strtok(payoffString, "[],"));
+                else
+                    M[0][i][j] = atof(strtok(NULL, "[],"));
+                M[1][i][j] = atof(strtok(NULL, "[],"));
+            }
+        }
+        
+        // set up game solutions
+        gameSolutions = new Solution*[A[0]*A[1]];
+        numSolutions = 0;
+        for (i = 0; i < A[0]; i++) {
+            for (j = 0; j < A[1]; j++) {
+                gameSolutions[numSolutions] = new Solution(i, j, M[0][i][j], M[1][i][j]);
+                numSolutions++;
+            }
+        }
+    }
+    else {
+        printf("Game of unknown type (%s).  Exiting\n", tipoString);
+        exit(1);
+    }
+}
+
+void Game::printGame() {
+    int i, j;
+    
+    printf("\n   |      ");
+    
+    for (i = 0; i < A[1]; i++)
+        printf("%i      |      ", i);
+    printf("\n");
+    for (i = 0; i < A[0]; i++) {
+        printf("--------------------------------------\n %i | ", i);
+        for (j = 0; j < A[1]; j++) {
+            printf("%.1lf , %.1lf | ", M[0][i][j], M[1][i][j]);
+        }
+        printf("\n");
+    }
+    printf("--------------------------------------\n\n");
+    printf("Minimax0: %lf: (%lf, %lf)\n", minmax[0]->mv, minmax[0]->ms[0], minmax[0]->ms[1]);
+    printf("Minimax1: %lf: (%lf, %lf)\n", minmax[1]->mv, minmax[1]->ms[0], minmax[1]->ms[1]);
+    //printf("Attack0: %lf: (%lf, %lf)\n", attack[0]->mv, attack[0]->ms[0], attack[0]->ms[1]);
+    //printf("Attack1: %lf: (%lf, %lf)\n", attack[1]->mv, attack[1]->ms[0], attack[1]->ms[1]);
+    //printf("Game Solutions:\n");
+    //for (i = 0; i < numSolutions; i++) {
+    //    gameSolutions[i]->print();
+    //}
+    
+    printf("pureNEs:  ");
+    for (i = 0; i < numPureNEs; i++) {
+        printf("(%i, %i); ", pureNEs[i][0], pureNEs[i][1]);
+    }
+    printf("\n");
+    printf("mixedNEs:  ");
+    for (i = 0; i < numMixedNEs; i++) {
+        printf("(%.2lf, %.2lf) = %lf, %lf; ", mixedNEs[i][0], mixedNEs[i][1], mixedVals[i][0], mixedVals[i][1]);
+    }
+    printf("\n\n");
+}
+
+void Game::createString(char str[1024]) {
+    sprintf(str, "{\"type\": \"%s\", \"payoffs\": %s}", tipoString, payoffString);
+    //printf("%s\n", str);
+}
+
+void Game::computeRNEoffers() {
+    int i, j;
+    double vals[2];
+    int a1[2], a2[2];
+    double p1[2], p2[2], w[2] = {0.5, 0.5};
+    
+    numrNEoffers = 0;
+    rNEoffers = new Solution*[1000]; // make sure I allocate enough memory
+    for (i = 0; i < numSolutions; i++) {
+        if ((gameSolutions[i]->R[0] >= minmax[0]->mv) && (gameSolutions[i]->R[1] >= minmax[1]->mv)) {
+            rNEoffers[numrNEoffers] = new Solution(gameSolutions[i]->actions[0][0], gameSolutions[i]->actions[0][1], gameSolutions[i]->R[0], gameSolutions[i]->R[1]);
+            numrNEoffers ++;
+        }
+        
+        for (j = i+1; j < numSolutions; j++) {
+            vals[0] = (gameSolutions[i]->R[0] + gameSolutions[j]->R[0]) / 2.0;
+            vals[1] = (gameSolutions[i]->R[1] + gameSolutions[j]->R[1]) / 2.0;
+            if ((vals[0] >= minmax[0]->mv) && (vals[1] >= minmax[1]->mv)) {
+                a1[0] = gameSolutions[i]->actions[0][0];
+                a1[1] = gameSolutions[j]->actions[0][0];
+                a2[0] = gameSolutions[i]->actions[0][1];
+                a2[1] = gameSolutions[j]->actions[0][1];
+                p1[0] = gameSolutions[i]->R[0];
+                p1[1] = gameSolutions[j]->R[0];
+                p2[0] = gameSolutions[i]->R[1];
+                p2[1] = gameSolutions[j]->R[1];
+            
+                rNEoffers[numrNEoffers] = new Solution(a1, a2, p1, p2, w);
+                numrNEoffers ++;            
+            }
+        }
+        
+        if (numrNEoffers > 1000) {
+            printf("not enough memory allocated\n");
+            exit(1);
+        }
+    }
+
+    //printf("numrNEoffers: %i\n", numrNEoffers);
+    //for (i = 0; i < numrNEoffers; i++) {
+    //    rNEoffers[i]->print();
+    //}
+}
+
+void Game::computePureNEs() {
+    numPureNEs = 0;
+    
+    int i, j;
+    for (i = 0; i < A[0]; i++) {
+        for (j = 0; j < A[1]; j++) {
+            if (isBestResponse(0, i, j) && isBestResponse(1, i, j)) {
+                pureNEs[numPureNEs][0] = i;
+                pureNEs[numPureNEs][1] = j;
+                numPureNEs++;
+            }
+        }
+    }
+}
+
+bool Game::isBestResponse(int index, int a1, int a2) {
+    int i;
+    double val;
+    
+    if (index == 0) {
+        val = M[0][a1][a2];
+        for (i = 0; i < A[index]; i++) {
+            if (i == a1)
+                continue;
+            if (M[0][i][a2] > val)
+                return false;
+        }
+    }
+    else {
+        val = M[1][a1][a2];
+        for (i = 0; i < A[1-index]; i++) {
+            if (i == a2)
+                continue;
+            if (M[1][a1][i] > val)
+                return false;
+        }
+    }
+
+    return true;
+}
+
+void Game::computeMixedNEs() {
+    numMixedNEs = 0;
+    
+    if (((numPureNEs % 2) == 1) || (A[0] > 2) || (A[1] > 2))
+        return;
+
+    mixedNEs[numMixedNEs][0] = (M[1][1][1] - M[1][1][0]) / (M[1][0][0] - M[1][1][0] - M[1][0][1] + M[1][1][1]);
+    mixedNEs[numMixedNEs][1] = (M[0][1][1] - M[0][0][1]) / (M[0][0][0] - M[0][0][1] - M[0][1][0] + M[0][1][1]);
+    mixedVals[numMixedNEs][0] = (M[0][0][0] * mixedNEs[numMixedNEs][1]) + (M[0][0][1] * (1.0 - mixedNEs[numMixedNEs][1]));
+    mixedVals[numMixedNEs][1] = (M[1][0][0] * mixedNEs[numMixedNEs][0]) + (M[1][1][0] * (1.0 - mixedNEs[numMixedNEs][0]));
+    numMixedNEs = 1;
+}
+
+void Game::computeLowHighNE() {
+    double low = 999999, val;
+    int i;
+    
+    bool includeMixed = true;//false;
+    
+    // lowne for player 0
+    for (i = 0; i < numPureNEs; i++) {
+        val = M[0][pureNEs[i][0]][pureNEs[i][1]];
+        if (val < low)
+            low = val;
+    }
+    
+    if (includeMixed) {
+        for (i = 0; i < numMixedNEs; i++) {
+            if (mixedVals[i][0] < low)
+                low = mixedVals[i][0];
+        }
+    }
+    
+    lowne[0] = low;
+    
+    // lowne for player 1
+    low = 999999;
+    for (i = 0; i < numPureNEs; i++) {
+        val = M[1][pureNEs[i][0]][pureNEs[i][1]];
+        if (val < low)
+            low = val;
+    }
+    
+    if (includeMixed) {
+        for (i = 0; i < numMixedNEs; i++) {
+            if (mixedVals[i][1] < low)
+                low = mixedVals[i][1];
+        }
+    }
+    
+    lowne[1] = low;
+    
+    double high = -999999;
+    // highne for player 0
+    for (i = 0; i < numPureNEs; i++) {
+        val = M[0][pureNEs[i][0]][pureNEs[i][1]];
+        if (val > high)
+            high = val;
+    }
+    
+    if (includeMixed) {
+        for (i = 0; i < numMixedNEs; i++) {
+            if (mixedVals[i][0] > high)
+                high = mixedVals[i][0];
+        }
+    }
+    
+    highne[0] = high;
+    
+    high = -999999;
+    // highne for player 1
+    for (i = 0; i < numPureNEs; i++) {
+        val = M[1][pureNEs[i][0]][pureNEs[i][1]];
+        if (val > high)
+            high = val;
+    }
+    
+    if (includeMixed) {
+        for (i = 0; i < numMixedNEs; i++) {
+            if (mixedVals[i][1] > high)
+                high = mixedVals[i][1];
+        }
+    }
+    
+    highne[1] = high;
+    
+}
+
+#include "GeneralizedFP.h"
+
+
+GeneralizedFP::GeneralizedFP() {
+    printf("incomplete GeF constructor\n");
+    exit(1);
+}
+
+GeneralizedFP::GeneralizedFP(const char *quien, int _me, bool _asExpert) {
+    me = _me;
+    asExpert = _asExpert;
+    
+    numTipos = 0;
+    
+    if (!strcmp(quien, "GeF")) {
+        addTipo(SOCIAL_WELFARE_GUY);
+        addTipo(FOLK_EGAL_GUY);
+        addTipo(SAFE_GUY);
+        addTipo(MAX_GUY);
+        addTipo(MAXIMIZER0_GUY);
+        addTipo(MAXIMIZER1_GUY);
+        addTipo(MAXIMIZER2_GUY);
+        //addTipo(ATTACK_GUY);
+        //addTipo(CHARITABLE_GUY);
+        //addTipo(STACKELBERG_GUY);
+    }
+    else if (!strcmp(quien, "maximizer1")) {
+        addTipo(MAXIMIZER0_GUY);
+    }
+    else if (!strcmp(quien, "maximizer2")) {
+        addTipo(MAXIMIZER1_GUY);
+    }
+    
+    for (int i = 0; i < numTipos; i++) {
+        kappa[i] = 1.0;
+        for (int j = 0; j < MAX_ACTs; j++) {
+            cuenta[i][j] = 1;
+        }
+    }
+    
+    for (int i = 0; i < MAX_ACTs; i++)
+        numGames[i] = 0;
+}
+
+void GeneralizedFP::addTipo(int code) {
+    tipos[numTipos] = code;
+    numTipos ++;
+}
+
+GeneralizedFP::~GeneralizedFP() {
+}
+
+void GeneralizedFP::Reset() {
+}
+
+bool GeneralizedFP::orient2Game(char *gameString) {
+    char gameOverTest[1024];
+    strcpy(gameOverTest, gameString);
+
+    char *token = strtok(gameOverTest, "{ \",:");
+    char *tipo = strtok(NULL, "{ \",:");
+    //printf("tipo: %s\n", tipo);
+    if (!strcmp(tipo, "Quit")) {
+        return false;
+    }
+
+    //printf("gameString: %s\n", gameString);
+
+    games[currentTime] = new Game(gameString);
+    
+    //ignbs.updateWithGame(games[currentTime]);
+
+    return true;
+}
+
+void GeneralizedFP::produceStartCheapTalk(char buf[10000]) {
+    strcpy(buf, "--\n");
+}
+
+void GeneralizedFP::processStartCheapTalk(char buf[10000]) {
+}
+
+void GeneralizedFP::produceEndCheapTalk(char buf[10000]) {
+    strcpy(buf, "--\n");
+}
+
+void GeneralizedFP::processEndCheapTalk(char buf[10000]) {
+}
+
+int GeneralizedFP::Move() {
+    int a, i, j;
+    
+    getRankings();
+    getGamma();
+    
+    double *utilities = new double[games[currentTime]->A[me]];
+    printf("Utilities:\n");
+    for (a = 0; a < games[currentTime]->A[me]; a++) {
+        utilities[a] = 0.0;
+        for (j = 0; j < games[currentTime]->A[1-me]; j++) {
+            if (me == 0)
+                utilities[a] += gamma[j] * games[currentTime]->M[me][a][j];
+            else
+                utilities[a] += gamma[j] * games[currentTime]->M[me][j][a];
+        }
+        printf("   %i: %lf\n", a, utilities[a]);
+    }
+    
+    // pick the action with the highest utility (break ties with uniform random)
+    double max = -999999, val;
+    int num = 0;
+    int inthere[100];
+
+    for (a = 0; a < games[currentTime]->A[me]; a++) {
+        val = utilities[a];
+        if (val > max) {
+            max = val;
+            num = 1;
+            inthere[0] = a;
+        }
+        else if (val == max) {
+            inthere[num] = a;
+            num ++;
+        }
+    }
+    
+    maxUtil = max;
+
+    delete[] utilities;
+    
+    int select = inthere[rand() % num];
+    printf("GeF: selected action %i\n", select);
+
+    return select;
+}
+
+void GeneralizedFP::moveUpdate(int actions[2], double dineros[2]) {
+
+    // update cuenta
+    //printf("update cuenta\n"); fflush(stdout);
+    int i, index;
+    for (i = 0; i < numTipos; i++) {
+        index = findCorrespondence(i, actions[1-me]);
+        cuenta[i][index] ++;
+    }
+    
+    printf("Cuenta:\n");
+    for (i = 0; i < numTipos; i++) {
+        printf("Tipo %i: ", i);
+        for (int j = 0; j < games[currentTime]->A[1-me]; j++) {
+            printf("%i ", cuenta[i][j]);
+        }
+        printf("\n");
+    }
+    printf("\n");
+
+    printf("Cuenta Expanded:\n");
+    double v;
+    for (i = 0; i < numTipos; i++) {
+        printf("Tipo %i: ", i);
+        for (int j = 0; j < 5; j++) {
+            v = cuenta[i][j];
+            if (numGames[j] > 0)
+                v = 1.0 + ((v - 1.0) / (numGames[j])) * numGames[0];
+            printf("%.1lf (%i) ", v, numGames[j]);
+        }
+        printf("\n");
+    }
+    printf("\n");
+
+    
+    for (i = 0; i < games[currentTime]->A[me]; i++)
+        numGames[i] ++;
+    
+    printf("numGames: ");
+    for (i = 0; i < MAX_ACTs; i++) {
+        printf("%i ", numGames[i]);
+    }
+    printf("\n");
+
+    currentTime ++;
+}
+
+int GeneralizedFP::findCorrespondence(int tipo, int himAct) {
+    int i;
+    
+    for (i = 0; i < games[currentTime]->A[1-me]; i++) {
+        if (theRankings[tipo][i] == himAct)
+            return i;
+    }
+
+    return -1;
+}
+
+void GeneralizedFP::getGamma() {
+    int i, j;
+    double sum = 0.0;
+
+    // compute the weights
+    double *weights = new double[numTipos];
+/*
+    // weighted kappa
+    for (i = 0; i < numTipos; i++) {
+        weights[i] = getSignalQuality(i);
+        sum += weights[i];
+    }
+    printf("Weights: ");
+    for (i = 0; i < numTipos; i++) {
+        weights[i] /= sum;
+        printf("%lf ", weights[i]);
+    }
+    printf("\n");
+*/
+
+    // best takes all kapp
+    double mx = -99999;
+    int index;
+    for (i = 0; i < numTipos; i++) {
+        weights[i] = 0.0;
+        if (getSignalQuality(i) > mx) {
+            mx = getSignalQuality(i);
+            index = i;
+        }
+    }
+    weights[index] = 1.0;
+    printf("Best model = %i\n", index);
+    
+    // compute kappa
+    for (j = 0; j < games[currentTime]->A[1-me]; j++) {
+        kappa[j] = 0.0;
+    }
+
+    for (j = 0; j < games[currentTime]->A[1-me]; j++) {
+        kappa[j] += cuenta[index][findCorrespondence(index, j)];
+        
+        // account for games that had more than games[currentTime]->A[1-me] actions
+        
+        
+        // account for games that had less than j actions
+        if (numGames[j] > 0)
+            kappa[j] = 1.0 + ((kappa[j] - 1.0) / (numGames[j])) * numGames[0];
+    }
+/*
+    for (i = 0; i < numTipos; i++) {
+        for (j = 0; j < games[currentTime]->A[1-me]; j++) {
+            kappa[j] += weights[i] * cuenta[i][theRankings[i][j]];
+        }
+    }
+*/
+    printf("kappa: ");
+    for (j = 0; j < games[currentTime]->A[1-me]; j++) {
+        printf("%lf ", kappa[j]);
+    }
+    printf("\n");
+    
+    // compute gamma
+    sum = 0.0;
+    for (j = 0; j < games[currentTime]->A[1-me]; j++) {
+        sum += kappa[j];
+    }
+    
+    for (i = 0; i < games[currentTime]->A[1-me]; i++) {
+        gamma[i] = kappa[i] / sum;
+    }
+    
+    printf("Assessment: ");
+    for (j = 0; j < games[currentTime]->A[1-me]; j++) {
+        printf("%lf ", gamma[j]);
+    }
+    printf("\n");
+    
+    delete[] weights;
+}
+
+double GeneralizedFP::getSignalQuality(int index) {
+    int i;
+    double sum = 0;
+    double epsilon = 0.1;
+    
+    double poder = 4.0;// + (currentTime / 50.0);
+    
+    for (i = 1; i < games[currentTime]->A[1-me]; i++) {
+        sum += pow((double)(abs(cuenta[index][i] - cuenta[index][0])), poder);
+    }
+    
+    return sum + epsilon;
+}
+
+void GeneralizedFP::getRankings() {
+    int i;
+    
+    for (i = 0; i < numTipos; i++) {
+        switch (tipos[i]) {
+            case SOCIAL_WELFARE_GUY: rankSocialWelfare(theRankings[i]); break;
+            case FOLK_EGAL_GUY: rankFolkEgal(theRankings[i]); break;
+            case SAFE_GUY: rankSafe(theRankings[i]); break;
+            case MAX_GUY: rankMax(theRankings[i]); break;
+            case MAXIMIZER0_GUY: rankMaximizer0(theRankings[i]); break;
+            case MAXIMIZER1_GUY: rankMaximizer1(theRankings[i]); break;
+            case MAXIMIZER2_GUY: rankMaximizer2(theRankings[i]); break;
+            //case ATTACK_GUY: rankAttack(theRankings[i]); break;
+            //case CHARITABLE_GUY: rankCharity(theRankings[i]); break;
+            //case STACKELBERG_GUY: rankStackelberg(theRankings[i]); break;
+            default: printf("getRankings: unknown tipo\n"); break;
+        }
+    }
+    
+    printf("\n");
+}
+
+void GeneralizedFP::sortEm(double utils[MAX_ACTs], int rankings[MAX_ACTs]) {
+    int i, j;
+    double tmp;
+    
+    for (i = 0; i < games[currentTime]->A[1-me]; i++)
+        rankings[i] = i;
+    
+    for (i = 0; i < games[currentTime]->A[1-me]; i++) {
+        for (j = 0; j < games[currentTime]->A[1-me]-1; j++) {
+            if ((utils[rankings[j]] < utils[rankings[j+1]]) || ((utils[rankings[j]] == utils[rankings[j+1]]) && (rand() % 2))) {
+                tmp = rankings[j];
+                rankings[j] = rankings[j+1];
+                rankings[j+1] = tmp;
+            }
+        }
+    }
+}
+
+void GeneralizedFP::rankSocialWelfare(int rankings[MAX_ACTs]) {
+    int i, j;
+    double max, val, utils[MAX_ACTs];
+    
+    for (i = 0; i < games[currentTime]->A[1-me]; i++) {
+        max = -999999;
+        for (j = 0; j < games[currentTime]->A[me]; j++) {
+            if (me == 1)
+                val = games[currentTime]->M[0][i][j] + games[currentTime]->M[1][i][j];
+            else
+                val = games[currentTime]->M[0][j][i] + games[currentTime]->M[1][j][i];
+            
+            if (val > max)
+                max = val;
+        }
+        utils[i] = max;
+    }
+    
+    // sort them
+    sortEm(utils, rankings);
+
+    printf("SocialWelfare rankings: ");
+    for (i = 0; i < games[currentTime]->A[1-me]; i++) {
+        printf("%i (%.2lf) ", rankings[i], utils[rankings[i]]);
+    }
+    printf("\n");
+}
+
+void GeneralizedFP::rankFolkEgal(int rankings[MAX_ACTs]) {
+    int i, j;
+    double max, val, utils[MAX_ACTs];
+    
+    for (i = 0; i < games[currentTime]->A[0]; i++) {
+        max = -999999;
+        for (j = 0; j < games[currentTime]->A[1]; j++) {
+            val = games[currentTime]->M[0][i][j];
+            if (games[currentTime]->M[1][i][j] < val)
+                val = games[currentTime]->M[1][i][j];
+            
+            if (val > max)
+                max = val;
+        }
+        utils[i] = max;
+    }
+    
+    // sort them
+    sortEm(utils, rankings);
+
+    printf("FolkEgal rankings: ");
+    for (i = 0; i < games[currentTime]->A[1-me]; i++) {
+        printf("%i (%.2lf) ", rankings[i], utils[rankings[i]]);
+    }
+    printf("\n");
+}
+
+void GeneralizedFP::rankSafe(int rankings[MAX_ACTs]) {
+    int i, j;
+    double min, val, utils[MAX_ACTs];
+    
+    for (i = 0; i < games[currentTime]->A[1-me]; i++) {
+        min = 999999;
+        for (j = 0; j < games[currentTime]->A[me]; j++) {
+            if (me == 1)
+                val = games[currentTime]->M[1-me][i][j];
+            else
+                val = games[currentTime]->M[1-me][j][i];
+            
+            if (val < min)
+                min = val;
+        }
+        utils[i] = min;
+    }
+
+    // sort them
+    sortEm(utils, rankings);
+
+    printf("Safe rankings: ");
+    for (i = 0; i < games[currentTime]->A[1-me]; i++) {
+        printf("%i (%.2lf) ", rankings[i], utils[rankings[i]]);
+    }
+    printf("\n");
+}
+
+void GeneralizedFP::rankMax(int rankings[MAX_ACTs]) {
+    int i, j;
+    double max, val, utils[MAX_ACTs];
+    
+    for (i = 0; i < games[currentTime]->A[1-me]; i++) {
+        max = -999999;
+        for (j = 0; j < games[currentTime]->A[me]; j++) {
+            if (me == 1)
+                val = games[currentTime]->M[1-me][i][j];
+            else
+                val = games[currentTime]->M[1-me][j][i];
+            
+            if (val > max)
+                max = val;
+        }
+        utils[i] = max;
+    }
+    
+    // sort them
+    sortEm(utils, rankings);
+
+    printf("Max rankings: ");
+    for (i = 0; i < games[currentTime]->A[1-me]; i++) {
+        printf("%i (%.2lf) ", rankings[i], utils[rankings[i]]);
+    }
+    printf("\n");
+}
+
+void GeneralizedFP::bestResponse(int index, double partStrat[MAX_ACTs], double strat[MAX_ACTs]) {
+    int i, j;
+    double max = -999999, val, utils[MAX_ACTs];
+    int num = 0;
+    int inthere[100];
+    
+    for (i = 0; i < games[currentTime]->A[index]; i++) {
+        val = 0.0;
+        for (j = 0; j < games[currentTime]->A[1-index]; j++) {
+            if (index == 0)
+                val += games[currentTime]->M[index][i][j] * partStrat[j];
+            else
+                val += games[currentTime]->M[index][j][i] * partStrat[j];
+        }
+        if (val > max) {
+            max = val;
+            num = 1;
+            inthere[0] = i;
+        }
+        else if (val == max) {
+            inthere[num] = i;
+            num ++;
+        }
+    }
+    
+    for (i = 0; i < games[currentTime]->A[index]; i++) {
+        strat[i] = 0.0;
+    }
+    
+    for (i = 0; i < num; i++) {
+        strat[inthere[i]] += 1.0 / num;
+    }
+}
+
+void GeneralizedFP::rankMaximizer0(int rankings[MAX_ACTs]) {
+    int i, j;
+    double utils[MAX_ACTs];
+    
+    for (i = 0; i < games[currentTime]->A[1-me]; i++) {
+        utils[i] = 0.0;
+        for (j = 0; j < games[currentTime]->A[me]; j++) {
+            if (me == 1)
+                utils[i] += games[currentTime]->M[1-me][i][j];
+            else
+                utils[i] += games[currentTime]->M[1-me][j][i];
+        }
+    }
+    
+    // sort them
+    sortEm(utils, rankings);
+
+    printf("Maximizer0 rankings: ");
+    for (i = 0; i < games[currentTime]->A[1-me]; i++) {
+        printf("%i (%.2lf) ", rankings[i], utils[rankings[i]]);
+    }
+    printf("\n");
+}
+
+void GeneralizedFP::rankMaximizer1(int rankings[MAX_ACTs]) {
+    int i, j;
+    double val, utils[MAX_ACTs];
+
+    double tmp[MAX_ACTs];
+    double him[MAX_ACTs];
+    for (i = 0; i < games[currentTime]->A[1-me]; i++)
+        him[i] = 1.0 / games[currentTime]->A[1-me];
+    bestResponse(me, him, tmp);
+    
+    printf("\t%i (I) will play %lf, %lf, so ... \n", me, tmp[0], tmp[1]);
+
+    // now calculate what he'll do if he's rational
+    for (i = 0; i < games[currentTime]->A[1-me]; i++) {
+        val = 0.0;
+        for (j = 0; j < games[currentTime]->A[me]; j++) {
+            if (me == 1)
+                val += games[currentTime]->M[1-me][i][j] * tmp[j];
+            else
+                val += games[currentTime]->M[1-me][j][i] * tmp[j];
+        }
+        utils[i] = val;
+    }
+    
+    // sort them
+    sortEm(utils, rankings);
+
+    printf("Maximizer1 rankings: ");
+    for (i = 0; i < games[currentTime]->A[1-me]; i++) {
+        printf("%i (%.2lf) ", rankings[i], utils[rankings[i]]);
+    }
+    printf("\n");
+}
+
+void GeneralizedFP::rankMaximizer2(int rankings[MAX_ACTs]) {
+    int i, j;
+    double val, utils[MAX_ACTs];
+    double tmp[MAX_ACTs];
+    double him[MAX_ACTs];
+    
+    for (i = 0; i < games[currentTime]->A[me]; i++)
+        tmp[i] = 1.0 / games[currentTime]->A[me];
+    bestResponse(1-me, tmp, him);
+    
+    printf("\t%i will play %lf, %lf ... ", 1-me, him[0], him[1]);
+    
+    bestResponse(me, him, tmp);
+    
+    printf("so %i (I) will play %lf, %lf\n", me, tmp[0], tmp[1]);
+
+    // now calculate what he'll do if he's rational
+    for (i = 0; i < games[currentTime]->A[1-me]; i++) {
+        val = 0.0;
+        for (j = 0; j < games[currentTime]->A[me]; j++) {
+            if (me == 1)
+                val += games[currentTime]->M[1-me][i][j] * tmp[j];
+            else
+                val += games[currentTime]->M[1-me][j][i] * tmp[j];
+        }
+        utils[i] = val;
+    }
+    
+    // sort them
+    sortEm(utils, rankings);
+
+    printf("Maximizer2 rankings: ");
+    for (i = 0; i < games[currentTime]->A[1-me]; i++) {
+        printf("%i (%.2lf) ", rankings[i], utils[rankings[i]]);
+    }
+    printf("\n");
+}
+
+// ****************************************
+//
+//      Functions to implement Expert
+//
+// ****************************************
+
+void GeneralizedFP::init(Game *_g) {}
+
+double GeneralizedFP::getPotential() {
+    if (currentTime != 0)
+        return potential / currentTime;
+    else
+        return potential;
+}
+
+void GeneralizedFP::selectAction(Game *_g) {
+    games[currentTime] = _g;
+    
+    selectedAction = Move();
+}
+
+void GeneralizedFP::update(int acts[2], double payoffs[2], bool active) {
+    moveUpdate(acts, payoffs);
+    
+    potential += maxUtil;
+    internalExpectationTally += maxUtil;
+    printf("GeF potential: %lf\n", getPotential());
+}
+
+const char *GeneralizedFP::whoAmI() {
+    return "GeF";
+}
+
+bool GeneralizedFP::matchesPlan(int proposal[2]) {
+    return false;
+}
+
+
+
+
+#include "GeneralizedFP.h"
+
+
+GeneralizedFP::GeneralizedFP() {
+    printf("incomplete GeF constructor\n");
+    exit(1);
+}
+
+GeneralizedFP::GeneralizedFP(int _me) {
+    me = _me;
+    
+    numTipos = 0;
+    addTipo(SOCIAL_WELFARE_GUY);
+    addTipo(FOLK_EGAL_GUY);
+    addTipo(SAFE_GUY);
+    addTipo(MAX_GUY);
+    addTipo(MAXIMIZER0_GUY);
+    addTipo(MAXIMIZER1_GUY);
+    addTipo(ATTACK_GUY);
+    addTipo(CHARITABLE_GUY);
+    addTipo(STACKELBERG_GUY);
+    addTipo(RANDOM_GUY);
+
+    for (int i = 0; i < numTipos; i++) {
+        kappa[i] = 1.0;
+    }
+    
+}
+
+void GeneralizedFP::addTipo(int code) {
+    tipos[numTipos] = code;
+    numTipos ++;
+}
+
+GeneralizedFP::~GeneralizedFP() {
+}
+
+void GeneralizedFP::Reset() {
+}
+
+bool GeneralizedFP::orient2Game(char *gameString) {
+    char gameOverTest[1024];
+    strcpy(gameOverTest, gameString);
+
+    char *token = strtok(gameOverTest, "{ \",:");
+    char *tipo = strtok(NULL, "{ \",:");
+    //printf("tipo: %s\n", tipo);
+    if (!strcmp(tipo, "Quit")) {
+        return false;
+    }
+
+    //printf("gameString: %s\n", gameString);
+
+    games[currentTime] = new Game(gameString);
+    
+    //ignbs.updateWithGame(games[currentTime]);
+
+    return true;
+}
+
+void GeneralizedFP::produceStartCheapTalk(char buf[10000]) {
+    strcpy(buf, "--\n");
+}
+
+void GeneralizedFP::processStartCheapTalk(char buf[10000]) {
+}
+
+void GeneralizedFP::produceEndCheapTalk(char buf[10000]) {
+    strcpy(buf, "--\n");
+}
+
+void GeneralizedFP::processEndCheapTalk(char buf[10000]) {
+}
+
+int GeneralizedFP::Move() {
+    int a, i, j;
+    
+    getGamma();
+    getAcciones();
+
+    double *actionGamma = new double[games[currentTime]->A[1-me]];
+    for (a = 0; a < games[currentTime]->A[1-me]; a++) {
+        actionGamma[a] = 0.0;
+    }
+    
+    for (i = 0; i < numTipos; i++) {
+        for (a = 0; a < games[currentTime]->A[1-me]; a++) {
+            actionGamma[a] += gamma[i] * acciones[i][a];
+        }
+    }
+
+    printf("Gamma: ");
+    for (a = 0; a < games[currentTime]->A[1-me]; a++) {
+        printf("%lf ", actionGamma[a]);
+    }
+    printf("\n");
+    
+    double *utilities = new double[games[currentTime]->A[me]];
+    printf("Utilities (new):\n");
+    for (a = 0; a < games[currentTime]->A[me]; a++) {
+        utilities[a] = 0.0;
+        for (j = 0; j < games[currentTime]->A[1-me]; j++) {
+            if (me == 0)
+                utilities[a] += actionGamma[j] * games[currentTime]->M[me][a][j];
+            else
+                utilities[a] += actionGamma[j] * games[currentTime]->M[me][j][a];
+        }
+        printf("   %i: %lf\n", a, utilities[a]);
+    }
+
+// ******************* old start ***********************
+/*
+    // estimate the utility of each action
+    double *utilities = new double[games[currentTime]->A[me]];
+    double sum;
+    
+    printf("Utilities (old):\n");
+    for (a = 0; a < games[currentTime]->A[me]; a++) {
+        utilities[a] = 0.0;
+        for (i = 0; i < numTipos; i++) {
+            sum = 0.0;
+            for (j = 0; j < games[currentTime]->A[1-me]; j++) {
+                if (me == 0)
+                    sum += acciones[i][j] * games[currentTime]->M[me][a][j];
+                else
+                    sum += acciones[i][j] * games[currentTime]->M[me][j][a];
+            }
+            utilities[a] += sum * gamma[i];
+        }
+        printf("   %i: %lf\n", a, utilities[a]);
+    }
+*/
+// *******************  old end  ***********************
+    
+    // pick the action with the highest utility (break ties with uniform random)
+    double max = -999999, val;
+    int num = 0;
+    int inthere[100];
+
+    for (a = 0; a < games[currentTime]->A[me]; a++) {
+        val = utilities[a];
+        if (val > max) {
+            max = val;
+            num = 1;
+            inthere[0] = a;
+        }
+        else if (val == max) {
+            inthere[num] = a;
+            num ++;
+        }
+    }
+
+    delete[] utilities;
+    delete[] actionGamma;
+    
+    int select = inthere[rand() % num];
+    printf("selected action %i\n", select);
+
+    return select;
+}
+
+void GeneralizedFP::moveUpdate(int actions[2], double dineros[2]) {
+    // find the tipos that correctly predicted his action
+    // spread the weight of 1.0 around to those that correctly predicted the action (gamma[i] * acciones[i][selected])
+    
+    double weight[MAX_GUYS];
+    int i;
+    double mag = 0.0;
+    for (i = 0; i < numTipos; i++) {
+        weight[i] = gamma[i] * acciones[i][actions[1-me]];
+        mag += weight[i];
+    }
+    
+    printf("mag = %lf\n", mag);
+    if (mag > 0.0) {
+        printf("kappa: ");
+        for (i = 0; i < numTipos; i++) {
+            kappa[i] += weight[i] / mag;
+            printf("%.2lf  ", kappa[i]);
+        }
+        printf("\n");
+    }
+    
+    currentTime ++;
+}
+
+void GeneralizedFP::getGamma() {
+    double sum = 0.0;
+    int i;
+    
+    for (i = 0; i < numTipos; i++) {
+        sum += kappa[i];
+    }
+
+    for (i = 0; i < numTipos; i++) {
+        gamma[i] = kappa[i] / sum;
+    }
+    
+    printf("Assessment:\n");
+    for (i = 0; i < numTipos; i++) {
+        printf("Tipo %i: %lf (%lf)\n", i, gamma[i], kappa[i]);
+    }
+}
+
+void GeneralizedFP::getAcciones() {
+    int i;
+    
+    for (i = 0; i < numTipos; i++) {
+        switch (tipos[i]) {
+            case SOCIAL_WELFARE_GUY: accionesSocialWelfare(acciones[i]); break;
+            case FOLK_EGAL_GUY: accionesFolkEgal(acciones[i]); break;
+            case SAFE_GUY: accionesSafe(acciones[i]); break;
+            case MAX_GUY: accionesMax(acciones[i]); break;
+            case MAXIMIZER0_GUY: accionesMaximizer0(acciones[i]); break;
+            case MAXIMIZER1_GUY: accionesMaximizer1(acciones[i]); break;
+            case ATTACK_GUY: accionesAttack(acciones[i]); break;
+            case CHARITABLE_GUY: accionesCharity(acciones[i]); break;
+            case STACKELBERG_GUY: accionesStackelberg(acciones[i]); break;
+            case RANDOM_GUY: accionesRandom(acciones[i]); break;
+            default: printf("getAcciones: unknown tipo\n"); break;
+        }
+    }
+    
+    printf("\n");
+}
+
+void GeneralizedFP::accionesSocialWelfare(double acts[MAX_ACTs]) {
+    int i, j;
+    double max = -999999, val;
+    int num = 0;
+    int inthere[100];
+    
+    for (i = 0; i < games[currentTime]->A[0]; i++) {
+        for (j = 0; j < games[currentTime]->A[1]; j++) {
+            val = games[currentTime]->M[0][i][j] + games[currentTime]->M[1][i][j];
+            if (val > max) {
+                max = val;
+                num = 1;
+                if (me == 0)
+                    inthere[0] = j;
+                else
+                    inthere[0] = i;
+            }
+            else if (val == max) {
+                if (me == 0)
+                    inthere[num] = j;
+                else
+                    inthere[num] = i;
+                num ++;
+            }
+        }
+    }
+    
+    for (i = 0; i < games[currentTime]->A[1-me]; i++) {
+        acts[i] = 0.0;
+    }
+    
+    for (i = 0; i < num; i++) {
+        acts[inthere[i]] += 1.0 / num;
+    }
+
+    printf("SocialWelfare action probs: ");
+    for (i = 0; i < games[currentTime]->A[1-me]; i++) {
+        printf("%.2lf ", acts[i]);
+    }
+    printf("\n");
+}
+
+void GeneralizedFP::accionesFolkEgal(double acts[MAX_ACTs]) {
+    int i, j;
+    double max = -999999, val;
+    int num = 0;
+    int inthere[100];
+    
+    for (i = 0; i < games[currentTime]->A[0]; i++) {
+        for (j = 0; j < games[currentTime]->A[1]; j++) {
+            val = games[currentTime]->M[0][i][j];
+            if (games[currentTime]->M[1][i][j] < val)
+                val = games[currentTime]->M[1][i][j];
+            if (val > max) {
+                max = val;
+                num = 1;
+                if (me == 0)
+                    inthere[0] = j;
+                else
+                    inthere[0] = i;
+            }
+            else if (val == max) {
+                if (me == 0)
+                    inthere[num] = j;
+                else
+                    inthere[num] = i;
+                num ++;
+            }
+        }
+    }
+    
+    for (i = 0; i < games[currentTime]->A[1-me]; i++) {
+        acts[i] = 0.0;
+    }
+    
+    for (i = 0; i < num; i++) {
+        acts[inthere[i]] += 1.0 / num;
+    }
+
+    printf("FolkEgal action probs: ");
+    for (i = 0; i < games[currentTime]->A[1-me]; i++) {
+        printf("%.2lf ", acts[i]);
+    }
+    printf("\n");
+}
+
+void GeneralizedFP::accionesSafe(double acts[MAX_ACTs]) {
+    int i;
+    
+    for (i = 0; i < games[currentTime]->A[1-me]; i++)
+        acts[i] = games[currentTime]->minmax[1-me]->ms[i];
+
+    printf("Safe action probs: ");
+    for (i = 0; i < games[currentTime]->A[1-me]; i++) {
+        printf("%.2lf ", acts[i]);
+    }
+    printf("\n");
+}
+
+void GeneralizedFP::accionesMax(double acts[MAX_ACTs]) {
+    int i, j;
+    double max = -999999, val;
+    int num = 0;
+    int inthere[100];
+    
+    for (i = 0; i < games[currentTime]->A[0]; i++) {
+        for (j = 0; j < games[currentTime]->A[1]; j++) {
+            val = games[currentTime]->M[1-me][i][j];
+            if (val > max) {
+                max = val;
+                num = 1;
+                if (me == 0)
+                    inthere[0] = j;
+                else
+                    inthere[0] = i;
+            }
+            else if (val == max) {
+                if (me == 0)
+                    inthere[num] = j;
+                else
+                    inthere[num] = i;
+                num ++;
+            }
+        }
+    }
+    
+    for (i = 0; i < games[currentTime]->A[1-me]; i++) {
+        acts[i] = 0.0;
+    }
+    
+    for (i = 0; i < num; i++) {
+        acts[inthere[i]] += 1.0 / num;
+    }
+
+    printf("Max action probs: ");
+    for (i = 0; i < games[currentTime]->A[1-me]; i++) {
+        printf("%.2lf ", acts[i]);
+    }
+    printf("\n");
+}
+
+void GeneralizedFP::accionesMaximizer0(double acts[MAX_ACTs]) {
+    int i, j;
+    double max = -999999, val;
+    int num = 0;
+    int inthere[100];
+    
+    for (i = 0; i < games[currentTime]->A[1-me]; i++) {
+        val = 0.0;
+        for (j = 0; j < games[currentTime]->A[me]; j++) {
+            if (me == 1)
+                val += games[currentTime]->M[1-me][i][j];
+            else
+                val += games[currentTime]->M[1-me][j][i];
+        }
+        if (val > max) {
+            max = val;
+            num = 1;
+            inthere[0] = i;
+        }
+        else if (val == max) {
+            inthere[num] = i;
+            num ++;
+        }
+    }
+    
+    for (i = 0; i < games[currentTime]->A[1-me]; i++) {
+        acts[i] = 0.0;
+    }
+    
+    for (i = 0; i < num; i++) {
+        acts[inthere[i]] += 1.0 / num;
+    }
+
+    printf("Maximizer0 action probs: ");
+    for (i = 0; i < games[currentTime]->A[1-me]; i++) {
+        printf("%.2lf ", acts[i]);
+    }
+    printf("\n");
+}
+
+void GeneralizedFP::accionesMaximizer1(double acts[MAX_ACTs]) {
+    int i, j;
+    double max = -999999, val;
+    int num = 0;
+    int inthere[100];
+    
+    printf("        HeVals: ");
+    for (i = 0; i < games[currentTime]->A[me]; i++) {
+        val = 0.0;
+        for (j = 0; j < games[currentTime]->A[1-me]; j++) {
+            if (me == 0)
+                val += games[currentTime]->M[me][i][j];
+            else
+                val += games[currentTime]->M[me][j][i];
+        }
+        if (val > max) {
+            max = val;
+            num = 1;
+            inthere[0] = i;
+        }
+        else if (val == max) {
+            inthere[num] = i;
+            num ++;
+        }
+        printf("%lf ", val);
+    }
+    printf("\n");
+    
+    double tmp[MAX_ACTs];
+    for (i = 0; i < games[currentTime]->A[1-me]; i++) {
+        tmp[i] = 0.0;
+    }
+    
+    for (i = 0; i < num; i++) {
+        tmp[inthere[i]] += 1.0 / num;
+    }
+    
+    // tmp now specifies the strategy he estimates I'll do if I'm a Maximizer0
+    printf("\tHe thinks I'll play: ");
+    for (i = 0; i < games[currentTime]->A[me]; i++) {
+        printf("%.2lf ", tmp[i]);
+    }
+    printf("\n");
+
+
+    // now calculate what he'll do if he's rational
+    max = -99999;
+    num = 0;
+    for (i = 0; i < games[currentTime]->A[1-me]; i++) {
+        val = 0.0;
+        for (j = 0; j < games[currentTime]->A[me]; j++) {
+            if (me == 1)
+                val += games[currentTime]->M[1-me][i][j] * tmp[j];
+            else
+                val += games[currentTime]->M[1-me][j][i] * tmp[j];
+        }
+        //printf("%i: %lf\n", i, val);
+        if (val > max) {
+            max = val;
+            num = 1;
+            inthere[0] = i;
+        }
+        else if (val == max) {
+            inthere[num] = i;
+            num ++;
+        }
+    }
+    
+    for (i = 0; i < games[currentTime]->A[1-me]; i++) {
+        acts[i] = 0.0;
+    }
+    
+    for (i = 0; i < num; i++) {
+        acts[inthere[i]] += 1.0 / num;
+    }
+    
+    printf("Maximizer1 action probs: ");
+    for (i = 0; i < games[currentTime]->A[1-me]; i++) {
+        printf("%.2lf ", acts[i]);
+    }
+    printf("\n");
+}
+
+void GeneralizedFP::accionesAttack(double acts[MAX_ACTs]) {
+    int i;
+    
+    for (i = 0; i < games[currentTime]->A[1-me]; i++)
+        acts[i] = games[currentTime]->attack[1-me]->ms[i];
+
+    printf("Attack action probs: ");
+    for (i = 0; i < games[currentTime]->A[1-me]; i++) {
+        printf("%.2lf ", acts[i]);
+    }
+    printf("\n");
+}
+
+void GeneralizedFP::accionesCharity(double acts[MAX_ACTs]) {
+    int i, j;
+    double max = -999999, val;
+    int num = 0;
+    int inthere[100];
+    
+    for (i = 0; i < games[currentTime]->A[0]; i++) {
+        for (j = 0; j < games[currentTime]->A[1]; j++) {
+            val = games[currentTime]->M[me][i][j];
+            if (val > max) {
+                max = val;
+                num = 1;
+                if (me == 0)
+                    inthere[0] = j;
+                else
+                    inthere[0] = i;
+            }
+            else if (val == max) {
+                if (me == 0)
+                    inthere[num] = j;
+                else
+                    inthere[num] = i;
+                num ++;
+            }
+        }
+    }
+    
+    for (i = 0; i < games[currentTime]->A[1-me]; i++) {
+        acts[i] = 0.0;
+    }
+    
+    for (i = 0; i < num; i++) {
+        acts[inthere[i]] += 1.0 / num;
+    }
+
+    printf("Charity action probs: ");
+    for (i = 0; i < games[currentTime]->A[1-me]; i++) {
+        printf("%.2lf ", acts[i]);
+    }
+    printf("\n");
+}
+
+void GeneralizedFP::accionesStackelberg(double acts[MAX_ACTs]) {
+    int i, j;
+    double max = -999999, val, valme;
+    int num = 0;
+    int inthere[100];
+    
+    for (i = 0; i < games[currentTime]->A[1-me]; i++) {
+        val = 0.0;
+        valme = -99999;
+        for (j = 0; j < games[currentTime]->A[me]; j++) {
+            if (me == 1) {
+                if (games[currentTime]->M[me][i][j] > valme) {
+                    val = games[currentTime]->M[1-me][i][j];
+                    valme = games[currentTime]->M[me][i][j];
+                }
+            }
+            else {
+                if (games[currentTime]->M[me][j][i] > valme) {
+                    val = games[currentTime]->M[1-me][j][i];
+                    valme = games[currentTime]->M[me][j][i];
+                }
+            }
+        }
+        
+        if (val > max) {
+            max = val;
+            num = 1;
+            inthere[0] = i;
+        }
+        else if (val == max) {
+            inthere[num] = i;
+            num ++;
+        }
+    
+    
+    }
+
+    for (i = 0; i < games[currentTime]->A[1-me]; i++) {
+        acts[i] = 0.0;
+    }
+    
+    for (i = 0; i < num; i++) {
+        acts[inthere[i]] += 1.0 / num;
+    }
+
+    printf("Stackelberg action probs: ");
+    for (i = 0; i < games[currentTime]->A[1-me]; i++) {
+        printf("%.2lf ", acts[i]);
+    }
+    printf("\n");
+}
+
+void GeneralizedFP::accionesRandom(double acts[MAX_ACTs]) {
+    int i;
+    
+    printf("Random action probs: ");
+    for (i = 0; i < games[currentTime]->A[1-me]; i++) {
+        acts[i] = 1.0 / games[currentTime]->A[1-me];
+        printf("%.2lf ", acts[i]);
+    }
+    printf("\n");
+    
+}
+
+#include "Human.h"
+
+Human::Human() {
+    printf("incomplete Human constructor\n");
+    exit(1);
+}
+
+Human::Human(int _me) {
+    me = _me;
+}
+
+Human::~Human() {
+}
+
+void Human::Reset() {
+}
+
+bool Human::orient2Game(char *gameString) {
+    char gameOverTest[1024];
+    strcpy(gameOverTest, gameString);
+
+    char *token = strtok(gameOverTest, "{ \",:");
+    char *tipo = strtok(NULL, "{ \",:");
+    //printf("tipo: %s\n", tipo);
+    if (!strcmp(tipo, "Quit")) {
+        return false;
+    }
+
+    //printf("gameString: %s\n", gameString);
+
+    games[currentTime] = new Game(gameString);
+    
+    //ignbs.updateWithGame(games[currentTime]);
+
+    return true;
+}
+
+void Human::produceStartCheapTalk(char buf[10000]) {
+    strcpy(buf, "--\n");
+}
+
+void Human::processStartCheapTalk(char buf[10000]) {
+}
+
+void Human::produceEndCheapTalk(char buf[10000]) {
+    strcpy(buf, "--\n");
+}
+
+void Human::processEndCheapTalk(char buf[10000]) {
+}
+
+int Human::Move() {
+    //games[currentTime]->printGame();
+
+    printf("\nEnter an action: ");
+    
+    int a = -1;
+    std::string actc;
+    while (a < 0) {
+        //sscanf("%s", actc);
+        std::cin >> actc;
+        a = atoi(actc.c_str());
+        if ((a < 0) || (a >= games[currentTime]->A[me]))
+            a = -1;
+    }
+    printf("Chose a = %i\n", a);
+    
+    return a;
+}
+
+void Human::moveUpdate(int actions[2], double dineros[2]) {
+    //printf("move updated\n"); fflush(stdout);
+    
+    currentTime++;
+}
+#include "ListenerExpert.h"
+
+ListenerExpert::ListenerExpert() {
+    printf("incomplete ListenerExpert constructor\n");
+    potential = 0.0;
+}
+
+ListenerExpert::ListenerExpert(int _me, igNBS *_ignbs) {
+    yo = _me;
+    t = 0;
+    
+    potential = 0.0;
+    backup = new TriggerStrat(yo, BULLIED1_V, _ignbs, false, 1.0); // begin by assuming a fair partner
+    //upperBound = 1.0;
+    //lowerBound = 0.0;
+    targetDir = 0;
+    targetInc = 0.05;
+}
+
+ListenerExpert::~ListenerExpert() {
+    delete backup;
+}
+
+void ListenerExpert::init(Game *_g) {
+    backup->init(_g);
+    potential = backup->ignbs->nbs[yo];
+}
+
+void ListenerExpert::Reset() {
+    backup->Reset();
+    backup->bullyWeight = 1.0;
+    targetDir = 0;
+    targetInc = 0.05;
+}
+
+double ListenerExpert::getPotential() {
+    if (t != 0)
+        return potential / t;
+    else
+        return potential;
+}
+
+void ListenerExpert::selectAction(Game *_g) {
+    g = _g;
+    
+    // infer the joint action we should play -- these will be overwridden if there's a proposal via cheap talk
+    backup->selectAction(_g);
+    //printf("backup currentValors: %lf, %lf; bullyTarget = %lf\n", backup->currentValor[0], backup->currentValor[1], backup->bullyTarget);
+    
+    selectedAction = backup->selectedAction;
+    backup->nbsExpected(_g, 1.0 / (1.0 + (t+0.01)/50.0));
+    backup->bullyExpected(_g, yo);
+
+    ja[0] = backup->expectedActions[0];
+    ja[1] = backup->expectedActions[1];
+    
+    projectedPayoff[0] = g->M[0][ja[0]][ja[1]];
+    projectedPayoff[1] = g->M[1][ja[0]][ja[1]];
+    
+    //rand() % _g->A[yo]; // select a random action for now
+}
+
+void ListenerExpert::update(int acts[2], double payoffs[2], bool active) {
+    t++;
+    
+    potential = backup->bullyTarget;//projectedPayoff[yo];
+    //potential = backup->ignbs->nbs[yo]; // assume a listener will get a fair shake
+    
+    internalExpectationTally += projectedPayoff[yo];
+    
+    backup->update(acts, payoffs, active);
+    //printf("update the backup; potential = %lf\n", backup->potential);
+    
+    updateModel(acts, ja);
+    
+    printf("listenPotential: %lf\n", getPotential());
+}
+
+void ListenerExpert::produceStartCheapTalk(char *buf) {
+    strcpy(buf, "--\n");
+}
+
+void ListenerExpert::processStartCheapTalk(char *buf) {
+    if (buf[0] != '-') {
+        int expected[2];
+        expected[0] = ja[0];
+        expected[1] = ja[1];
+    
+        // a joint action was proposed, so listen to it
+        extractJointAction(buf);
+        selectedAction = ja[yo];
+        
+        // I can update my model of the bully target
+        updateModel(ja, expected);
+    }
+    else {
+        // just use what I inferred previously; so nothing else to do for now
+    }
+}
+
+void ListenerExpert::extractJointAction(char *buf) {
+    char cpy[1024];
+    
+    strcpy(cpy, buf);
+    cpy[1] = '\0';
+    ja[0] = atoi(cpy);
+    
+    strcpy(cpy, buf);
+    cpy[2] = '\0';
+    ja[1] = atoi(cpy+1);
+
+    printf("Proposed joint action: %i%i\n", ja[0], ja[1]);
+    
+    projectedPayoff[0] = g->M[0][ja[0]][ja[1]];
+    projectedPayoff[1] = g->M[1][ja[0]][ja[1]];
+    
+    //potential += projectedPayoff[yo];
+}
+
+
+void ListenerExpert::updateModel(int observed[2], int expected[2]) {
+    if (observed[1-yo] == expected[1-yo]) {
+        //    if he did what I expected him to do; do nothing
+        printf("He acted as expected\n");
+    }
+    else {
+        if (observed[1-yo] == backup->nbsExpectedActions[1-yo]) {
+            //    if he tried to play fair, but I thought he should exploit, increase bullyWeight
+            if (targetDir == 1)
+                targetInc *= 1.1;
+            else if (targetDir == 0) {
+                targetInc /= 2.0;
+            }
+            targetDir = 1;
+            if (targetInc > 0.05)
+                targetInc = 0.05;
+
+            backup->bullyWeight += targetInc;
+            
+            printf("increase bullyWeight\n");
+            
+            if (backup->bullyWeight > 1.0)
+                backup->bullyWeight = 1.0;
+        }
+        if (observed[1-yo] == backup->bullyExpectedActions[1-yo]) {
+            //    if he tried to exploit, but I thought he should play fair, decrease bullyWeight
+            if (targetDir == -1)
+                targetInc *= 1.1;
+            else if (targetDir == 1) {
+                targetInc /= 2.0;
+            }
+            targetDir = -1;
+            if (targetInc > 0.05)
+                targetInc = 0.05;
+
+            backup->bullyWeight -= targetInc;
+            
+            printf("decrease bullyWeight\n");
+
+            if (backup->bullyWeight < 0.0)
+                backup->bullyWeight = 0.0;
+        }
+    }
+    printf("bullyWeight = %lf (%lf)\n", backup->bullyWeight, targetInc);
+}
+
+const char *ListenerExpert::whoAmI() {
+    return "ListenerExpert";
+}
+
+bool ListenerExpert::matchesPlan(int proposal[2]) {
+    return false;
+}#include "MBRL.h"
+
+MBRL::MBRL() {
+    printf("incomplete MBRL constructor\n");
+    exit(1);
+}
+
+MBRL::MBRL(int _me) {
+    int i, j, k;
+    
+    me = _me;
+    
+    myLastMove = hisLastMove = -1;
+    
+    sampleCount = 0;
+    lowVal = highVal = 0.0;
+    kappa = new int**[NUM_BINS];
+    V = new double**[NUM_BINS];
+    newV = new double**[NUM_BINS];
+    for (i = 0; i < NUM_BINS; i++) {
+        kappa[i] = new int*[NUM_BINS];
+        V[i] = new double*[NUM_BINS];
+        newV[i] = new double*[NUM_BINS];
+        for (j = 0; j < NUM_BINS; j++) {
+            kappa[i][j] = new int[NUM_BINS];
+            V[i][j] = new double[NUM_BINS];
+            newV[i][j] = new double[NUM_BINS];
+            for (k = 0; k < NUM_BINS; k++) {
+                kappa[i][j][k] = 1;
+                V[i][j][k] = 0.0;
+                newV[i][j][k] = 0.0;
+            }
+        }
+    }
+}
+
+MBRL::~MBRL() {
+    int i, j, k;
+    
+    for (i = 0; i < NUM_BINS; i++) {
+        for (j = 0; j < NUM_BINS; j++) {
+            delete kappa[i][j];
+            delete V[i][j];
+            delete newV[i][j];
+        }
+        delete kappa[i];
+        delete V[i];
+        delete newV[i];
+    }
+    delete kappa;
+    delete V;
+    delete newV;
+}
+
+void MBRL::Reset() {
+}
+
+bool MBRL::orient2Game(char *gameString) {
+    char gameOverTest[1024];
+    strcpy(gameOverTest, gameString);
+
+    char *token = strtok(gameOverTest, "{ \",:");
+    char *tipo = strtok(NULL, "{ \",:");
+    //printf("tipo: %s\n", tipo);
+    if (!strcmp(tipo, "Quit")) {
+        return false;
+    }
+
+    //printf("gameString: %s\n", gameString);
+
+    games[currentTime] = new Game(gameString);
+    
+    //ignbs.updateWithGame(games[currentTime]);
+
+    return true;
+}
+
+void MBRL::produceStartCheapTalk(char buf[10000]) {
+    strcpy(buf, "--\n");
+}
+
+void MBRL::processStartCheapTalk(char buf[10000]) {
+}
+
+void MBRL::produceEndCheapTalk(char buf[10000]) {
+    strcpy(buf, "--\n");
+}
+
+void MBRL::processEndCheapTalk(char buf[10000]) {
+}
+
+int MBRL::Move() {
+    int a;
+    
+    double gamma = 0.95;
+    
+    if (sampleCount == 0) {
+        // play randomly
+        a = rand() % games[currentTime]->A[me];
+    }
+    else {
+        int i, j, c = 0;
+        for (i = 0; i < NUM_BINS; i++) {
+            c += kappa[myLastMove][hisLastMove][i];
+        }
+        printf("c = %i\n", c);
+        
+        double U[10], h, l, inc, R, prob;
+        printf("Utilities:\n");
+        for (i = 0; i < games[currentTime]->A[me]; i++) {
+            U[i] = 0.0;
+            R = 0.0;
+            l = getLowV(me, i);
+            h = getHighV(me, i);
+            inc = (double)(h - l) / NUM_BINS;
+            printf("probs (%lf): ", l);
+            for (j = 0; j < NUM_BINS; j++) {
+                prob = (kappa[myLastMove][hisLastMove][j] / ((double)c));
+                printf("%lf  ", prob);
+                R += prob * (l + (inc * j));
+                U[i] += prob * (gamma * maxV(i, j));
+            }
+            U[i] += R;
+            printf("\n");
+            printf("%i: %lf; %lf\n", i, R, U[i]);
+        }
+        printf("\n");
+    
+        double explore = 1.0 / (1.0 + (currentTime/5.0));
+        printf("explore (%i) = %lf\n", currentTime, explore);
+        if (rand() % 1000 < (explore*1000)) {
+            printf("random move\n");
+            a = rand() % games[currentTime]->A[me];
+        }
+        else {
+            double mx = -99999;
+            for (i = 0; i < games[currentTime]->A[me]; i++) {
+                if (U[i] > mx) {
+                    a = i;
+                    mx = U[i];
+                }
+            }
+        }
+        //a = rand() % games[currentTime]->A[me];
+    }
+    
+    return a;
+}
+
+void MBRL::moveUpdate(int actions[2], double dineros[2]) {
+    int myNewMove = getMove(me, actions);
+    int hisNewMove = getMove(1-me, actions);
+    printf("Moves: %i, %i\n", myNewMove, hisNewMove);
+
+    if (sampleCount > 0)
+        kappa[myLastMove][hisLastMove][hisNewMove]++;
+
+    sampleCount++;
+    lowVal += getLowV(me, actions[me]);
+    highVal += getHighV(me, actions[me]);
+
+    printf("low-high: %lf -- %lf\n", lowVal / sampleCount, highVal / sampleCount);
+
+    myLastMove = myNewMove;
+    hisLastMove = hisNewMove;
+
+    // update V
+    valueIteration();
+    
+    currentTime ++;    
+}
+
+int MBRL::getMove(int index, int actions[2]) {
+    double low = getLowV(1-index, actions[1-index]);
+    double high = getHighV(1-index, actions[1-index]);
+    
+    if (low == high)
+        return NUM_BINS / 2;
+    
+    double actual = games[currentTime]->M[1-index][actions[0]][actions[1]];
+    double ratio = (actual - low) / (high - low);
+
+    return (int)(ratio * (NUM_BINS-1) + 0.5);
+}
+
+double MBRL::getLowV(int index, int a) {
+    double low = 999999;
+    int i;
+    
+    for (i = 0; i < games[currentTime]->A[1-index]; i++) {
+        if (index == 0) {
+            if (games[currentTime]->M[index][a][i] < low)
+                low = games[currentTime]->M[index][a][i];
+        }
+        else {
+            if (games[currentTime]->M[index][i][a] < low)
+                low = games[currentTime]->M[index][i][a];
+        }
+    }
+
+    return low;
+}
+
+double MBRL::getHighV(int index, int a) {
+    double high = -999999;
+    int i;
+    
+    for (i = 0; i < games[currentTime]->A[1-index]; i++) {
+        if (index == 0) {
+            if (games[currentTime]->M[index][a][i] > high)
+                high = games[currentTime]->M[index][a][i];
+        }
+        else {
+            if (games[currentTime]->M[index][i][a] > high)
+                high = games[currentTime]->M[index][i][a];
+        }
+    }
+
+    return high;
+}
+
+void MBRL::valueIteration() {
+    while (vIterate() > 0.1);
+
+    int i, j, k;
+    printf("Kappa:\n");
+    for (i = 0; i < NUM_BINS; i++) {
+        for (j = 0; j < NUM_BINS; j++) {
+            printf("%i, %i: ", i, j);
+            for (k = 0; k < NUM_BINS; k++) {
+                printf("%i  ", kappa[i][j][k]);
+            }
+            printf("\n");
+        }
+    }
+    printf("\n\n");
+
+    printf("V:\n");
+    for (i = 0; i < NUM_BINS; i++) {
+        for (j = 0; j < NUM_BINS; j++) {
+            printf("%i, %i: ", i, j);
+            for (k = 0; k < NUM_BINS; k++) {
+                printf("%.3lf\t", V[i][j][k]);
+            }
+            printf("\n");
+        }
+    }
+    printf("\n\n");
+}
+
+double MBRL::vIterate() {
+    int i, j, k, m;
+    double R, prob, val;
+    
+    double gamma = 0.95;
+    
+    for (i = 0; i < NUM_BINS; i++) {
+        for (j = 0; j < NUM_BINS; j++) {
+            R = getR(i, j);
+            for (k = 0; k < NUM_BINS; k++) {
+                val = 0.0;
+                for (m = 0; m < NUM_BINS; m++) {
+                    prob = getProb(i, j, m);
+                    val += prob * maxV(k, m);
+                }
+                newV[i][j][k] = R + gamma * val;
+            }
+        }
+    }
+
+    double cambio = 0.0;
+    //printf("V:\n");
+    for (i = 0; i < NUM_BINS; i++) {
+        for (j = 0; j < NUM_BINS; j++) {
+            //printf("%i, %i: ", i, j);
+            for (k = 0; k < NUM_BINS; k++) {
+                cambio += fabs(V[i][j][k] - newV[i][j][k]);
+                V[i][j][k] = newV[i][j][k];
+                //printf("%.3lf\t", V[i][j][k]);
+            }
+            //printf("\n");
+        }
+    }
+    //printf("\n\n");
+    
+    return cambio;
+}
+
+double MBRL::maxV(int yo, int el) {
+    double mx = -99999;
+    int i;
+    for (i = 0; i < NUM_BINS; i++) {
+        if (V[yo][el][i] > mx)
+            mx = V[yo][el][i];
+    }
+    
+    return mx;
+}
+
+double MBRL::getProb(int lMe, int lHim, int aHim) {
+    int c = 0;
+    int i;
+    for (i = 0; i < NUM_BINS; i++) {
+        c += kappa[lMe][lHim][i];
+    }
+    
+    return ((double)kappa[lMe][lHim][aHim]) / c;
+}
+
+double MBRL::getR(int lMe, int lHim) {
+    int c = 0;
+    int i;
+    for (i = 0; i < NUM_BINS; i++) {
+        c += kappa[lMe][lHim][i];
+    }
+    double val = 0.0;
+    for (i = 0; i < NUM_BINS; i++) {
+        val += valor(i) * ((double)kappa[lMe][lHim][i]) / c;
+    }
+    
+    return val;
+}
+
+double MBRL::valor(int bin) {
+    double low = lowVal / sampleCount;
+    double high = highVal / sampleCount;
+    
+    return ((double)bin / (NUM_BINS-1) * (high - low)) + low;
+}
+
+
+
+#include "MaxMinExpert.h"
+
+MaxMinExpert::MaxMinExpert() {
+    printf("incomplete MaxMinExpert constructor\n");
+    potential = 0.0;
+}
+
+MaxMinExpert::MaxMinExpert(int _me) {
+    yo = _me;
+    t = 0;
+    potential = 0.0;
+}
+
+MaxMinExpert::~MaxMinExpert() {}
+
+void MaxMinExpert::init(Game *_g) {}
+
+void MaxMinExpert::Reset() {
+    potential = 0.0;
+}
+
+double MaxMinExpert::getPotential() {
+    if (t != 0)
+        return potential / t;
+    else
+        return potential;
+}
+
+void MaxMinExpert::selectAction(Game *_g) {
+    printf("maxmin selectAction\n"); fflush(stdout);
+
+    futuro = potential + _g->minmax[yo]->mv;
+    printf("potential sums = %lf\n", potential);
+    selectedAction = implementProtection(_g);
+    
+    printf("selectedAction = %i\n", selectedAction); fflush(stdout);
+}
+
+int MaxMinExpert::implementProtection(Game *_g) {
+    int i;
+    
+    double num = rand() / (double)RAND_MAX;
+    double sum = 0.0;
+    for (i = 0; i < _g->A[yo]; i++) {
+        sum += _g->minmax[yo]->ms[i];
+        if (num <= sum)
+            return i;
+    }
+    
+    return _g->A[yo]-1;
+}
+
+
+void MaxMinExpert::update(int acts[2], double payoffs[2], bool active) {
+    internalExpectationTally += futuro - potential;
+
+    potential = futuro;
+    t++;
+    printf("MaxMinPotential = %lf\n", getPotential());
+}
+
+void MaxMinExpert::produceStartCheapTalk(char *buf) {
+    strcpy(buf, "--\n");
+}
+
+void MaxMinExpert::processStartCheapTalk(char *buf) {}
+
+const char *MaxMinExpert::whoAmI() {
+    return "MaxMinExpert";
+}
+
+bool MaxMinExpert::matchesPlan(int proposal[2]) {
+    return false;
+}
+#include "NBS.h"
+
+
+NBS::NBS() {
+    printf("Empty NBS constructor\n");
+}
+
+NBS::NBS(double ***M, int A[2]) {
+    //printf("a"); fflush(stdout);
+
+    NumDecisionPointsActual = A[0];
+	Cell pago[NumDecisionPointsMax][NumDecisionPointsMax];
+	
+	int i, j, m, n;
+    
+	for (i = 0; i < A[0]; i++) {
+		for (j = 0; j < A[1]; j++) {
+            pago[i][j].r1 = M[0][i][j];
+            pago[i][j].r2 = M[1][i][j];
+		}
+	}
+
+	double h1 = -10000000, h2 = -10000000, l1 = 10000000, l2 = 10000000;
+	for (i = 0; i < NumDecisionPointsActual; i++) {
+		for (j = 0; j < NumDecisionPointsActual; j++) {
+			payoff1[i][j] = pago[i][j].r1;
+
+			if (payoff1[i][j] > h1)
+				h1 = payoff1[i][j];
+			if (payoff1[i][j] < l1)
+				l1 = payoff1[i][j];
+
+			payoff2[j][i] = pago[i][j].r2;
+			if (payoff2[j][i] > h2)
+				h2 = payoff2[j][i];
+			if (payoff2[j][i] < l2)
+				l2 = payoff2[j][i];
+		}
+	}
+
+	if (h1 == l1) {
+		h1 ++;
+		l1 --;
+	}
+	if (h2 == l2) {
+		h2 ++;
+		l2 --;
+	}
+
+    //printf("b"); fflush(stdout);
+
+	GetDefend(alpha1, payoff2);
+	GetDefend(alpha2, payoff1);
+	GetAttack(delta1, payoff1);
+	GetAttack(delta2, payoff2);
+	GetGuarantee(delta1, alpha2, payoff1, &g1);
+	GetGuarantee(delta2, alpha1, payoff2, &g2);
+
+    //printf("c"); fflush(stdout);
+
+//	printf("g (%.2lf, %.2lf)\n", g1, g2);
+
+	for (i = 0; i < NumDecisionPointsActual; i++) {
+		for (j = 0; j < NumDecisionPointsActual; j++) {
+			A1[i][j] = payoff1[i][j] - g1;
+			A2[i][j] = payoff2[i][j] - g2;
+		}
+	}
+
+	double product, max = -1;
+	Point p1, p2;
+	Point tp1, tp2;
+	int none = -1, ntwo = -1;
+	int one, two;
+	for (i = 0; i < NumDecisionPointsActual; i++) {
+		for (j = 0; j < NumDecisionPointsActual; j++) {
+			tp1.x = A1[i][j];
+			tp1.y = A2[j][i];
+			for (m = 0; m < NumDecisionPointsActual; m++) {
+				for (n = 0; n < NumDecisionPointsActual; n++) {
+					if ((i == m) && (j == n))
+						continue;
+
+					tp2.x = A1[m][n];
+					tp2.y = A2[n][m];
+
+					product = ComputeBargain(tp1, tp2, &one, &two);
+					if (((tp1.x * tp1.y) > product) && (tp1.x > 0) && (tp1.y > 0)) {
+						//printf("first\n");
+						one = 1;
+						two = 0;
+						product = tp1.x * tp1.y;
+					}
+					else if (((tp2.x * tp2.y) > product) && (tp2.x > 0) && (tp2.y > 0)) {
+						//printf("second\n");
+						one = 0;
+						two = 1;
+						product = tp2.x * tp2.y;
+					}
+                    
+                    //printf("product = %lf; max = %lf\n", product, max);
+
+					if (product > max) {
+						//printf("changing (from max = %lf) to product %lf: (one = %i, two = %i)\n", max, product, one, two);
+						max = product;
+						none = one;
+						ntwo = two;
+						p1.x = tp1.x;
+						p1.y = tp1.y;
+						p2.x = tp2.x;
+						p2.y = tp2.y;
+					}
+				}
+			}
+		}
+	}
+    
+    //printf("none = %i; ntwo = %i\n", none, ntwo);
+
+    int c[2], a1[2], a2[2];
+	for (i = 0; i < NumDecisionPointsActual; i++) {
+		for (j = 0; j < NumDecisionPointsActual; j++) {
+			if ((p1.x == A1[i][j]) && (p1.y == A2[j][i])) {
+				//printf("%i: player1 takes action %i, and player2 takes action %i\n", none, i, j);
+				c[0] = none;
+				a1[0] = i;
+				a2[0] = j;
+			}
+			if ((p2.x == A1[i][j]) && (p2.y == A2[j][i])) {
+				//printf("%i: player1 takes action %i, and player2 takes action %i\n", ntwo, i, j);
+				c[1] = ntwo;
+				a1[1] = i;
+				a2[1] = j;
+			}
+		}
+	}
+    
+    //printf("d"); fflush(stdout);
+    
+    double w[2], pays1[2], pays2[2];
+    w[0] = ((double)c[0]) / (c[0] + c[1]);
+    w[1] = 1.0 - w[0];
+    //printf("< %i %i %i %i %i %i > ", c[0], c[1], a1[0], a2[0], a1[1], a2[1]); fflush(stdout);
+    pays1[0] = M[0][a1[0]][a2[0]];
+    pays1[1] = M[0][a1[1]][a2[1]];
+    pays2[0] = M[1][a1[0]][a2[0]];
+    pays2[1] = M[1][a1[1]][a2[1]];
+    
+    //printf("f"); fflush(stdout);
+    
+    sol = new Solution(a1, a2, pays1, pays2, w);
+    
+    //printf("g"); fflush(stdout);
+}
+
+NBS::~NBS() {
+    delete sol;
+}
+
+double NBS::ComputeBargain(Point tp1, Point tp2, int *one, int *two) {
+	if (((tp1.x < 0) && (tp1.y < 0)) || ((tp2.x < 0) && (tp2.y < 0))) {
+		return -1.0;
+	}
+    
+    if ((2.0 * (tp1.y - tp2.y) * (tp1.x - tp2.x)) == 0) {
+        //printf("caught a problem: (%lf, %lf), (%lf, %lf)\n", tp1.x, tp1.y, tp2.x, tp2.y);
+        
+        if ((tp1.x + tp1.y) > (tp2.x + tp2.y)) {
+            *one = 1;
+            *two = 0;
+            return 0.0;
+        }
+        else {
+            *one = 0;
+            *two = 1;
+            return 0.0;
+        }
+    }
+
+	double wx = (-tp2.y * (tp1.x - tp2.x) - tp2.x * (tp1.y - tp2.y)) / (2.0 * (tp1.y - tp2.y) * (tp1.x - tp2.x));
+//	printf("wx = %lf from points (%lf, %lf) and (%lf, %lf)\n", wx, tp1.x, tp1.y, tp2.x, tp2.y);
+
+	if ((wx < 0) || (wx > 1)) {		
+		if ((tp1.x * tp1.y) > (tp2.x * tp2.y)) {
+			*one = 1;
+			*two = 0;
+
+			return (tp1.x * tp1.y);
+		}
+		else {
+			*two = 1;
+			*one = 0;
+
+			return (tp2.x * tp2.y);
+		}
+	}
+	else {
+		int i;
+		for (i = 1; i < 1000; i++) {
+			if ((((wx * (double)i) - (int)((wx * (double)i) + 0.5)) < 0.01) && 
+				((((1.0 - wx) * (double)i) - (int)(((1.0 - wx) * (double)i) + 0.5)) < 0.01)) {
+				*one = (int)(wx * i + 0.5);
+				*two = (int)((1.0 - wx) * i + 0.5);
+				break;
+			}
+		}
+
+		Point z;
+		z.x = wx * tp1.x  + (1.0 - wx) * tp2.x;
+		z.y = wx * tp1.y  + (1.0 - wx) * tp2.y;
+
+//		printf("z1 = %lf, z2 = %lf\n", z.x, z.y);
+
+		// fix to littman's algorithm?
+		if ((z.x < 0) && (z.y < 0)) {
+			//printf("censoring %.2lf, %.2lf\n", z.x, z.y);
+			return -(z.x * z.y);
+		}
+
+		return (z.x * z.y);
+	}
+
+
+	return -1;
+}
+
+void NBS::GetGuarantee(double delta[NumDecisionPointsMax], double alpha[NumDecisionPointsMax],
+					double payoff[NumDecisionPointsMax][NumDecisionPointsMax], double *g) {
+	int i, j;
+
+	*g = 0;
+
+	for (i = 0; i < NumDecisionPointsActual; i++) {
+		for (j = 0; j < NumDecisionPointsActual; j++) {
+			*g += delta[i] * alpha[j] * payoff[i][j];
+		}
+	}
+}
+
+void NBS::GetDefend(double alpha[NumDecisionPointsMax], double payoff[NumDecisionPointsMax][NumDecisionPointsMax]) {
+	double currentmin, tval, val;
+	int j, k;
+	double weights[NumDecisionPointsMax];
+
+	for (j = 0; j < NumDecisionPointsActual; j++) {
+		alpha[j] = 1.0 / (double)NumDecisionPointsActual;
+		weights[j] = 0.0;
+	}
+
+	val = -1000.0;
+	for (k = 0; k < NumDecisionPointsActual; k++) {
+		tval = 0.0;
+		for (j = 0; j < NumDecisionPointsActual; j++) {
+			tval += alpha[j] * payoff[k][j];
+		}
+		if (tval > val)
+			val = tval;
+	}
+
+	currentmin = val;
+
+
+	RecurseMinimax(weights, alpha, &currentmin, payoff, 0);
+}
+
+void NBS::GetAttack(double *alpha, double payoff[NumDecisionPointsMax][NumDecisionPointsMax]) {
+	double currentmax, val, tval;
+	int j, k;
+	double weights[NumDecisionPointsMax];
+
+	for (j = 0; j < NumDecisionPointsActual; j++) {
+		alpha[j] = 1.0 / (double)NumDecisionPointsActual;
+		weights[j] = 0.0;
+	}
+
+	val = 1000000.0;
+	for (k = 0; k < NumDecisionPointsActual; k++) {
+		tval = 0.0;
+		for (j = 0; j < NumDecisionPointsActual; j++) {
+			tval += alpha[j] * payoff[j][k];
+		}
+		if (tval < val)
+			val = tval;
+	}
+
+	currentmax = -1000000; //val;
+
+	RecurseMaximin(weights, alpha, &currentmax, payoff, 0);
+/*	
+	for (i = 0.0; i <= 1.00001; i += 0.01) {
+		tval = val = 0.0;
+
+		val = i * payoff[0][0] + (1.0 - i) * payoff[0][1];
+		tval = i * payoff[1][0] + (1.0 - i) * payoff[1][1];
+
+		if (tval < val)
+			val = tval;
+
+		if (val > currentmax) {
+			currentmax = val;
+			alpha[0] = i;
+			alpha[1] = (1.0 - i);
+		}
+	}
+*/
+}
+
+void NBS::RecurseMaximin(double *weights, double *alpha, double *currentmax, double payoff[NumDecisionPointsMax][NumDecisionPointsMax], int index) {
+	if (index == (NumDecisionPointsActual - 1)) {
+		double tval, val;
+		double weights2[NumDecisionPointsMax];
+		int k, j;
+
+		for (weights[index] = 0.0; weights[index] <= 1.00001; weights[index] += 0.1) {
+			if (Normalize(weights, weights2)) {
+				//fprintf(outfile, "%.2lf %.2lf %.2lf %.2lf\n", weights2[0], weights2[1], weights2[2], weights2[3]);
+				val = 1000000;
+				for (k = 0; k < NumDecisionPointsActual; k++) {
+					tval = 0.0;
+					for (j = 0; j < NumDecisionPointsActual; j++) {
+						tval += weights2[j] * payoff[j][k];
+					}
+					if (tval < val)
+						val = tval;
+				}
+
+				if (val > *currentmax) {
+					*currentmax = val;
+					for (k = 0; k < NumDecisionPointsActual; k++)
+						alpha[k] = weights2[k];
+				}
+			}
+		}
+
+		return;
+	}
+
+	else {
+		for (weights[index] = 0.0; weights[index] <= 1.00001; weights[index] += 0.1)
+			RecurseMaximin(weights, alpha, currentmax, payoff, index + 1);
+	}
+//	if (weights[index] < 0.991)
+//		weights[index] += 0.01;
+//	RecurseMaximin(weights, alpha, currentmax, payoff, index + 1);
+}
+
+void NBS::RecurseMinimax(double *weights, double *alpha, double *currentmin, double payoff[NumDecisionPointsMax][NumDecisionPointsMax], int index) {
+	if (index == (NumDecisionPointsActual - 1)) {
+		//printf("hit the end\n");
+		double tval, val;
+		double weights2[NumDecisionPointsMax];
+		int k, j;
+
+		for (weights[index] = 0.0; weights[index] <= 1.00001; weights[index] += 0.1) {
+			if (Normalize(weights, weights2)) {
+				val = -1000;
+				for (k = 0; k < NumDecisionPointsActual; k++) {
+					tval = 0.0;
+					for (j = 0; j < NumDecisionPointsActual; j++) {
+						tval += weights2[j] * payoff[k][j];
+					}
+					if (tval > val)
+						val = tval;
+				}
+
+				if (val < *currentmin) {
+					*currentmin = val;
+					for (k = 0; k < NumDecisionPointsActual; k++)
+						alpha[k] = weights2[k];
+				}
+			}
+		}
+
+		return;
+	}
+	else {
+		for (weights[index] = 0.0; weights[index] <= 1.00001; weights[index] += 0.1)
+			RecurseMinimax(weights, alpha, currentmin, payoff, index + 1);
+	}
+//	if (weights[index] < 0.991)
+//		weights[index] += 0.01;
+//	RecurseMinimax(weights, alpha, currentmin, payoff, index + 1);
+}
+
+int NBS::Normalize(double *m, double *n) {
+	double mag = 0.0;
+	int i;
+
+	for (i = 0; i < NumDecisionPointsActual; i++)
+		mag += m[i];
+
+	if (mag == 0.0)
+		return 0;
+	else {
+		for (i = 0; i < NumDecisionPointsActual; i++)
+			n[i] = m[i] / mag;
+	}
+
+	return 1;
+}
+#include "Player.h"
+
+Player::Player() {
+    printf("Player constructor\n");
+    currentTime = 0;
+    games = new Game*[1000];
+    
+    asExpert = false;
+}
+
+Player::~Player() {
+    printf("Player destructor ... "); fflush(stdout);
+    
+    if (!asExpert) {
+        for (int i = 0; i < currentTime; i++) {
+            //printf("%i ", i); fflush(stdout);
+            delete games[i];
+        }
+        delete games;
+    }
+    
+    printf("Destructed\n"); fflush(stdout);
+}
+
+void Player::Reset() {
+}
+
+bool Player::orient2Game(char *gameString) {
+    printf("Player orient2Game()\n");
+    return true;
+}
+
+void Player::produceStartCheapTalk(char buf[10000]) {
+    printf("Player produceStartCheapTalk\n");
+}
+
+void Player::produceEndCheapTalk(char buf[10000]) {
+    printf("Player produceEndCheapTalk\n");
+}
+
+void Player::processStartCheapTalk(char buf[10000]) {
+    printf("Player processStartCheapTalk\n");
+}
+
+void Player::processEndCheapTalk(char buf[10000]) {
+    printf("Player processEndCheapTalk\n");
+}
+
+int Player::Move() {
+    printf("Player move\n");
+	return 0;
+}
+
+void Player::moveUpdate(int actions[2], double dollars[2]) {
+	printf("Player update\n");
+}
+#include "PlusPlusSelector.h"
+
+PlusPlusSelector::PlusPlusSelector() {
+    printf("incomplete PlusPlusSelector constructor\n");
+}
+
+PlusPlusSelector::PlusPlusSelector(int _me, Expert **_setOfExperts, int _numExperts) {
+    setOfExperts = _setOfExperts;
+    numExperts = _numExperts;
+    me = _me;
+    
+    currentExpert = NULL;
+    experto = -1;
+    
+    t = 0;
+    currentGame = NULL;
+    Rbar = 0.0;
+    V_nbs = 0;
+    currentScore = 0.0;
+    
+    cycleCount = 0;
+    cycleLength = 4;
+    
+    match = new int*[numExperts];
+    for (int i = 0; i < numExperts; i++) {
+        match[i] = new int[cycleLength];
+        for (int j = 0; j < cycleLength; j++) {
+            match[i][j] = NOProposal;
+        }
+    }
+    
+    if (me == 0)
+        logfp = fopen("thelog_0.txt", "w");
+    else
+        logfp = fopen("thelog_1.txt", "w");
+}
+
+PlusPlusSelector::~PlusPlusSelector() {
+    fclose(logfp);
+    
+    for (int i = 0; i < numExperts; i++)
+        delete match[i];
+    delete match;
+}
+    
+void PlusPlusSelector::selectExpert(Game *_g) {
+    if (currentExpert != NULL)
+        //fprintf(logfp, "%i: aspiration = %lf; potential = %lf\n", t, aspiration, currentExpert->getPotential());
+        fprintf(logfp, "%i: %i\n", t, experto);
+
+    currentGame = _g;
+    if ((currentExpert == NULL) || (cycleCount >= cycleLength)) {
+        cycleCount = 0;
+        if (t == 0) {
+            aspiration = currentGame->nbs->sol->R[me];
+            experto = pickSatisficingExpert();
+            currentExpert = setOfExperts[experto];
+            printf("picked expert %i with potential %lf\n", experto, currentExpert->getPotential()); fflush(stdout);
+        }
+        else {            
+            //printf("nratio vs sratio: %lf to %lf\n", nratio, sratio);
+            double probStay = 0.0;
+            printf("expected = %lf; actual = %lf\n", currentExpert->internalExpectationTally, currentScore);
+            if (currentExpert->internalExpectationTally > 0.0)
+                probStay = pow(currentScore / currentExpert->internalExpectationTally, 4.0);
+            double externalValidation = pow(currentExpert->getPotential() / aspiration, 4.0);
+            printf("externalValidation: %lf (%lf, %lf)\n", externalValidation, currentExpert->getPotential(), aspiration);
+            if (externalValidation < probStay)
+                probStay = externalValidation;
+            double num = (rand() % 1001) / 1000.0;
+            printf("probStay = %lf; num = %lf\n", probStay, num);
+            if (num > probStay) {
+                int old = experto;
+                experto = pickSatisficingExpert();
+                currentExpert = setOfExperts[experto];
+                printf("picked expert %i with potential %lf\n", experto, currentExpert->getPotential()); fflush(stdout);
+
+                if (old != experto) {
+                    // new expert selected -- reset dhats
+                    currentExpert->Reset();
+                    //currentExpert->resetInternalExpectation();
+                    //currentScore = 0.0;
+                }
+            }
+            else {
+                printf("continue with current expert (%i)\n", experto);
+            }
+            //currentExpert->Reset();
+            currentExpert->resetInternalExpectation();
+            currentScore = 0.0;
+        }
+    }
+}
+
+void PlusPlusSelector::update(int actions[2], double dollars[2]) {
+    Rbar += dollars[me];
+    currentScore += dollars[me];
+    V_nbs += currentGame->nbs->sol->R[me];
+    cycleCount++;
+    t++;
+
+    // update the aspiration level
+    double w = 1.0 / (1.0+(t/30.0));
+    aspiration = (w * (V_nbs / t)) + ((1.0 - w) * (Rbar / t));
+    printf("aspiration level: %lf\n", aspiration);
+}
+
+void PlusPlusSelector::evaluateProposal(char buf[10000]) {
+    int i, j;
+    for (i = 0; i < numExperts; i++) {
+        for (j = cycleLength-1; j > 0; j--) {
+            match[i][j] = match[i][j-1];
+        }
+    }
+
+    if (buf[0] != '-') {
+        int proposal[2];
+        extractJointAction(buf, proposal);
+        
+        printf("proposal: %i%i\n", proposal[0], proposal[1]);
+    
+        // see which experts plan to do this proposal this round
+        for (i = 0; i < numExperts; i++) {
+            if (setOfExperts[i]->matchesPlan(proposal))
+                match[i][0] = AMatch;
+            else
+                match[i][0] = NOMatch;
+        }
+    }
+    else {
+        for (i = 0; i < numExperts; i++) {
+            match[i][0] = NOProposal;
+        }
+    }
+
+    // TODO: decide if a switch is in order
+    printf("Congruent: ");
+    for (i = 0; i < numExperts; i++) {
+        if (isCongruent(i))
+            printf("1");
+        else
+            printf("0");
+    }
+    printf("\n");
+}
+
+bool PlusPlusSelector::isCongruent(int index) {
+    int i;
+    
+    bool has = false;
+    for (i = 0; i < cycleLength; i++) {
+        if (match[index][i] == NOMatch)
+            return false;
+        else if (match[index][i] == AMatch)
+            has = true;
+    }
+
+    if (has)
+        return true;
+    else
+        return false;
+}
+
+void PlusPlusSelector::extractJointAction(char buf[10000], int proposal[2]) {
+    char cpy[1024];
+    
+    strcpy(cpy, buf);
+    cpy[1] = '\0';
+    proposal[0] = atoi(cpy);
+    
+    strcpy(cpy, buf);
+    cpy[2] = '\0';
+    proposal[1] = atoi(cpy+1);
+
+    printf("Proposed joint action: %i%i\n", proposal[0], proposal[1]);
+}
+
+
+int PlusPlusSelector::pickSatisficingExpert() {
+    int i;
+    
+    bool *satisficingExperts = new bool[numExperts];
+    int numSatisficingExperts = 0;
+    
+    printf("pickSatisficingExpert (aspiration = %lf):\n", aspiration);
+    for (i = 0; i < numExperts; i++) {
+        printf("%i: potential = %lf (%i)\n", i, setOfExperts[i]->getPotential(), (int)(isCongruent(i)));
+        if ((setOfExperts[i]->getPotential() >= aspiration) && isCongruent(i)) {
+            satisficingExperts[i] = true;
+            numSatisficingExperts ++;
+        }
+        else
+            satisficingExperts[i] = false;
+    }
+    
+    if (numSatisficingExperts == 0) {
+        // find out which experts are satisficing
+        printf("Satisficing Experts: "); fflush(stdout);
+        for (i = 0; i < numExperts; i++) {
+            //printf("potential = %lf\n", setOfExperts[i]->getPotential());
+            if (setOfExperts[i]->getPotential() >= aspiration) {
+                numSatisficingExperts ++;
+                satisficingExperts[i] = true;
+                printf("1");
+            }
+            else {
+                satisficingExperts[i] = false;
+                printf("0");
+            }
+        }
+        printf(" (%i)\n", numSatisficingExperts); fflush(stdout);
+    }
+    
+    // randomly pick one of the satisficing experts
+    if (numSatisficingExperts == 0) {
+        if (experto < 0)
+            return 0;
+        else
+            return experto;
+    }
+    
+    int pick = rand() % numExperts;
+    while (!satisficingExperts[pick])
+        pick = rand() % numExperts;
+    
+    delete[] satisficingExperts;
+    
+    return pick;
+}#include "RandomPlayer.h"
+
+RandomPlayer::RandomPlayer() {
+    printf("RandomPlayer constructor\n");
+}
+
+RandomPlayer::RandomPlayer(int _me) {
+    printf("RandomPlayer constructor\n");
+    me = _me;
+    
+    for (int i = 0; i < 10; i++) {
+        c[i] = 0;
+    }
+}
+
+RandomPlayer::~RandomPlayer() {
+    printf("Counts: "); fflush(stdout);
+    for (int i = 0; i < 2; i++) {
+        printf("%i ", c[i]);
+    }
+    printf("\n");
+
+    printf("RandomPlayer destructor\n");
+}
+
+void RandomPlayer::Reset() {
+}
+
+bool RandomPlayer::orient2Game(char *gameString) {
+    char gameOverTest[1024];
+    strcpy(gameOverTest, gameString);
+
+    char *token = strtok(gameOverTest, "{ \",:");
+    char *tipo = strtok(NULL, "{ \",:");
+    //printf("tipo: %s\n", tipo);
+    if (!strcmp(tipo, "Quit")) {
+        return false;
+    }
+
+    //printf("gameString: %s\n", gameString);
+
+    games[currentTime] = new Game(gameString);
+    
+    //ignbs.updateWithGame(games[currentTime]);
+
+    return true;
+}
+
+void RandomPlayer::produceStartCheapTalk(char buf[10000]) {
+    strcpy(buf, "--\n");
+}
+
+void RandomPlayer::produceEndCheapTalk(char buf[10000]) {
+    strcpy(buf, "--\n");
+}
+
+void RandomPlayer::processStartCheapTalk(char buf[10000]) {
+}
+
+void RandomPlayer::processEndCheapTalk(char buf[10000]) {
+}
+
+int RandomPlayer::Move() {
+	int a = rand() % games[currentTime]->A[me];
+    
+    printf("a = %i\n", a); fflush(stdout);
+    c[a] ++;
+    
+    return a;
+}
+
+void RandomPlayer::moveUpdate(int actions[2], double dollars[2]) {
+    currentTime ++;
+}
+#include "RandomSelector.h"
+
+RandomSelector::RandomSelector() {
+    printf("incomplete RandomSelector constructor\n");
+}
+
+RandomSelector::RandomSelector(Expert **_setOfExperts, int _numExperts) {
+    setOfExperts = _setOfExperts;
+    numExperts = _numExperts;
+    currentExpert = NULL;
+    experto = -1;
+    
+    t = 0;
+    currentGame = NULL;
+}
+
+RandomSelector::~RandomSelector() {}
+    
+void RandomSelector::selectExpert(Game *_g) {
+    if ((currentExpert == NULL) || ((t % 4) == 0)) {
+        experto = rand() % numExperts;
+        currentExpert = setOfExperts[experto];
+    }
+}
+
+void RandomSelector::update(int actions[2], double dollars[2]) {
+    t++;
+}
+#include "SelectionMechanism.h"
+
+
+SelectionMechanism::SelectionMechanism() {
+    printf("SelectionMechanism constructor\n");
+}
+
+SelectionMechanism::~SelectionMechanism() {}
+
+void SelectionMechanism::selectExpert(Game *_g) {}
+
+void SelectionMechanism::update(int actions[2], double dollars[2]) {}
+
+void SelectionMechanism::evaluateProposal(char buf[10000]) {}
+#include "Solution.h"
+
+Solution::Solution() {}
+
+Solution::Solution(int a1, int a2, double p1, double p2) {
+    puro = true;
+    
+    actions[0][0] = actions[1][0] = a1;
+    actions[0][1] = actions[1][1] = a2;
+    Valores[0][0] = Valores[1][0] = p1;
+    Valores[0][1] = Valores[1][1] = p2;
+    
+    weights[0] = 1.0;
+    weights[1] = 0.0;
+
+    R[0] = p1;
+    R[1] = p2;
+}
+
+Solution::Solution(int a1[2], int a2[2], double p1[2], double p2[2], double w[2]) {
+    puro = false;
+    
+    actions[0][0] = a1[0];
+    actions[1][0] = a1[1];
+    actions[0][1] = a2[0];
+    actions[1][1] = a2[1];
+    
+    Valores[0][0] = p1[0];
+    Valores[1][0] = p1[1];
+    Valores[0][1] = p2[0];
+    Valores[1][1] = p2[1];
+    
+    weights[0] = w[0];
+    weights[1] = w[1];
+    
+	R[0] = (p1[0] * w[0]) + (p1[1] * w[1]);
+	R[1] = (p2[0] * w[0]) + (p2[1] * w[1]);
+}
+
+Solution::~Solution() {}
+
+void Solution::print() {
+    if (puro)
+        printf("(%i, %i) : %.2lf, %.2lf\n", actions[0][0], actions[0][1], R[0], R[1]);
+    else
+        printf("(%i, %i) - (%i, %i) : %.2lf, %.2lf\n", actions[0][0], actions[0][1], actions[1][0], actions[1][1], R[0], R[1]);
+}#include "TriggerStrat.h"
+
+TriggerStrat::TriggerStrat() {
+    printf("incomplete TriggerStrat constructor\n");
+}
+
+TriggerStrat::TriggerStrat(int _me, int _targetType, igNBS *_ignbs, bool _punishment) {
+    yo = _me;
+    targetType = _targetType;
+    ignbs = _ignbs;
+    punishment = _punishment;
+
+    t = 0;
+    Reset();
+    guilt = 0.0;
+    runningScore = 0.0;
+    bullyWeight = 1.0;
+}
+
+TriggerStrat::TriggerStrat(int _me, int _targetType, igNBS *_ignbs, bool _punishment, double _bullyWeight) {
+    yo = _me;
+    targetType = _targetType;
+    ignbs = _ignbs;
+    punishment = _punishment;
+
+    t = 0;
+    Reset();
+    guilt = 0.0;
+    runningScore = 0.0;
+    bullyWeight = _bullyWeight;
+}
+
+TriggerStrat::~TriggerStrat() {
+}
+
+void TriggerStrat::init(Game *_g) {
+    double epsilon = 1.0;
+
+    currentValor[0] = currentValor[1] = 0.0;
+
+    if (targetType == NBS_V) {
+        //currentValor[0] = ignbs->nbs[0];
+        //currentValor[1] = ignbs->nbs[1];
+        potential = ignbs->nbs[yo];
+    }
+    else if (targetType == BULLY1_V) {
+        //currentValor[yo] = ignbs->nbs[yo] + epsilon;
+        //currentValor[1-yo] = ignbs->nbs[1-yo] - epsilon;
+        bullyTarget = 0.0;
+        potential = ignbs->nbs[yo] + epsilon;
+    }
+    else if (targetType == BULLIED1_V) {
+        //currentValor[yo] = ignbs->nbs[yo] - epsilon;
+        //currentValor[1-yo] = ignbs->nbs[1-yo] + epsilon;
+        bullyTarget = 0.0;
+        potential = ignbs->nbs[yo] - epsilon;
+    }
+    else {
+        //currentValor[0] = 0.0;
+        //currentValor[1] = 0.0;
+        potential = 0.0;
+    }
+    
+    runningTally[0] = runningTally[1] = 0.0;
+    //potential = currentValor[yo];
+}
+
+void TriggerStrat::Reset() {
+    // set runningTally to what it should have been if the expert had always been properly followed
+    switch (targetType) {
+        case NBS_V:
+            runningTally[0] = ignbs->nbs[0];
+            runningTally[1] = ignbs->nbs[1];
+            break;
+        case BULLY1_V:
+            runningTally[yo] = ignbs->getBullyValue(yo, bullyTarget);
+            runningTally[1-yo] = bullyTarget;
+            break;
+            
+        case BULLIED1_V:
+            runningTally[1-yo] = ignbs->getBullyValue(1-yo, bullyTarget);
+            runningTally[yo] = bullyTarget;
+            break;
+        default:
+            printf("TriggerStrat::Reset -- identity unknown\n");
+            exit(1);
+            break;
+    }
+    
+    printf("runningTally: %lf, %lf\n", runningTally[0], runningTally[1]);
+    
+    guilt = 0.0;
+}
+
+double TriggerStrat::getPotential() {
+    if (t != 0)
+        return potential / t;
+    else
+        return potential;
+}
+
+void TriggerStrat::selectAction(Game *_g) {
+    g = _g;
+    
+    //double wght = 0.5;
+    switch (targetType) {
+        case NBS_V:
+            //selectedAction = nbsAction(g, 0.0);//1.0 / (1.0 + (t+0.01)/5.0));
+            //selectedAction = nbsAction(g, 1.0 / (1.0 + (t+0.01)/50.0));
+            selectedAction = nbsAction(g, 1.0 / (1.0 + (t+0.01)/5.0));
+            //selectedAction = nbsAction(g, 1.0);//1.0 / (1.0 + (t+0.01)/5.0));
+            
+            printf("projectedPayoffs: %.1lf, %.1lf\n", projectedPayoff[0], projectedPayoff[1]);
+            currentValor[0] = ignbs->nbs[0];
+            currentValor[1] = ignbs->nbs[1];
+            
+            break;
+        case BULLY1_V:
+            selectedAction = bullyAction(_g, 1-yo);
+            
+            currentValor[yo] = ignbs->getBullyValue(yo, bullyTarget);
+            currentValor[1-yo] = bullyTarget;
+            bullyTarget = bullyWeight * ignbs->nbs[1-yo] + (1.0-bullyWeight) * ignbs->maxminSum[1-yo];
+            
+            break;
+        case BULLIED1_V:
+            selectedAction = bullyAction(_g, yo);
+            
+            // update currentValor
+            currentValor[1-yo] = ignbs->getBullyValue(1-yo, bullyTarget);
+            currentValor[yo] = bullyTarget;
+            bullyTarget = bullyWeight * ignbs->nbs[yo] + (1.0-bullyWeight) * ignbs->maxminSum[yo];
+            
+            break;
+        default:
+            printf("I don't know who I am\n");
+            selectedAction = 0;
+            break;
+    }
+    
+    if ((guilt > 0.0) && punishment) {
+        printf("needs to be punished: %lf\n", guilt);
+        
+        selectedAction = implementAttack(_g);
+    }
+}
+
+int TriggerStrat::implementAttack(Game *_g) {
+    int i;
+    
+    double num = rand() / (double)RAND_MAX;
+    double sum = 0.0;
+    for (i = 0; i < _g->A[yo]; i++) {
+        sum += _g->attack[yo]->ms[i];
+        if (num <= sum)
+            return i;
+    }
+    
+    return _g->A[yo]-1;
+}
+
+// wght is the proportion between NBS and maxmin of opponent
+int TriggerStrat::bullyAction(Game *_g, int bulliedIndex) {
+    printf("target = %lf (vs. %lf) \n", bullyTarget, runningTally[bulliedIndex]);
+    
+    if (runningTally[bulliedIndex] < bullyTarget) {
+        printf("Give bread crumbs\n");
+        return nbsAction(_g, 0.8);
+    }
+    else {
+        printf("Exploit!\n");
+        double W[10][10];
+        if (bulliedIndex == 0)
+            computeSWUtility(g, W, 0.1, 0.9);
+        else
+            computeSWUtility(g, W, 0.9, 0.1);
+        
+        int i, j;
+        double w_alto = -99999;
+        int ind[2];
+        for (i = 0; i < _g->A[0]; i++) {
+            for (j = 0; j < _g->A[1]; j++) {
+                if (W[i][j] > w_alto) {
+                    w_alto = W[i][j];
+                    ind[0] = i;
+                    ind[1] = j;
+                }
+            }
+        }
+        printf("selected action %i after selecting solution %i, %i\n", ind[yo], ind[0], ind[1]);
+        expectedActions[0] = ind[0];
+        expectedActions[1] = ind[1];
+        projectedPayoff[0] = g->M[0][ind[0]][ind[1]];
+        projectedPayoff[1] = g->M[1][ind[0]][ind[1]];
+        
+        return ind[yo];
+    }
+}
+
+int TriggerStrat::nbsAction(Game *_g, double w) {
+    int i, j;
+
+    double W[10][10];
+    computeSWUtility(g, W, 0.5, 0.5);
+
+    double F[10][10];
+    computeFairUtility(g, F);
+    
+    double U[10][10];
+    double u_alto = -99999;
+    
+    int ind[2];
+    for (i = 0; i < _g->A[0]; i++) {
+        for (j = 0; j < _g->A[1]; j++) {
+            U[i][j] = w * W[i][j] + (1-w) * F[i][j];
+            if (U[i][j] > u_alto) {
+                u_alto = U[i][j];
+                ind[0] = i;
+                ind[1] = j;
+            }
+            printf("U(%i, %i) = %.2lf (%.2lf, %.2lf)\n", i, j, U[i][j], W[i][j], F[i][j]);
+        }
+    }
+    printf("selected action %i after selecting solution %i, %i\n", ind[yo], ind[0], ind[1]);
+    expectedActions[0] = ind[0];
+    expectedActions[1] = ind[1];
+    projectedPayoff[0] = g->M[0][ind[0]][ind[1]];
+    projectedPayoff[1] = g->M[1][ind[0]][ind[1]];
+    
+    return ind[yo];
+}
+
+void TriggerStrat::computeSWUtility(Game *_g, double W[10][10], double w1, double w2) {
+    int i, j;
+    
+    double sw_alto = -99999, sw_bajo = 99999;
+    for (i = 0; i < _g->A[0]; i++) {
+        for (j = 0; j < _g->A[1]; j++) {
+            W[i][j] = socialWelfare(_g, i, j, w1, w2);
+            if (W[i][j] > sw_alto) {
+                sw_alto = W[i][j];
+            }
+            if (W[i][j] < sw_bajo) {
+                sw_bajo = W[i][j];
+            }
+        }
+    }
+    
+    for (i = 0; i < _g->A[0]; i++) {
+        for (j = 0; j < _g->A[1]; j++) {
+            if (sw_alto > sw_bajo) {
+                W[i][j] = (W[i][j] - sw_bajo) / (sw_alto - sw_bajo);
+            }
+            else {
+                W[i][j] = 1.0;
+            }
+        }
+    }
+}
+
+double TriggerStrat::socialWelfare(Game *_g, int a1, int a2, double w1, double w2) {
+    return w1 * g->M[0][a1][a2] + w2 * g->M[1][a1][a2];
+}
+
+void TriggerStrat::computeFairUtility(Game *_g, double F[10][10]) {
+    int i, j;
+    
+    double f_alto = -99999, f_bajo = 99999;
+    for (i = 0; i < _g->A[0]; i++) {
+        for (j = 0; j < _g->A[1]; j++) {
+            F[i][j] = prodAdvantages(_g, i, j);
+            if (F[i][j] > f_alto) {
+                f_alto = F[i][j];
+            }
+            if (F[i][j] < f_bajo) {
+                f_bajo = F[i][j];
+            }
+            //printf("F(%i, %i): %lf\n", i, j, F[i][j]);
+        }
+    }
+
+    for (i = 0; i < _g->A[0]; i++) {
+        for (j = 0; j < _g->A[1]; j++) {
+            if (f_alto > f_bajo) {
+                F[i][j] = (F[i][j] - f_bajo) / (f_alto - f_bajo);
+            }
+            else {
+                F[i][j] = 1.0;
+            }
+        }
+    }
+}
+
+double TriggerStrat::prodAdvantages(Game *_g, int a1, int a2) {
+    double adv1, adv2;
+
+    adv1 = (runningTally[0] + g->M[0][a1][a2]) - ignbs->maxminSum[0];
+    adv2 = (runningTally[1] + g->M[1][a1][a2]) - ignbs->maxminSum[1];
+    
+    //printf("adv = %lf, %lf\n", adv1, adv2);
+    
+    if ((adv1 < 0.0) || (adv2 < 0.0))
+        return 0.0;
+    else
+        return adv1 * adv2;
+}
+
+void TriggerStrat::update(int acts[2], double payoffs[2], bool active) {
+    runningTally[0] += payoffs[0];
+    runningTally[1] += payoffs[1];
+    
+    runningScore += projectedPayoff[yo];
+    internalExpectationTally += projectedPayoff[yo];
+
+    if (punishment && active) {
+        if (guilt > 0.0)
+            guilt += payoffs[1-yo] - projectedPayoff[1-yo];
+        else if (acts[1-yo] != expectedActions[1-yo]) {
+            double delta = 0.5; // extra initial punishment
+            guilt += payoffs[1-yo] - projectedPayoff[1-yo] + delta;
+        }
+        if (guilt < 0.0)
+            guilt = 0.0;
+        
+        printf("guilt = %lf\n", guilt);
+    }
+    else if (!active) {
+        guilt = 0.0;
+    }
+
+    // update the potential
+    //if (t != 0) {// in the first round, the potential is initialized based on the first game -- no need to add it now
+    potential = currentValor[yo];
+
+    //if (runningScore > currentValor[yo])
+    //    potential = runningScore;
+    //}
+    t++;
+    
+    //printf("TriggerStrat-Potential2: %lf\n", potential2);
+    printf("TriggerStrat-Potential: %lf\n", getPotential());
+    printf("currentValors: %lf, %lf\n", currentValor[0], currentValor[1]);
+}
+
+void TriggerStrat::produceStartCheapTalk(char *buf) {
+    if (!punishment || guilt <= 0.0)
+        sprintf(buf, "%i%i\n", expectedActions[0], expectedActions[1]);
+    else
+        strcpy(buf, "--\n");
+    
+    printf("expert cheap talk: %s\n", buf);
+}
+
+void TriggerStrat::bullyExpected(Game *_g, int bulliedIndex) {
+    double W[10][10];
+    if (bulliedIndex == 0)
+        computeSWUtility(g, W, 0.1, 0.9);
+    else
+        computeSWUtility(g, W, 0.9, 0.1);
+    
+    int i, j;
+    double w_alto = -99999;
+    int ind[2];
+    for (i = 0; i < _g->A[0]; i++) {
+        for (j = 0; j < _g->A[1]; j++) {
+            if (W[i][j] > w_alto) {
+                w_alto = W[i][j];
+                ind[0] = i;
+                ind[1] = j;
+            }
+        }
+    }
+    bullyExpectedActions[0] = ind[0];
+    bullyExpectedActions[1] = ind[1];
+}
+
+void TriggerStrat::nbsExpected(Game *_g, double w) {
+    int i, j;
+    
+    double W[10][10];
+    computeSWUtility(g, W, 0.5, 0.5);
+    
+    double F[10][10];
+    computeFairUtility(g, F);
+    
+    double U[10][10];
+    double u_alto = -99999;
+    
+    int ind[2];
+    for (i = 0; i < _g->A[0]; i++) {
+        for (j = 0; j < _g->A[1]; j++) {
+            U[i][j] = w * W[i][j] + (1-w) * F[i][j];
+            if (U[i][j] > u_alto) {
+                u_alto = U[i][j];
+                ind[0] = i;
+                ind[1] = j;
+            }
+        }
+    }
+    
+    nbsExpectedActions[0] = ind[0];
+    nbsExpectedActions[1] = ind[1];
+}
+
+const char *TriggerStrat::whoAmI() {
+    switch (targetType) {
+        case (NBS_V): return "Fair TriggerStrat"; break;
+        case (BULLIED1_V): return "Bullied TriggerStrat"; break;
+        case (BULLY1_V): return "Bully TriggerStrat"; break;
+        default: return "Unknown TriggerStrat"; break;
+    }
+}
+
+bool TriggerStrat::matchesPlan(int proposal[2]) {
+    printf("Proposal: %i%i; Plan: %i%i\n", proposal[0], proposal[1], expectedActions[0], expectedActions[1]);
+
+    if ((proposal[0] == expectedActions[0]) && (proposal[1] == expectedActions[1]))
+        return true;
+    
+    return false;
+}
+
+#include "TriggerStrat.h"
+
+TriggerStrat::TriggerStrat() {
+    printf("incomplete TriggerStrat constructor\n");
+}
+
+TriggerStrat::TriggerStrat(int _me, int _targetType, double _coef, double _gamma) {
+    me = _me;
+    targetType = _targetType;
+    coef = _coef;
+    
+    printf("gamma = %lf\n", _gamma);
+    gamma = _gamma;
+
+    t = 0;
+    Reset();
+}
+
+TriggerStrat::~TriggerStrat() {
+}
+
+void TriggerStrat::init(Game *_g) {
+    determineValors(_g);
+    potential = currentValor[me];
+}
+
+void TriggerStrat::Reset() {
+    D_t[0] = D_t[1] = 0.0;
+    //potential = -99999;
+}
+
+double TriggerStrat::getPotential() {
+    if (t != 0)
+        return potential / t;
+    else
+        return potential;
+}
+
+// assume the rewards are no lower than 0
+int TriggerStrat::selectAction(Game *_g) {
+    g = _g;
+    
+    // compute currentValor for this game (if t == 0, we should have already done that)
+    if (t != 0)
+        determineValors(g);
+    printf("currentValor: %.2lf, %.2lf\n", currentValor[0], currentValor[1]);
+    
+    // compute jaUtility for each ja
+    numJAs = g->A[0] * g->A[1];
+    int i, j;
+    double Dhat1, Dhat2;
+    for (i = 0; i < g->A[0]; i++) {
+        for (j = 0; j < g->A[1]; j++) {
+            Dhat1 = D_t[0] + (g->M[0][i][j] - currentValor[0]);
+            Dhat2 = D_t[1] + (g->M[1][i][j] - currentValor[1]);
+
+            jaUtility[i][j] = pow((g->M[0][i][j] + g->M[1][i][j]), coef);  // divide by weighted social welfare
+            jaUtility[i][j] /= (Dhat1*Dhat1 + Dhat2*Dhat2) + 1.0;
+            //jaUtility[i][j] /= fabs(pow(Dhat1 - Dhat2, 1.0)) + 1.0;
+            //jaUtility[i][j] /= (fabs(Dhat1) + fabs(Dhat2)) + 1.0;
+            
+            printf("%i, %i: %lf (dhat: %lf, %lf)\n", i, j, jaUtility[i][j], Dhat1, Dhat2);
+        }
+    }
+    
+    // now pick the joint action
+    int **best = new int*[2];
+    best[0] = new int[g->A[0]*g->A[1]];
+    best[1] = new int[g->A[0]*g->A[1]];
+    int numBest = 0;
+    double mejor = -99999;
+    for (i = 0; i < g->A[0]; i++) {
+        for (j = 0; j < g->A[1]; j++) {
+            if (jaUtility[i][j] > mejor) {
+                mejor = jaUtility[i][j];
+                best[0][0] = i;
+                best[1][0] = j;
+                numBest = 1;
+            }
+            else if (jaUtility[i][j] == mejor) {
+                printf("tie\n");
+                best[0][numBest] = i;
+                best[1][numBest] = j;
+                numBest++;
+            }
+        }
+    }
+    
+    printf("numBest = %i\n", numBest);
+    
+    int sel = rand()%numBest;
+    int a = best[me][sel];
+    printf("selected action %i after selecting solution %i, %i\n", a, best[0][sel], best[1][sel]);
+    
+    delete best[0];
+    delete best[1];
+    delete[] best;
+    
+    return a;
+}
+
+void TriggerStrat::update(int acts[2], double payoffs[2], bool active) {
+    // update debt (D_t)
+    if (active) {
+        D_t[0] = (gamma * D_t[0]) + (g->M[0][acts[0]][acts[1]] - currentValor[0]);
+        D_t[1] = (gamma * D_t[1]) + (g->M[1][acts[0]][acts[1]] - currentValor[1]);
+    }
+
+    printf("Debt: %lf, %lf\n", D_t[0], D_t[1]); fflush(stdout);
+
+    // update the potential
+    if (t != 0) // in the first round, the potential is initialized based on the first game -- no need to add it now
+        potential += currentValor[me];
+    t++;
+    
+    printf("Potential: %lf\n", getPotential());
+}
+
+void TriggerStrat::determineValors(Game *_g) {
+    double alto;
+    int index;
+    
+    switch (targetType) {
+        case NBS_V:
+            currentValor[0] = _g->nbs->sol->R[0];
+            currentValor[1] = _g->nbs->sol->R[1];
+            break;
+        case BULLY1_V:
+            alto = -99999;
+            for (int i = 0; i < _g->numrNEoffers; i++) {
+                if (_g->rNEoffers[i]->R[me] > alto) {
+                    alto = _g->rNEoffers[i]->R[me];
+                    index = i;
+                }
+                else if ((_g->rNEoffers[i]->R[me] == alto) && (_g->rNEoffers[i]->R[1-me] > _g->rNEoffers[index]->R[1-me])) {
+                    index = i;
+                }
+            }
+            currentValor[0] = _g->rNEoffers[index]->R[0];
+            currentValor[1] = _g->rNEoffers[index]->R[1];
+            break;
+        case BULLIED1_V:
+            alto = -99999;
+            for (int i = 0; i < _g->numrNEoffers; i++) {
+                if (_g->rNEoffers[i]->R[1-me] > alto) {
+                    alto = _g->rNEoffers[i]->R[1-me];
+                    index = i;
+                }
+                else if ((_g->rNEoffers[i]->R[1-me] == alto) && (_g->rNEoffers[i]->R[me] > _g->rNEoffers[index]->R[me])) {
+                    index = i;
+                }
+            }
+            currentValor[0] = _g->rNEoffers[index]->R[0];
+            currentValor[1] = _g->rNEoffers[index]->R[1];
+            break;
+        default:
+            printf("unknown targetType\n");
+            exit(1);
+            break;
+    }
+}
+
+void TriggerStrat::setWelfareV() {
+    int i;
+    double most = -99999, swelf;
+    int *best = new int[g->numSolutions];
+    int numBest = 0;
+    for (i = 0; i < g->numSolutions; i++) {
+        if (!(g->gameSolutions[i]->puro))
+            continue;
+            
+        swelf = g->gameSolutions[i]->R[0] + g->gameSolutions[i]->R[1];
+        if (swelf > most) {
+            most = swelf;
+            numBest = 1;
+            best[0] = i;
+        }
+        else if (swelf == most) {
+            best[numBest] = i;
+            numBest ++;
+        }
+    }
+    printf("numBest = %i (%.2lf)\n", numBest, most);
+    currentValor[0] = currentValor[1] = 0.0;
+    for (i = 0; i < numBest; i++) {
+        currentValor[0] += g->gameSolutions[best[i]]->R[0];
+        currentValor[1] += g->gameSolutions[best[i]]->R[1];
+    }
+    currentValor[0] /= numBest;
+    currentValor[1] /= numBest;
+    
+    delete[] best;
+}
+#include "client_socket.h"
+#include <iostream>
+#include <stdio.h>
+#include <netdb.h>
+#include <unistd.h>
+
+#define MAX_BUFFER		1024
+
+ClientSocket::ClientSocket(char *servername, int port) {
+	long nHostAddress;
+	struct hostent* pHostInfo;   
+
+    hSocket = socket(AF_INET, SOCK_STREAM, 0);	
+	
+    if(hSocket == SOCKET_ERROR) {
+        printf("\nCould not make a socket\n");
+		throw "Could not create a socket";
+    }
+
+    // get IP address from name 
+    pHostInfo = gethostbyname(servername);
+    // copy address into long 
+    memcpy(&nHostAddress, pHostInfo->h_addr, pHostInfo->h_length);	
+	
+    // fill address struct 
+    Address.sin_addr.s_addr = nHostAddress;	
+    Address.sin_port = htons(port);
+    Address.sin_family = AF_INET;
+
+    printf("\nConnecting to %s on port %d ... ", servername, port);
+
+    // connect to host 
+    while (connect(hSocket, (struct sockaddr*)&Address, sizeof(Address)) == SOCKET_ERROR) {
+        printf("\nCould not connect to host on port %i ... will keep trying\n", port);
+		
+        usleep(2000000);
+        //hSocket = SOCKET_ERROR;
+		//throw "Could not connect to host";
+        
+        long nHostAddress;
+        struct hostent* pHostInfo;
+        
+        hSocket = socket(AF_INET, SOCK_STREAM, 0);
+        
+        if(hSocket == SOCKET_ERROR) {
+            printf("\nCould not make a socket\n");
+            throw "Could not create a socket";
+        }
+        
+        // get IP address from name
+        pHostInfo = gethostbyname(servername);
+        // copy address into long
+        memcpy(&nHostAddress, pHostInfo->h_addr, pHostInfo->h_length);
+        
+        // fill address struct
+        Address.sin_addr.s_addr = nHostAddress;
+        Address.sin_port = htons(port);
+        Address.sin_family = AF_INET;
+        
+        printf("\nConnecting to %s on port %d ... ", servername, port);
+    }
+	printf("completed\n");
+}
+
+int ClientSocket::SendMessage(char *message, int len) {
+	int bsent = 0;
+
+//	printf("message sent: %s\n", message);
+	if ((bsent = send(hSocket, message, len, 0)) == SOCKET_ERROR) {
+		printf("error sending socket message\n");
+        close(hSocket);
+		exit(0);
+//		quit = true;
+	}
+
+	return bsent;
+}
+
+int ClientSocket::ReadMessage(char *message) {
+	int NumBytes = 0;
+
+	memset(message, 0, MAX_BUFFER);
+	NumBytes = recv(hSocket, message, 1024, 0);
+	
+	if (NumBytes == SOCKET_ERROR) {
+        close(hSocket);
+		exit(1);
+//		quit = true;
+//		fprintf(stderr,"Socket Error\n");
+//		throw "Error Reading From Socket";
+	}
+    message[NumBytes] = '\0';
+
+	return NumBytes;
+}
+#include "igNBS.h"
+
+igNBS::igNBS() {
+    numPoints = numOldPoints = 0;
+    maxminSum[0] = maxminSum[1] = 0.0;
+}
+
+igNBS::~igNBS() {
+    printf("igNBS destructor\n");
+    
+    FILE *fp = fopen("PointDump.csv", "w");
+    fprintf(fp, "p1,p2\n");
+    for (int i = 0; i < numOldPoints; i++) {
+        fprintf(fp, "%lf,%lf\n", oldPoints[i][0], oldPoints[i][1]);
+    }
+    fclose(fp);
+}
+    
+void igNBS::updateWithGame(Game *_g) {
+    //printf("updateWithGame\n"); fflush(stdout);
+
+    maxminSum[0] += _g->minmax[0]->mv;
+    maxminSum[1] += _g->minmax[1]->mv;
+
+    int i, j;
+    
+    numPoints = 0;
+
+    // update points with possible new results
+    for (i = 0; i < _g->A[0]; i++) {
+        for (j = 0; j < _g->A[1]; j++) {
+            if (isParetoOptimal(_g, i, j)) {
+                addResult(_g->M[0][i][j], _g->M[1][i][j]);
+            }
+        }
+    }
+    
+    cleanPoints();
+
+    // copy points to old points
+    numOldPoints = 0;
+    for (i = 0; i < numPoints; i++) {
+        if (points[i][0] > -999999) {
+            oldPoints[numOldPoints][0] = points[i][0];
+            oldPoints[numOldPoints][1] = points[i][1];
+            numOldPoints++;
+        }
+    }
+
+    printf("numPoints = %i\n", numOldPoints);
+    //for (i = 0; i < numOldPoints; i++) {
+    //    printf("%.1lf, %.1lf (%.1lf)\n", oldPoints[i][0], oldPoints[i][1], oldPoints[i][0] + oldPoints[i][1]);
+    //}
+    printf("minimax: %.2lf, %.2lf\n", maxminSum[0], maxminSum[1]);
+    computeNBS();
+    printf("nbs: %.2lf, %.2lf\n", nbs[0], nbs[1]);
+}
+
+bool igNBS::isParetoOptimal(Game *_g, int a1, int a2) {
+    int i, j;
+    
+    for (i = 0; i < _g->A[0]; i++) {
+        for (j = 0; j < _g->A[1]; j++) {
+            if ((i != a1) || (j != a2)) {
+                if ((_g->M[0][i][j] > _g->M[0][a1][a2]) && (_g->M[1][i][j] > _g->M[1][a1][a2]))
+                    return false;
+            }
+        }
+    }
+    
+    return true;
+}
+
+void igNBS::addResult(double p1, double p2) {
+    int i;
+
+    if (numOldPoints == 0) {
+        points[numPoints][0] = p1;
+        points[numPoints][1] = p2;
+        
+        numPoints++;
+    }
+    else {
+        double v1, v2;
+        for (i = 0; i < numOldPoints; i++) {
+            points[numPoints][0] = oldPoints[i][0] + p1;
+            points[numPoints][1] = oldPoints[i][1] + p2;
+            
+            numPoints++;
+            
+            if (numPoints == MAXPOINTS) {
+                printf("hit the max number of points\n");
+                exit(1);
+            }
+        }
+    }
+}
+
+void igNBS::cleanPoints() {
+    int i, j;
+    
+    for (i = 0; i < numPoints; i++) {
+        for (j = 0; j < numPoints; j++) {
+            if (i == j)
+                continue;
+            if ((points[i][0] <= points[j][0]) && (points[i][1] <= points[j][1])) {
+                removePoint(i);
+            }
+/*            else if ((points[i][0] == points[j][0]) && (points[i][1] < points[j][1])) {
+                removePoint(i);
+            }
+            else if ((points[i][0] < points[j][0]) && (points[i][1] == points[j][1])) {
+                removePoint(i);
+            }
+            else if ((points[i][0] == points[j][0]) && (points[i][1] == points[j][1])) {
+                removePoint(i);
+            }*/
+        }
+    }
+}
+
+void igNBS::removePoint(int index) {
+    int i;
+    
+    points[index][0] = points[index][1] = -999999;
+/*
+    for (i = index; i < numPoints-1; i++) {
+        points[i][0] = points[i+1][0];
+        points[i][1] = points[i+1][1];
+    }
+    
+    numPoints --;
+*/
+}
+
+void igNBS::computeNBS() {
+    int i;
+    double max = -9999, theProd;
+    for (i = 0; i < numOldPoints; i++) {
+        theProd = (oldPoints[i][0] - maxminSum[0]) * (oldPoints[i][1] - maxminSum[1]);
+        if (theProd > max) {
+            max = theProd;
+            nbs[0] = oldPoints[i][0];
+            nbs[1] = oldPoints[i][1];
+        }
+    }
+}
+
+double igNBS::getBullyValue(int bullyIndex, double targetValue) {
+    int i;
+    double alto = -99999;
+    for (i = 0; i < numOldPoints; i++) {
+        if (oldPoints[i][1-bullyIndex] >= targetValue) {
+            if (oldPoints[i][bullyIndex] > alto)
+                alto = oldPoints[i][bullyIndex];
+        }
+    }
+
+    return alto;
+}
+#include <stdio.h> /* printf, sprintf */
+#include <stdlib.h> /* exit */
+#include <time.h> /* time */
+#include <unistd.h> /* read, write, close */
+#include <string.h> /* memcpy, memset */
+#include <sys/socket.h> /* socket, connect */
+#include <netinet/in.h> /* struct sockaddr_in, struct sockaddr */
+#include <netdb.h> /* struct hostent, gethostbyname */
+#include <iostream>
+#include <string>
+#include <vector>
+#include "defs.h"
+#include "client_socket.h"
+#include "Player.h"
+#include "RandomPlayer.h"
+#include "ExpertAlg.h"
+#include "Human.h"
+
+
+using namespace std;
+
+void error(const char *msg) { perror(msg); exit(0); }
+
+string httpCall(char message[1024]){
+  int portno = 3000;
+  char *host = (char *) "127.0.0.1"; // This will eventually need to change
+
+  struct hostent *server;
+  struct sockaddr_in serv_addr;
+  int sockfd, bytes, sent, received, total;
+  char response[4096];
+  string responseStr;
+  /* create the socket */
+  sockfd = socket(AF_INET, SOCK_STREAM, 0);
+  if (sockfd < 0) error("ERROR opening socket");
+
+  /* lookup the ip address */
+  server = gethostbyname(host);
+  if (server == NULL) error("ERROR, no such host");
+
+  /* fill in the structure */
+  memset(&serv_addr,0,sizeof(serv_addr));
+  serv_addr.sin_family = AF_INET;
+  serv_addr.sin_port = htons(portno);
+  memcpy(&serv_addr.sin_addr.s_addr,server->h_addr,server->h_length);
+
+  /* connect the socket */
+  if (connect(sockfd,(struct sockaddr *)&serv_addr,sizeof(serv_addr)) < 0)
+      error("ERROR connecting");
+
+  /* send the request */
+  total = strlen(message);
+  sent = 0;
+  do {
+      bytes = write(sockfd,message+sent,total-sent);
+      if (bytes < 0)
+          error("ERROR writing message to socket");
+      if (bytes == 0)
+          break;
+      sent+=bytes;
+  } while (sent < total);
+
+  /* receive the response */
+  memset(response,0,sizeof(response));
+  total = sizeof(response)-1;
+  received = 0;
+  do {
+      bytes = read(sockfd,response+received,total-received);
+      if (bytes < 0)
+          error("ERROR reading response from socket");
+      if (bytes == 0)
+          break;
+      received+=bytes;
+  } while (received < total);
+
+  if (received == total)
+      error("ERROR storing complete response from socket");
+
+  /* close the socket */
+
+  close(sockfd);
+
+  /* process response */
+
+  responseStr = response;
+
+  return responseStr;
+}
+
+string stripHeader(string withHeader){
+  string withoutHeader;
+  int numChars = 0;
+  int len = withHeader.length();
+
+
+  for (int i = 0; i < len; i++){
+    if (withHeader[i] == '^' && withHeader[i+1] == '^' && withHeader[i+2] == '^'){
+      numChars = len - (i+3);
+      withoutHeader = &withHeader[len - numChars];
+    }
+  }
+
+  return withoutHeader;
+}
+
+string getUserID(char *argv[]){
+  char *message_fmt = (char *) "POST /api/AIlogin/%s HTTP/1.0\r\n\r\n";
+  string response;
+  char message[1024];
+
+  sprintf(message,message_fmt,argv[1]);
+  response = httpCall(message);
+
+  return response;
+}
+
+string getInGameStatus(string userIDStr){
+  char *message_fmt = (char *) "GET /api/AIinGameStatus/%s HTTP/1.0\r\n\r\n";
+  string response;
+  char *userIDArg = (char *) userIDStr.c_str();
+  char message[1024];
+
+  sprintf(message,message_fmt,userIDArg);
+
+  response = httpCall(message);
+
+  return response;
+}
+
+string getWhich(string userIDStr){
+    char *message_fmt = (char *) "GET /api/AIwhich/%s HTTP/1.0\r\n\r\n";
+    string response;
+    char *userIDArg = (char *) userIDStr.c_str();
+    char message[1024];
+
+
+    sprintf(message,message_fmt,userIDArg);
+
+    response = httpCall(message);
+
+    return response;
+}
+
+string getRound(string gameIDStr){
+    char *message_fmt = (char *) "GET /api/AIround/%s HTTP/1.0\r\n\r\n";
+    string response;
+    char *gameIDArg = (char *) gameIDStr.c_str();
+    char message[1024];
+
+    sprintf(message,message_fmt,gameIDArg);
+
+    response = httpCall(message);
+
+    return response;
+}
+
+string getMatrix(string gameIDStr){
+    char *message_fmt = (char *) "GET /api/AImatrix/%s HTTP/1.0\r\n\r\n";
+    string response;
+    char *gameIDArg = (char *) gameIDStr.c_str();
+    char message[1024];
+
+    sprintf(message,message_fmt,gameIDArg);
+
+    response = httpCall(message);
+
+    return response;
+}
+
+string sendCheapTalk(string gameIDStr, string userIDStr, string cheapTalkMessageStr){
+  char *message_fmt = (char *) "POST /api/AIcheapTalk/%s/%s/%s HTTP/1.0\r\n\r\n";
+  string response;
+  // This is version specific
+    // The intent behind these next couple lines of code is to take the newLine characters off the string
+
+  string revisedStr = "";
+  revisedStr.push_back(cheapTalkMessageStr[0]);
+  revisedStr.push_back(cheapTalkMessageStr[1]);
+
+  char *cheapTalkMessageArg = (char *) revisedStr.c_str();
+  char *gameIDArg = (char *) gameIDStr.c_str();
+  char *userIDArg = (char *) userIDStr.c_str();
+
+  char message[1024];
+
+  sprintf(message,message_fmt,gameIDArg, userIDArg, cheapTalkMessageArg);
+
+  response = httpCall(message);
+
+  return response;
+}
+
+string submitRoundOption(string gameIDStr, string playerNumStr, string optionStr){
+    char *message_fmt = (char *) "POST /api/AIsetRoundOption/%s/%s/%s HTTP/1.0\r\n\r\n";
+    string response;
+    char *gameIDArg = (char *) gameIDStr.c_str();
+    char *playerNumArg = (char *) playerNumStr.c_str();
+    char *optionArg = (char *) optionStr.c_str();
+    char message[1024];
+
+    sprintf(message,message_fmt,gameIDArg,playerNumArg,optionArg);
+
+    response = httpCall(message);
+
+    return response;
+}
+
+string getSubmittedStatus(string gameIDStr, string playerNumStr){
+    char *message_fmt = (char *) "GET /api/AIsubmittedStatus/%s/%s HTTP/1.0\r\n\r\n";
+    string response;
+    char *gameIDArg = (char *) gameIDStr.c_str();
+    char *playerNumArg = (char *) playerNumStr.c_str();
+    char message[1024];
+
+    sprintf(message,message_fmt,gameIDArg,playerNumArg);
+
+    response = httpCall(message);
+
+    return response;
+}
+
+string getRoundEarnings(string gameIDStr, string playerNumStr){
+  char *message_fmt = (char *) "GET /api/AIroundEarnings/%s/%s HTTP/1.0\r\n\r\n";
+  string response;
+  char *gameIDArg = (char *) gameIDStr.c_str();
+  char *playerNumArg = (char *) playerNumStr.c_str();
+  char message[1024];
+
+  sprintf(message,message_fmt,gameIDArg,playerNumArg);
+
+  response = httpCall(message);
+
+  return response;
+}
+
+string getOtherPlayersOption(string gameIDStr, string otherPlayerNumStr){
+  char *message_fmt = (char *) "GET /api/AIotherPlayersOption/%s/%s HTTP/1.0\r\n\r\n";
+  string response;
+  char *gameIDArg = (char *) gameIDStr.c_str();
+  char *otherPlayerNumArg = (char *) otherPlayerNumStr.c_str();
+  char message[1024];
+
+  sprintf(message,message_fmt,gameIDArg,otherPlayerNumArg);
+
+  response = httpCall(message);
+
+  return response;
+}
+
+string getReadyStatus(string gameIDStr, string playerNumStr){
+    char *message_fmt = (char *) "GET /api/AIreadyStatus/%s/%s HTTP/1.0\r\n\r\n";
+    string response;
+    char *gameIDArg = (char *) gameIDStr.c_str();
+    char *playerNumArg = (char *) playerNumStr.c_str();
+    char message[1024];
+
+    sprintf(message,message_fmt,gameIDArg,playerNumArg);
+
+    response = httpCall(message);
+
+    return response;
+}
+
+string getGameStatus(string gameIDStr){
+    char *message_fmt = (char *) "GET /api/AIgameIsDone/%s HTTP/1.0\r\n\r\n";
+    string response;
+    char *gameIDArg = (char *) gameIDStr.c_str();
+    char message[1024];
+
+    sprintf(message,message_fmt,gameIDArg);
+
+    response = httpCall(message);
+
+    return response;
+}
+
+vector< vector<int> > parseString(string toParse){
+    vector< vector<int> > rows;
+    vector<int> row;
+
+    for (int i = 0; i < toParse.size(); i++){
+
+        if (toParse[i] == ']'){
+            if (row.size() != 0){
+                rows.push_back(row);
+            }
+            row.clear();
+        }
+        else if (isdigit(toParse[i])){
+            if (isdigit(toParse[i+1])){
+              cout << "NUM: " << i << " " << (toParse[i] - '0')*10 + (toParse[i+1]-'0') << endl;
+
+              row.push_back((toParse[i] - '0')*10 + (toParse[i+1]-'0'));
+              i++;
+            }
+            else{
+                row.push_back(toParse[i]-'0');
+            }
+        }
+
+    }
+    return rows;
+}
+
+Player *createPlayer(char * playerString, int me) {
+    if (!strcmp("random", playerString)) {
+        return new RandomPlayer(me);
+    }
+    else if (!strcmp("bully", playerString)) {
+        return new ExpertAlg(me, playerString);
+    }
+    else if (!strcmp("bullied", playerString)) {
+        return new ExpertAlg(me, playerString);
+    }
+    else if (!strcmp("fair", playerString)) {
+        return new ExpertAlg(me, playerString);
+    }
+    else if (!strcmp("maxmin", playerString)) {
+        return new ExpertAlg(me, playerString);
+    }
+    else if (!strcmp("listener", playerString)) {
+        return new ExpertAlg(me, playerString);
+    }
+    else if (!strcmp("exploiter", playerString)) {
+        return new ExpertAlg(me, playerString);
+    }
+    else if (!strcmp("spp", playerString)) {
+        return new ExpertAlg(me, playerString);
+    }
+    else if (!strcmp("GeF", playerString) || !strncmp("maximizer", playerString, 8)) {
+        return new GeneralizedFP(playerString, me, false);
+    }
+    else if (!strcmp("human", playerString)) {
+        return new Human(me);
+    }
+    else {
+        printf("player type %s not found. Exiting\n", playerString);
+        return NULL;
+    }
+}
+
+
+int main(int argc,char *argv[])
+{
+    // Error check
+    if (argc != 3) { puts("Parameters: ./igPlayer {Personality}"); exit(0); }
+
+    // Seed rand
+    srand(time(NULL));
+
+    // Significant Data for GamePlay
+    string userIDCheck = "Name already in use!";
+    string inGameStatus = "false";
+    string inGameStatusCheck = "false";
+    string userIDStr = "";
+    string gameIDStr = "";
+    string whichStr = "";
+    string roundNumStr = "";
+    string roundMatrixStr = "";
+    string roundOptionStr = "";
+    string submittedStatusStr = "";
+    string readyStatusStr = "";
+    string gameIsDoneStr = "";
+    int roundOptionInt = 0;
+    bool done = false;
+    bool waiting = true;
+    bool cheapTalk = true;
+    vector<string> myEarnings;
+    vector<string> myChoices;
+    vector<string> theirEarnings;
+    vector<string> theirChoices;
+
+    // Get userID
+    userIDStr = stripHeader(getUserID(argv));
+
+    // system("open http://localhost:3000"); // figure out how to change default browser on this
+    // system("open http://localhost:3000/#/admin");
+    // Set userID
+
+    if (userIDStr == "undefined"){
+      cout << "This user is not currently enrolled in the system." << endl;
+      return 0;
+    }
+    else if (userIDStr == userIDCheck){
+      cout << "User is already active in system." << endl;
+      return 0;
+    }
+
+    cout << "Waiting to be added to game ..." << endl;
+
+    // Check inGameStatus
+    while(inGameStatus == inGameStatusCheck){
+
+      inGameStatus = stripHeader(getInGameStatus(userIDStr));
+      sleep(3);
+    }
+
+    // Set gameID
+    gameIDStr = inGameStatus;   // Conversion from char* to string
+
+    // Set Which Player (1 || 2)
+    whichStr = stripHeader(getWhich(userIDStr));
+
+    cout << "Successfully added to game " << gameIDStr << " as player " << whichStr << "." << endl << endl;
+
+/********************************************************************/
+/***Run algorithm***/
+    char buf[10000];
+    char partner[1024];
+    double tact[2], dineros[2];
+    int actuar[2];
+    int act;
+
+    // create the player
+    string playerString = argv[2];
+    int me = 0;
+    if (whichStr == "2")
+      me = 1;
+    Player *player = createPlayer((char *)playerString.c_str(), me);
+
+    // play the game
+    int g = 0;
+    double score[2] = {0.0, 0.0};
+
+    //Round Play
+    while(!done){
+        // getRound
+        roundNumStr = stripHeader(getRound(gameIDStr));
+        cout << "Round: " << g << endl;
+        cout << "------------------------------------------------" << endl;
+
+        // getMatrix
+        roundMatrixStr = stripHeader(getMatrix(gameIDStr));
+        // See how this works
+
+        cout << "Matrix: " << roundMatrixStr << endl;
+
+
+
+        printf("\n\nGame %i\n", g);
+
+
+        //agent reasons about the game
+        if (!(player->orient2Game((char *)roundMatrixStr.c_str())))
+            break;
+
+        //printf("Oriented\n"); fflush(stdout);
+
+        if (cheapTalk) {
+          printf("before-game cheap talks\n");
+          player->produceStartCheapTalk(buf);
+
+          string cheapTalkMessage(buf);
+
+          cout << "CTM: " << cheapTalkMessage << endl;
+
+          sendCheapTalk(gameIDStr, userIDStr, cheapTalkMessage);
+
+          // receive a message
+
+          //player->processStartCheapTalk(buf);
+
+          //printf("received cheap talk: %s\n", buf);
+        }
+
+
+        // select and send an action
+        int act = player->Move();
+        roundOptionStr = to_string(act);
+        myChoices.push_back(roundOptionStr);
+
+        cout << "Round Option: " << roundOptionStr << endl;
+        /*
+        sprintf(buf, "%i$ 0.000000", act);
+        cs->SendMessage(buf, strlen(buf));
+
+        printf("action sent: %s\n", buf); fflush(stdout);
+
+        // receive the result
+        cs->ReadMessage(buf);
+        printf("Results: %s\n", buf); fflush(stdout);
+
+        sscanf(buf, "%i %i %lf %lf %lf %lf", &(actuar[0]), &(actuar[1]), &(dineros[0]), &(dineros[1]), &(tact[0]), &(tact[1]));
+        */
+
+        /*
+        if (cheapTalk) {
+          printf("after-game cheap talk\n");
+
+          // send a message
+          player->produceEndCheapTalk(buf);
+          cs->SendMessage(buf, strlen(buf));
+
+          printf("sent after-game cheap talk: %s\n", buf); fflush(stdout);
+
+          // receive a message
+          cs->ReadMessage(buf);
+          player->processEndCheapTalk(buf);
+        }
+
+        strcpy(buf, "ready\n");
+        cs->SendMessage(buf, strlen(buf));
+        */
+
+        // Send Decision
+        submitRoundOption(gameIDStr, whichStr, roundOptionStr);
+
+        // Reset Waiting Bool
+        waiting = true;
+
+        // Wait for other player to play
+        while (waiting){
+            submittedStatusStr = stripHeader(getSubmittedStatus(gameIDStr, whichStr));
+
+            if (submittedStatusStr == "true"){
+                //cout << "Ready to continue. " << endl;
+                waiting = false;
+            }
+
+            sleep (1);
+        }
+
+        /********************************************************************/
+
+        /*
+            - put this in a while loop
+            - make a goodToContinue bool
+            - reset bool true at the beginning of the if statement (at the beginning of each iteration of for loop)
+            - if any of the values return as undefined, change the bool to false so that it'll query the server again
+              - this should work because there are the correct amount of entries in these arrays on the server
+            - if we have to repeat, sleep for 2 seconds or so.
+        */
+
+        do {
+          waiting = false;
+          string temp = "" ;
+
+          if (whichStr == "1"){
+
+            temp = stripHeader(getRoundEarnings(gameIDStr, "1"));
+            if (temp != "undefined"){
+              myEarnings.push_back(temp);
+            }
+            else {
+              waiting = true;
+            }
+
+            temp = stripHeader(getRoundEarnings(gameIDStr, "2"));
+            if(temp != "undefined"){
+              theirEarnings.push_back(temp);
+            }
+            else{
+              waiting = true;
+            }
+
+            temp = stripHeader(getOtherPlayersOption(gameIDStr, "2"));
+            if(temp != "undefined"){
+              theirChoices.push_back(temp);
+            }
+            else{
+              waiting = true;
+            }
+
+          }
+          else if (whichStr == "2"){
+            temp = stripHeader(getRoundEarnings(gameIDStr, "2"));
+            if (temp != "undefined"){
+              myEarnings.push_back(temp);
+            }
+            else {
+              waiting = true;
+            }
+
+            temp = stripHeader(getRoundEarnings(gameIDStr, "1"));
+            if(temp != "undefined"){
+              theirEarnings.push_back(temp);
+            }
+            else{
+              waiting = true;
+            }
+
+            temp = stripHeader(getOtherPlayersOption(gameIDStr, "1"));
+            if(temp != "undefined"){
+              theirChoices.push_back(temp);
+            }
+            else{
+              waiting = true;
+            }
+
+          }
+
+          if(waiting){
+            sleep(1);
+          }
+        } while(waiting);
+
+
+        actuar[me] = act;
+        actuar[1-me] = stoi(theirChoices[theirChoices.size()-1]);
+
+        // Have an error check here that sees if there is a nulled value
+        if( myEarnings[myEarnings.size()-1] == "undefined"){
+          cout << "yes 2" << endl;
+        }
+
+
+        cout << "My: " << myEarnings[myEarnings.size()-1] << endl;
+        cout << "Their: " << theirEarnings[theirEarnings.size()-1] << endl;
+
+        dineros[me] = stod(myEarnings[myEarnings.size()-1]);
+        dineros[1-me] = stod(theirEarnings[theirEarnings.size()-1]);
+
+        score[0] += dineros[0];
+        score[1] += dineros[1];
+
+        player->moveUpdate(actuar, dineros);
+        g++;
+
+        printf("Scores: (%lf, %lf)\n", score[0], score[1]);
+
+
+        cout << "My Payoff: " << myEarnings[myEarnings.size()-1] << endl;
+        cout << "Their Payoff: " << theirEarnings[theirEarnings.size()-1] << endl;
+        cout <<  "------------------------------------------------" << endl << endl;
+        // Update readyStatus
+        waiting = true;
+
+        while(waiting){
+          readyStatusStr = stripHeader(getReadyStatus(gameIDStr, whichStr));
+
+          if (readyStatusStr == "true"){
+            waiting = false;
+          }
+
+          sleep(1);
+        }
+
+        gameIsDoneStr = stripHeader(getGameStatus(gameIDStr));
+
+        if (gameIsDoneStr == "true"){
+          done = true;
+        }
+
+    }
+
+    delete player;
+    printf("se acabo\n");
+
+    // Print information here if that's what we decide to do.
+    cout << "Thanks for playing! " << endl;
+
+    return 0;
+}
+#include "defs.h"
+#include "client_socket.h"
+#include "Player.h"
+#include "RandomPlayer.h"
+#include "ExpertAlg.h"
+#include "GeneralizedFP.h"
+#include "Human.h"
+
+void playInteractionGame(char *playerString, int me, char *host);
+Player *createPlayer(char *playerString, int me);
+bool isBestResponse(int index, Game *g, int actuar[2]);
+
+/* ***********************************
+*
+*   ./igPlayer [playertype] [playerNumber] [host]
+*
+************************************** */
+int main(int argc, char *argv[]) {
+    srand(time(NULL));
+
+    if (argc < 4) {
+        printf("Not enough parameters.  Exiting\n");
+        exit(1);
+    }
+
+    playInteractionGame(argv[1], atoi(argv[2]), argv[3]);
+
+    return 0;
+}
+
+void playInteractionGame(char *playerString, int me, char *host) {
+    char buf[10000];
+    char partner[1024];
+    double tact[2], dineros[2];
+    int actuar[2];
+
+    // create the player
+    Player *player = createPlayer(playerString, me);
+
+    // establish a connection to the server
+    ClientSocket *cs = new ClientSocket(host, 3000+me);
+    cs->SendMessage(playerString, strlen(playerString));
+    bool cheapTalk = false;
+    cs->ReadMessage(buf); // this message contains (1) cheap talk or not indicate and (2) the name of the associate (for logging)
+    if (buf[0] == 'Y') {
+        cheapTalk = true;
+        strcpy(partner, buf+4);
+    }
+    else {
+        strcpy(partner, buf+3);
+    }
+
+    strcpy(buf, "ready\n");
+    cs->SendMessage(buf, strlen(buf));
+
+    // play the game
+    int g = 0;
+    double score[2] = {0.0, 0.0};
+
+    double mm = 0.0, lowne = 0.0, highne = 0.0, nbser = 0.0;//, seer = 0.0;
+    double mx;
+    int bestcount = 0, bestLog[1000];
+    int hadPureNE = 0;
+
+    while (true) {
+        // read and process the next game
+        cs->ReadMessage(buf);
+
+        printf("\n\nGame %i\n", g);
+
+        // agent reasons about the game
+        if (!(player->orient2Game(buf)))
+            break;
+
+        //printf("Oriented\n"); fflush(stdout);
+
+        if (cheapTalk) {
+            //printf("before-game cheap talks\n");
+            //printf("que pasa?\n"); fflush(stdout);
+            // send a message
+            player->produceStartCheapTalk(buf);
+            //printf("produced\n"); fflush(stdout);
+            cs->SendMessage(buf, strlen(buf));
+
+            //printf("sent message: %s\n", buf); fflush(stdout);
+
+            // receive a message
+            cs->ReadMessage(buf);
+            player->processStartCheapTalk(buf);
+
+            //printf("received cheap talk: %s\n", buf);
+        }
+
+        // select and send an action
+        int act = player->Move();
+        sprintf(buf, "%i$ 0.000000", act);
+        cs->SendMessage(buf, strlen(buf));
+
+        printf("action sent: %s\n", buf); fflush(stdout);
+
+        // receive the result
+        cs->ReadMessage(buf);
+        printf("Results: %s\n", buf); fflush(stdout);
+
+        sscanf(buf, "%i %i %lf %lf %lf %lf", &(actuar[0]), &(actuar[1]), &(dineros[0]), &(dineros[1]), &(tact[0]), &(tact[1]));
+        score[0] += dineros[0];
+        score[1] += dineros[1];
+
+            mm += player->games[g]->minmax[me]->mv;
+            lowne += player->games[g]->lowne[me];
+            highne += player->games[g]->highne[me];
+            nbser += player->games[g]->nbs->sol->R[me];
+
+            if (isBestResponse(me, player->games[g], actuar)) {
+                bestcount ++;
+                bestLog[g] = 1;
+                printf("BEST RESPONSE\n");
+            }
+            else {
+                bestLog[g] = 0;
+                printf("NOT best response\n");
+            }
+
+        if (player->games[g]->numPureNEs > 0)
+            hadPureNE ++;
+/*
+        if (me == 0) {
+            if (player->games[g]->M[0][1-actuar[0]][actuar[1]] <= player->games[g]->M[0][actuar[0]][actuar[1]]) {
+                bestcount ++;
+                bestLog[g] = 1;
+            }
+            else
+                bestLog[g] = 0;
+        }
+        else {
+            if (player->games[g]->M[1][actuar[0]][1-actuar[1]] <= player->games[g]->M[1][actuar[0]][actuar[1]]) {
+                bestcount ++;
+                bestLog[g] = 1;
+            }
+            else
+                bestLog[g] = 0;
+        }
+*/
+
+/*
+        double mx = dineros[me];
+        if (me == 0) {
+            if (player->games[g]->M[0][1-actuar[0]][actuar[1]] > mx)
+                mx = player->games[g]->M[0][1-actuar[0]][actuar[1]];
+        }
+        else {
+            if (player->games[g]->M[1][actuar[0]][1-actuar[1]] > mx)
+                mx = player->games[g]->M[1][actuar[0]][1-actuar[1]];
+        }
+        seer += mx;
+*/
+        player->moveUpdate(actuar, dineros);
+
+        if (cheapTalk) {
+            //printf("after-game cheap talk\n");
+
+            // send a message
+            player->produceEndCheapTalk(buf);
+            cs->SendMessage(buf, strlen(buf));
+
+            //printf("sent after-game cheap talk: %s\n", buf); fflush(stdout);
+
+            // receive a message
+            cs->ReadMessage(buf);
+            player->processEndCheapTalk(buf);
+        }
+
+        strcpy(buf, "ready\n");
+        cs->SendMessage(buf, strlen(buf));
+
+        g++;
+
+        printf("Scores: (%lf, %lf)\n", score[0], score[1]);
+
+        printf("\nMy Game Stats:\n");
+        printf("\tMaxmin: %lf\n", mm);
+        printf("\tLowNE: %lf\n", lowne);
+        printf("\tHighNE: %lf\n", highne);
+        printf("\tNBS: %lf\n", nbser);
+        printf("\tPercent Had PureNE: %lf\n", hadPureNE / (double)g);
+        printf("\tPercent BR = %lf\n", bestcount / (double)g);
+    }
+
+    delete player;
+
+    sprintf(buf, "%lf %lf %lf %lf %lf %lf %lf\n", score[me], mm, lowne, highne, nbser, hadPureNE / (double)g, player->ignbs.nbs[me]);
+    cs->SendMessage(buf, strlen(buf));
+
+    delete cs;
+
+    FILE *fpBR;
+    if (me == 0)
+        fpBR = fopen("BR_0.txt", "w");
+    else
+        fpBR = fopen("BR_1.txt", "w");
+
+    for (int i = 0; i < g; i++) {
+        fprintf(fpBR, "%i\n", bestLog[i]);
+    }
+
+    fclose(fpBR);
+}
+
+Player *createPlayer(char *playerString, int me) {
+    if (!strcmp("random", playerString)) {
+        return new RandomPlayer(me);
+    }
+    else if (!strcmp("bully", playerString)) {
+        return new ExpertAlg(me, playerString);
+    }
+    else if (!strcmp("bullied", playerString)) {
+        return new ExpertAlg(me, playerString);
+    }
+    else if (!strcmp("fair", playerString)) {
+        return new ExpertAlg(me, playerString);
+    }
+    else if (!strcmp("maxmin", playerString)) {
+        return new ExpertAlg(me, playerString);
+    }
+    else if (!strcmp("listener", playerString)) {
+        return new ExpertAlg(me, playerString);
+    }
+    else if (!strcmp("exploiter", playerString)) {
+        return new ExpertAlg(me, playerString);
+    }
+    else if (!strcmp("spp", playerString)) {
+        return new ExpertAlg(me, playerString);
+    }
+    else if (!strcmp("GeF", playerString) || !strncmp("maximizer", playerString, 8)) {
+        return new GeneralizedFP(playerString, me, false);
+    }
+    else if (!strcmp("human", playerString)) {
+        return new Human(me);
+    }
+    else {
+        printf("player type %s not found. Exiting\n", playerString);
+        return NULL;
+    }
+}
+
+bool isBestResponse(int index, Game *g, int actuar[2]) {
+    double mejor;
+    int i;
+
+    if (index == 0) {
+        mejor = g->M[0][actuar[0]][actuar[1]];
+
+        for (i = 0; i < g->A[0]; i++) {
+            if (i == actuar[0])
+                continue;
+
+            if (g->M[0][i][actuar[1]] > mejor)
+                return false;
+        }
+    }
+    else {
+        mejor = g->M[1][actuar[0]][actuar[1]];
+
+        for (i = 0; i < g->A[0]; i++) {
+            if (i == actuar[1])
+                continue;
+
+            if (g->M[1][actuar[0]][i] > mejor)
+                return false;
+        }
+    }
+
+    return true;
+}
+#include "minimaxLog.h"
+
+minimaxLog::minimaxLog() {
+}
+
+minimaxLog::minimaxLog(int _nActions[2], int _me) {//, int _numStates) {
+	ms = new double[_nActions[_me]];
+	mpi = new double[_nActions[_me]];
+	payoffs = new double[_nActions[0] * _nActions[1]];
+
+	mv = lowmv = -abs(SENTINAL);
+	nott = new bool[_nActions[_me]];
+
+	int i;
+	for (i = 0; i < _nActions[_me]; i++)
+		ms[i] = 1.0 / (double)_nActions[_me];
+}
+
+minimaxLog::~minimaxLog() {
+	delete ms;
+	delete mpi;
+	delete payoffs;
+	delete nott;
+}
+
+void minimaxLog::getMinimax(int *nActions, int me, double **_M) {
+	int c = 0, i, j;
+	for (i = 0; i < nActions[0]; i++) {
+		for (j = 0; j < nActions[1]; j++) {
+			payoffs[c] = _M[i][j];
+			c ++;
+		}
+	}
+	
+    getMinimax(nActions, me, payoffs);
+}
+
+void minimaxLog::getAttack(int *nActions, int me, double **_M) {
+	int c = 0, i, j;
+	for (i = 0; i < nActions[0]; i++) {
+		for (j = 0; j < nActions[1]; j++) {
+			payoffs[c] = -_M[i][j];
+			c ++;
+		}
+	}
+	
+    getMinimax(nActions, me, payoffs);
+    mv = -mv;
+}
+
+void minimaxLog::getMinimax(int *nActions, int me, double *payoff) {
+	// first check for a pure strategy solution
+	if (pureStrategy(mpi, nActions, me, payoff)) {
+		//printf("pure strategy solution\n");
+		mv = evaluatePolicy(nActions, mpi, payoff, me);
+		int i;
+        double sum = 0.0;
+		for (i = 0; i < nActions[me]; i++) {
+			ms[i] = mpi[i];
+            sum += ms[i];
+        }
+        if (sum < 0.9999) {
+            printf("maximin problem (%lf): ", sum);
+            for (i = 0; i < nActions[me]; i++) {
+                printf("%.6lf ", ms[i]);
+            }
+            printf("\n");
+            
+            exit(1);
+        }
+	}
+	else {
+		mv = -abs(SENTINAL);
+		policyIterations(mpi, nActions, me, payoff, 1.0, 0, 0.0, 1.0 / (double)(nActions[me]), 1.0);
+
+		int i;
+        double sum = 0.0;
+		for (i = 0; i < nActions[me]; i++) {
+            sum += ms[i];
+        }
+        if (sum < 0.9999) {
+            printf("maximin problem (%lf): ", sum);
+            for (i = 0; i < nActions[me]; i++) {
+                printf("%.6lf ", ms[i]);
+            }
+            printf("\n");
+            
+            exit(1);
+        }
+	}
+    
+    /*if (nActions[me] > 5) {
+        printf("mv = %.3lf\n", mv);
+        int i;
+        for (i = 0; i < nActions[me]; i++)
+            printf("%lf ", ms[i]);
+        printf("\n");
+    }*/
+}
+
+double minimaxLog::policyIterations(double *mpi, int *nActions, int me, double *payoff, double remaining, int index, double l, double m, double r) {
+	int i;
+    
+    //for (i = 0; i < nActions[me]; i++)
+    //    printf("%.2lf ", mpi[i]);
+    //printf("\n");
+    /*if ((nActions[0] > 4) || (nActions[1] > 4)) {
+        for (i = 0; i < nActions[me]; i++)
+            mpi[i] = ms[i] = 1.0 / nActions[me];
+        mv = getDimmensionHigh(mpi, nActions, me, payoff, index, remaining, l, m, r);
+        return mv;
+    }*/
+	
+	if ((nActions[me] - index) == 2) {
+		double tmp = getDimmensionHigh(mpi, nActions, me, payoff, index, remaining, l, m, r);
+		if (tmp > mv) {
+			mv = tmp;
+			//printf("1st new mv = %lf; (%lf, %lf)\n", mv, mpi[0], mpi[1]);
+			for (i = 0; i < nActions[me]; i++)
+				ms[i] = mpi[i];
+		}
+		return tmp;
+	}
+	else if (remaining <= 0.0) {
+		for (i = index; i < nActions[me]; i++)
+			mpi[i] = 0.0;
+
+		double tmp = evaluatePolicy(nActions, mpi, payoff, me);
+		if (tmp > mv) {
+			mv = tmp;
+			//printf("2nd new mv = %lf; (%lf, %lf)\n", mv, mpi[0], mpi[1]);			
+			for (i = 0; i < nActions[me]; i++)
+				ms[i] = mpi[i];
+		}
+		return tmp;
+	}
+
+	double Val[3], right;
+
+	mpi[index] = l; //(remaining - l);
+	right = remaining - mpi[index];
+	Val[0] = policyIterations(mpi, nActions, me, payoff, remaining - mpi[index], index+1, 
+								0.0, right / (double)(nActions[me] - (index + 1)), right);
+
+	mpi[index] = m; //(remaining - m);
+	right = remaining - mpi[index];
+	Val[1] = policyIterations(mpi, nActions, me, payoff, remaining - mpi[index], index+1, 
+								0.0, right / (double)(nActions[me] - (index + 1)), right);
+
+	mpi[index] = r; //(remaining - r);
+	right = remaining - mpi[index];
+	Val[2] = policyIterations(mpi, nActions, me, payoff, remaining - mpi[index], index+1, 
+								0.0, right / (double)(nActions[me] - (index + 1)), right);
+
+	int order[3];
+	getOrder(Val[0], Val[1], Val[2], order);
+
+	//if ((r - l) < GRANULARITY) {
+    	if (((r - l) < GRANULARITY) || ((nActions[me] > 4) && ((r-l) < GRANULARITY2))) {
+		return Val[order[0]];
+	}
+
+	if (order[0] == 0) {
+		return policyIterations(mpi, nActions, me, payoff, remaining, index, 
+									l, (m-l) / (double)(nActions[me] - index) + l, m);
+	}
+	else if (order[0] == 2) {
+		return policyIterations(mpi, nActions, me, payoff, remaining, index, 
+									m, (r-m) / (double)(nActions[me] - index) + m, r);
+	}
+	else {
+		// check the quarter points
+		double lq, rq;
+		
+		mpi[index] = ((m - l) / (double)(nActions[me] - (index+1))) + l; //(remaining - ((m+l) / 2.0));
+		right = remaining - mpi[index];
+		lq = policyIterations(mpi, nActions, me, payoff, remaining - mpi[index], index+1, 
+								0.0, right / (double)(nActions[me] - (index + 1)), right);
+
+		if (lq > Val[1]) {
+			return policyIterations(mpi, nActions, me, payoff, remaining, index, 
+								l, (m-l) / (double)(nActions[me] - index) + l, m);
+		}
+
+		mpi[index] = ((r-m) / (double)(nActions[me] - (index+1))) + m; //(remaining - ((m+r) / 2.0));
+		right = remaining - mpi[index];
+		rq = policyIterations(mpi, nActions, me, payoff, remaining - mpi[index], index+1, 
+								0.0, right / (double)(nActions[me] - (index + 1)), right);
+
+		if (rq > Val[1]) {
+			return policyIterations(mpi, nActions, me, payoff, remaining, index, 
+										m, (r-m) / (double)(nActions[me] - index) + m, r);
+		}
+
+		return policyIterations(mpi, nActions, me, payoff, remaining, index, 
+									(m-l) / (double)(nActions[me] - index) + l, m, 
+									(r-m) / (double)(nActions[me] - index) + m);
+	}	
+}
+
+double minimaxLog::getDimmensionHigh(double *mpi, int *nActions, int me, double *payoff, int index, 
+									double remaining, double l, double m, double r) {
+	double Val[3];
+
+	mpi[index] = (remaining - l);
+	mpi[index + 1] = remaining - mpi[index];
+	Val[0] = evaluatePolicy(nActions, mpi, payoff, me);
+
+	mpi[index] = (remaining - m);
+	mpi[index + 1] = remaining - mpi[index];
+	Val[1] = evaluatePolicy(nActions, mpi, payoff, me);
+
+	mpi[index] = (remaining - r);
+	mpi[index + 1] = remaining - mpi[index];
+	Val[2] = evaluatePolicy(nActions, mpi, payoff, me);
+
+	int order[3];
+	getOrder(Val[0], Val[1], Val[2], order);
+	
+	//printf("%i (%lf); %i (%lf); %i (%lf)\n", order[0], Val[order[0]], order[1], Val[order[1]], order[2], Val[order[2]]);
+
+	if (((r - l) < GRANULARITY) || ((nActions[me] > 4) && ((r-l) < GRANULARITY2))) {
+		if (order[0] == 0) {
+			mpi[index] = (remaining - l);
+			mpi[index + 1] = remaining - mpi[index];
+		}
+		else if (order[0] == 1) {
+			mpi[index] = (remaining - m);
+			mpi[index + 1] = remaining - mpi[index];
+		}
+		
+		return Val[order[0]];
+	}
+
+	if (order[0] == 0) {
+		return getDimmensionHigh(mpi, nActions, me, payoff, index, remaining, l, (m+l) / 2.0, m);
+	}
+	else if (order[0] == 2) {
+		return getDimmensionHigh(mpi, nActions, me, payoff, index, remaining, m, (m+r)/2.0, r);
+	}
+	else {
+		// check the quarter points
+		double lq, rq;
+
+		mpi[index] = (remaining - ((m+l) / 2.0));
+		mpi[index + 1] = remaining - mpi[index];
+		lq = evaluatePolicy(nActions, mpi, payoff, me);
+
+		if (lq > Val[1]) {
+			return getDimmensionHigh(mpi, nActions, me, payoff, index, remaining, l, (m+l) / 2.0, m);
+		}
+
+		mpi[index] = (remaining - ((m+r) / 2.0));
+		mpi[index + 1] = remaining - mpi[index];
+		rq = evaluatePolicy(nActions, mpi, payoff, me);
+
+		if (rq > Val[1]) {
+			return getDimmensionHigh(mpi, nActions, me, payoff, index, remaining, m, (m+r) / 2.0, r);
+		}
+
+		return getDimmensionHigh(mpi, nActions, me, payoff, index, remaining, (l+m)/2.0, m, (r+m)/2.0);
+	}
+}
+
+void minimaxLog::getOrder(double lVal, double mVal, double rVal, int *order) {
+	if (lVal > mVal) {
+		if (lVal > rVal) {
+			order[0] = 0;
+			if (rVal > mVal) {
+				order[1] = 2;
+				order[2] = 1;
+			}
+			else {
+				order[1] = 1;
+				order[2] = 2;
+			}
+		}
+		else {
+			order[0] = 2;
+			order[1] = 0;
+			order[2] = 1;
+		}
+	}
+	else {
+		if (mVal > rVal) {
+			order[0] = 1;
+			if (rVal > lVal) {
+				order[1] = 2;
+				order[2] = 0;
+			}
+			else {
+				order[1] = 0;
+				order[2] = 2;
+			}
+		}
+		else {
+			order[0] = 2;
+			order[1] = 1;
+			order[2] = 0;
+		}
+	}
+}
+
+double minimaxLog::evaluatePolicy(int *nActions, double *mpi, double *payoff, int me) {
+	int i, j, s;
+	double V;
+	double min = abs(SENTINAL);
+	
+	//printf("policy: %lf %lf;  ", mpi[0], mpi[1]);
+
+	for (i = 0; i < nActions[1-me]; i++) {
+		V = 0.0;
+		for (j = 0; j < nActions[me]; j++) {
+			if (me == 1)
+				s = i * nActions[1] + j;
+			else
+				s = j * nActions[1] + i;
+
+			if (payoff[s] == -abs(SENTINAL)) {
+				printf("something is wrong\n");
+				V += 999999.0 * mpi[j];  // changes this eventually ?
+			}
+			else {
+	//			printf("%.2lf + ", payoff[s] * mpi[j]);
+				
+				V += payoff[s] * mpi[j];
+			}
+		}
+
+		if (V < min)
+			min = V;
+	}
+	
+	//printf("  min = %lf\n", min);
+
+	return min;
+}
+
+//
+//	Stuff for pure strategy checks;
+//
+bool minimaxLog::highest(int index, int *nActions, double *payoff, int me, bool *nott) {
+	int i;
+	double altito;
+	int s;
+
+	if (me == 0)
+		s = index;
+	else
+		s = index * nActions[1];
+	
+	//printf("s = %i\n", s);
+
+	altito = payoff[s];
+	//printf("%lf ", payoff[s]); 
+	for (i = 1; i < nActions[me]; i++) {
+		if (me == 0)
+			s = i * nActions[1] + index;
+		else
+			s = index * nActions[1] + i;
+
+		//printf("%lf ", payoff[s]);		
+		if (payoff[s] > altito)
+			altito = payoff[s];
+	}
+
+	bool rval = false;
+	for (i = 0; i < nActions[me]; i++) {
+		if (me == 0)
+			s = i * nActions[1] + index;
+		else
+			s = index * nActions[1] + i;
+
+		if (payoff[s] < altito)
+			nott[i] = true;
+		else if (!nott[i])
+			rval = true;
+	}
+
+	//printf("\nnott (%i): ", index);
+	//for (i = 0; i < nActions[me]; i++)
+	//	printf("%i ", (int)(nott[i]));
+	//printf("\n");
+	
+	return rval;
+}
+
+bool minimaxLog::pureStrategy(double *mpi, int *nActions, int me, double *payoff) {
+	int i;
+	for (i = 0; i < nActions[me]; i++)
+		nott[i] = false;
+
+	highest(0, nActions, payoff, me, nott);
+	for (i = 1; i < nActions[1-me]; i++) {
+		if (!highest(i, nActions, payoff, me, nott))
+			return false;
+	}
+
+	for (i = 0; i < nActions[me]; i++) {
+		mpi[i] = 0.0;		
+	}
+	double sum = 0.0;
+	for (i = 0; i < nActions[me]; i++) {
+		if (!nott[i]) {
+			mpi[i] = 1.0;
+			sum ++;
+		}
+	}
+	
+	for (i = 0; i < nActions[me]; i++) {
+		mpi[i] /= sum;
+	}
+
+	return true;
+}
+
