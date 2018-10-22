@@ -12,27 +12,33 @@
     display: flex;
     align-items: center;
   }
+
   .noBorder{
     border: 0;
     box-shadow: none;
   }
+
   .msgsBox{
     overflow-y: scroll;
+    overflow-x: scroll;
     height: 65vh;
     word-wrap: break-word;
   }
+
   .partnerMsgWrap{
     float: left;
     clear:left;
     max-width: 75%;
     min-width: 75%;
   }
+
   .partnerMsgDisplay{
+    max-width: 100%;
     float: left;
     clear: left;
     text-align: left;
     border-radius: 6px;
-    border: 2px solid #FE7223;
+    //border: 2px solid #FE7223;
     background-color: #E5E5EA;
     color: black;
     padding-top: 7px;
@@ -40,13 +46,16 @@
     padding-left: 10px;
     padding-right: 10px;
   }
+
   .playerMsgWrap{
     float: right;
     clear:right;
     max-width: 75%;
     min-width: 75%;
   }
+
   .playerMsgDisplay{
+    max-width: 100%;
     text-align:left;
     float: right;
     clear:right;
@@ -62,12 +71,8 @@
   #chatbox {
     overflow:   none;
     position:   relative;
-    /* width:      100%;
-    height:     65vh;  Inhere*/
-
   }
-  #chatmessages
-  {
+  #chatmessages {
       overflow:   auto;
       position:   absolute;
       bottom:     0;
