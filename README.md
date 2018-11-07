@@ -21,7 +21,7 @@
 
 - In the main folder, start the server with commands:
   - source .env
-  - node server.js (served on port 3000)
+  - node server.js [game matrix path] (served on port 3000, matrix path must be referenced from project's root directory)
 
 - In the main folder, start the front end with command:
   - npm run dev (runs on port 8080)

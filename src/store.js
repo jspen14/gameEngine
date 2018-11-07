@@ -507,71 +507,13 @@ export default new Vuex.Store({
 //END JSPENCER CHAT STUFF
 
     getMatrix(context, matrixID){
-      axios.get("/api/matrix/" + context.state.currentGame).then(response => { // Changed this to be gameID
-
+      axios.get("/api/matrix/" + context.state.currentGame).then(response => { 
         let data= response.data.matrix;
-        console.log(response.data);
         let mx=data.payoffs;
-
-
-
         let type= data.type.substring(6);
-        console.log("type: "+ type)
-
         let dimensions= type.split("x");
 
-        console.log("dimensions: " + dimensions);
-        console.log(dimensions[0])
-
-        // for(let i=0; i<dimensions.length;i++)
-        // {
-        //   dimensions[i]=parseInt(dimensions[i]);
-        // }
-
-        let rows=dimensions[0];
-        let cols=dimensions[1];
-                //extract values
-        let index=0;
-        let temparray=[]
-        while(index<mx.length)
-        {
-          if(isNaN(mx[index]))
-          {
-            index++;
-          }
-          else{
-
-            let temp=index;
-            while(!isNaN(mx[temp]))
-            {
-              temp++;
-            }
-            let k=parseInt(mx.substring(index,temp));
-
-            index=temp;
-            temparray.push(k);
-          }
-        }
-        let matrix=[]
-        //Initialize matrix
-        let arrayIndex=0;
-        for(let y =0; y<rows;y++)
-        {
-          let row=[]
-          for(let x=0; x<cols;x++)
-          {
-            let option=[]
-            for(let i=0;i<2;i++)
-            {
-              option.push(temparray[arrayIndex]);
-              arrayIndex++;
-            }
-            row.push(option);
-          }
-          matrix.push(row);
-        }
-        console.log(matrix);
-        context.commit('setMatrix', matrix);
+        context.commit('setMatrix', mx);
       }).catch(err => {
         console.log("getMatrix Failed:", err);
 
