@@ -6,10 +6,10 @@ ExpertAlg::ExpertAlg() {
 
 ExpertAlg::ExpertAlg(int _me, char *playerString) {
     me = _me;
-
+    
     if (!strcmp("bully", playerString)) {
         setOfExperts = new Expert*[1];
-        setOfExperts[0] = new TriggerStrat(me, BULLY1_V, &ignbs, true, 0.25);
+        setOfExperts[0] = new TriggerStrat(me, BULLY1_V, &ignbs, true, 0.50);
         numExperts = 1;
     }
     else if (!strcmp("bullied", playerString)) {
@@ -19,7 +19,7 @@ ExpertAlg::ExpertAlg(int _me, char *playerString) {
     }
     else if (!strcmp("fair", playerString)) {
         setOfExperts = new Expert*[1];
-        setOfExperts[0] = new TriggerStrat(me, NBS_V, &ignbs, true);
+        setOfExperts[0] = new TriggerStrat(me, NBS_V, &ignbs, false);//true);
         numExperts = 1;
     }
     else if (!strcmp("maxmin", playerString)) {
@@ -40,32 +40,34 @@ ExpertAlg::ExpertAlg(int _me, char *playerString) {
     else if (!strcmp("spp", playerString)) {
         setOfExperts = new Expert*[8];
         setOfExperts[0] = new TriggerStrat(me, BULLY1_V, &ignbs, true, 0.25);
-        setOfExperts[1] = new TriggerStrat(me, BULLY1_V, &ignbs, true, 0.80);
-        setOfExperts[2] = new TriggerStrat(me, NBS_V, &ignbs, true);
-        setOfExperts[3] = new TriggerStrat(me, NBS_V, &ignbs, false);
-        setOfExperts[4] = new ListenerExpert(me, &ignbs);
-        setOfExperts[5] = new MaxMinExpert(me);
+        setOfExperts[1] = new TriggerStrat(me, BULLY1_V, &ignbs, true, 0.5);
+        setOfExperts[2] = new TriggerStrat(me, BULLY1_V, &ignbs, true, 0.80);
+        setOfExperts[3] = new TriggerStrat(me, NBS_V, &ignbs, true);
+        setOfExperts[4] = new TriggerStrat(me, NBS_V, &ignbs, false);
+        setOfExperts[5] = new ListenerExpert(me, &ignbs);
+        setOfExperts[6] = new MaxMinExpert(me);
+        setOfExperts[7] = new GeneralizedFP("GeF", me, true);
         //setOfExperts[3] = new TriggerStrat(me, BULLY1_V, &ignbs, false, 0.25);
         //setOfExperts[4] = new TriggerStrat(me, BULLY1_V, &ignbs, false, 0.80);
         //setOfExperts[5] = new TriggerStrat(me, NBS_V, &ignbs, false);
         //setOfExperts[0] = new ExploiterExpert(me, &ignbs);
-        numExperts = 6;
+        numExperts = 8;
     }
     else {
         printf("unknown ExpertAlg\n");
         exit(1);
     }
-
+    
     selMech = new PlusPlusSelector(me, setOfExperts, numExperts);
     //selMech = new RandomSelector(setOfExperts, numExperts);
 }
 
 ExpertAlg::~ExpertAlg() {
     printf("ExpertAlg destructor\n");
-
+    
     for (int i = 0; i < numExperts; i++)
         delete setOfExperts[i];
-
+    
     delete setOfExperts;
     delete selMech;
 }
@@ -88,7 +90,7 @@ bool ExpertAlg::orient2Game(char *gameString) {
     }
 
     games[currentTime] = new Game(gameString);
-
+    
     ignbs.updateWithGame(games[currentTime]);
 
     int i;
@@ -97,7 +99,7 @@ bool ExpertAlg::orient2Game(char *gameString) {
         for (i = 0; i < numExperts; i++) {
             setOfExperts[i]->init(games[currentTime]);
         }
-
+    
     }
 
     selMech->selectExpert(games[currentTime]);
@@ -107,7 +109,7 @@ bool ExpertAlg::orient2Game(char *gameString) {
         printf("\nExpert %i selectAction (%s):\n", i, setOfExperts[i]->whoAmI());
         setOfExperts[i]->selectAction(games[currentTime]);
     }
-
+    
     return true;
 }
 
@@ -125,7 +127,7 @@ void ExpertAlg::processStartCheapTalk(char buf[10000]) {
     // tell all of the experts
     for (int i = 0; i < numExperts; i++)
         setOfExperts[i]->processStartCheapTalk(buf);
-
+    
     // see if we want to switch experts
     selMech->evaluateProposal(buf);
 }
@@ -139,9 +141,9 @@ int ExpertAlg::Move() {
 
 void ExpertAlg::moveUpdate(int actions[2], double dollars[2]) {
     currentTime ++;
-
+    
     //printf("ExpertAlg moveUpdate\n"); fflush(stdout);
-
+    
     // we need to update all of the experts
     //printf("Potentials:\n");
     for (int i = 0; i < numExperts; i++) {
@@ -155,7 +157,7 @@ void ExpertAlg::moveUpdate(int actions[2], double dollars[2]) {
         }
         //printf("%i: %lf\n", i, setOfExperts[i]->getPotential());
     }
-
+    
     // update the expert-selection mechanism
     selMech->update(actions, dollars);
 }

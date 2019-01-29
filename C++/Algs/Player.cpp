@@ -4,14 +4,22 @@ Player::Player() {
     printf("Player constructor\n");
     currentTime = 0;
     games = new Game*[1000];
+    
+    asExpert = false;
 }
 
 Player::~Player() {
-    printf("Player destructor\n");
+    printf("Player destructor ... "); fflush(stdout);
     
-    for (int i = 0; i < currentTime; i++)
-        delete games[i];
-    delete games;
+    if (!asExpert) {
+        for (int i = 0; i < currentTime; i++) {
+            //printf("%i ", i); fflush(stdout);
+            delete games[i];
+        }
+        delete games;
+    }
+    
+    printf("Destructed\n"); fflush(stdout);
 }
 
 void Player::Reset() {

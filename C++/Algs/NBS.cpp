@@ -6,6 +6,8 @@ NBS::NBS() {
 }
 
 NBS::NBS(double ***M, int A[2]) {
+    //printf("a"); fflush(stdout);
+
     NumDecisionPointsActual = A[0];
 	Cell pago[NumDecisionPointsMax][NumDecisionPointsMax];
 	
@@ -45,12 +47,16 @@ NBS::NBS(double ***M, int A[2]) {
 		l2 --;
 	}
 
+    //printf("b"); fflush(stdout);
+
 	GetDefend(alpha1, payoff2);
 	GetDefend(alpha2, payoff1);
 	GetAttack(delta1, payoff1);
 	GetAttack(delta2, payoff2);
 	GetGuarantee(delta1, alpha2, payoff1, &g1);
 	GetGuarantee(delta2, alpha1, payoff2, &g2);
+
+    //printf("c"); fflush(stdout);
 
 //	printf("g (%.2lf, %.2lf)\n", g1, g2);
 
@@ -91,6 +97,8 @@ NBS::NBS(double ***M, int A[2]) {
 						two = 1;
 						product = tp2.x * tp2.y;
 					}
+                    
+                    //printf("product = %lf; max = %lf\n", product, max);
 
 					if (product > max) {
 						//printf("changing (from max = %lf) to product %lf: (one = %i, two = %i)\n", max, product, one, two);
@@ -106,18 +114,20 @@ NBS::NBS(double ***M, int A[2]) {
 			}
 		}
 	}
+    
+    //printf("none = %i; ntwo = %i\n", none, ntwo);
 
     int c[2], a1[2], a2[2];
 	for (i = 0; i < NumDecisionPointsActual; i++) {
 		for (j = 0; j < NumDecisionPointsActual; j++) {
 			if ((p1.x == A1[i][j]) && (p1.y == A2[j][i])) {
-//				printf("%i: player1 takes action %i, and player2 takes action %i\n", none, i, j);
+				//printf("%i: player1 takes action %i, and player2 takes action %i\n", none, i, j);
 				c[0] = none;
 				a1[0] = i;
 				a2[0] = j;
 			}
 			if ((p2.x == A1[i][j]) && (p2.y == A2[j][i])) {
-//				printf("%i: player1 takes action %i, and player2 takes action %i\n", ntwo, i, j);
+				//printf("%i: player1 takes action %i, and player2 takes action %i\n", ntwo, i, j);
 				c[1] = ntwo;
 				a1[1] = i;
 				a2[1] = j;
@@ -125,14 +135,22 @@ NBS::NBS(double ***M, int A[2]) {
 		}
 	}
     
+    //printf("d"); fflush(stdout);
+    
     double w[2], pays1[2], pays2[2];
     w[0] = ((double)c[0]) / (c[0] + c[1]);
     w[1] = 1.0 - w[0];
+    //printf("< %i %i %i %i %i %i > ", c[0], c[1], a1[0], a2[0], a1[1], a2[1]); fflush(stdout);
     pays1[0] = M[0][a1[0]][a2[0]];
     pays1[1] = M[0][a1[1]][a2[1]];
     pays2[0] = M[1][a1[0]][a2[0]];
     pays2[1] = M[1][a1[1]][a2[1]];
+    
+    //printf("f"); fflush(stdout);
+    
     sol = new Solution(a1, a2, pays1, pays2, w);
+    
+    //printf("g"); fflush(stdout);
 }
 
 NBS::~NBS() {
@@ -143,6 +161,21 @@ double NBS::ComputeBargain(Point tp1, Point tp2, int *one, int *two) {
 	if (((tp1.x < 0) && (tp1.y < 0)) || ((tp2.x < 0) && (tp2.y < 0))) {
 		return -1.0;
 	}
+    
+    if ((2.0 * (tp1.y - tp2.y) * (tp1.x - tp2.x)) == 0) {
+        //printf("caught a problem: (%lf, %lf), (%lf, %lf)\n", tp1.x, tp1.y, tp2.x, tp2.y);
+        
+        if ((tp1.x + tp1.y) > (tp2.x + tp2.y)) {
+            *one = 1;
+            *two = 0;
+            return 0.0;
+        }
+        else {
+            *one = 0;
+            *two = 1;
+            return 0.0;
+        }
+    }
 
 	double wx = (-tp2.y * (tp1.x - tp2.x) - tp2.x * (tp1.y - tp2.y)) / (2.0 * (tp1.y - tp2.y) * (tp1.x - tp2.x));
 //	printf("wx = %lf from points (%lf, %lf) and (%lf, %lf)\n", wx, tp1.x, tp1.y, tp2.x, tp2.y);

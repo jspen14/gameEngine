@@ -19,18 +19,31 @@
   - npm install
     - If it says that it didn't install all dependencies, follow the commands provided by terminal
 
+
+****************************************************************************************
+Running the program
+****************************************************************************************
+-Turn on mysql
+  - brew services start mariadb
+  - mysql -u root
 - In the main folder, start the server with commands:
   - source .env
-  - node server.js (served on port 3000)
+  - node server.js [game matrix] (served on port 3000)
 
 - In the main folder, start the front end with command:
   - npm run dev (runs on port 8080)
 
 - In the C++ folder, add a C++ client (if desired) with commands:
   - cd C++ (to navigate into C++ folder)
-  - ./client username
+  - ./igPlayer Trump bully  
     - username can be Trump, Thumper, or Carnegie
-    - Host is set to 127.0.0.1 but can be changed. If I need to change it, let me know. Josh
+    - Host is set to 127.0.0.1 but can be changed. If I need to change it, let me know.
+
+- Start game
+    - http://localhost:8080/#/admin
+ 
+
+Josh
 
 (If you want to connect multiple users on your machine you MUST use a different browser because we used JSW tokens)
 (Preferred browser: Google Chrome)

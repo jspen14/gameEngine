@@ -6,11 +6,11 @@ ListenerExpert::ListenerExpert() {
 }
 
 ListenerExpert::ListenerExpert(int _me, igNBS *_ignbs) {
-    me = _me;
+    yo = _me;
     t = 0;
     
     potential = 0.0;
-    backup = new TriggerStrat(me, BULLIED1_V, _ignbs, false, 1.0); // begin by assuming a fair partner
+    backup = new TriggerStrat(yo, BULLIED1_V, _ignbs, false, 1.0); // begin by assuming a fair partner
     //upperBound = 1.0;
     //lowerBound = 0.0;
     targetDir = 0;
@@ -23,7 +23,7 @@ ListenerExpert::~ListenerExpert() {
 
 void ListenerExpert::init(Game *_g) {
     backup->init(_g);
-    potential = backup->ignbs->nbs[me];
+    potential = backup->ignbs->nbs[yo];
 }
 
 void ListenerExpert::Reset() {
@@ -49,7 +49,7 @@ void ListenerExpert::selectAction(Game *_g) {
     
     selectedAction = backup->selectedAction;
     backup->nbsExpected(_g, 1.0 / (1.0 + (t+0.01)/50.0));
-    backup->bullyExpected(_g, me);
+    backup->bullyExpected(_g, yo);
 
     ja[0] = backup->expectedActions[0];
     ja[1] = backup->expectedActions[1];
@@ -57,16 +57,16 @@ void ListenerExpert::selectAction(Game *_g) {
     projectedPayoff[0] = g->M[0][ja[0]][ja[1]];
     projectedPayoff[1] = g->M[1][ja[0]][ja[1]];
     
-    //rand() % _g->A[me]; // select a random action for now
+    //rand() % _g->A[yo]; // select a random action for now
 }
 
 void ListenerExpert::update(int acts[2], double payoffs[2], bool active) {
     t++;
     
-    potential = backup->bullyTarget;//projectedPayoff[me];
-    //potential = backup->ignbs->nbs[me]; // assume a listener will get a fair shake
+    potential = backup->bullyTarget;//projectedPayoff[yo];
+    //potential = backup->ignbs->nbs[yo]; // assume a listener will get a fair shake
     
-    internalExpectationTally += projectedPayoff[me];
+    internalExpectationTally += projectedPayoff[yo];
     
     backup->update(acts, payoffs, active);
     //printf("update the backup; potential = %lf\n", backup->potential);
@@ -88,7 +88,7 @@ void ListenerExpert::processStartCheapTalk(char *buf) {
     
         // a joint action was proposed, so listen to it
         extractJointAction(buf);
-        selectedAction = ja[me];
+        selectedAction = ja[yo];
         
         // I can update my model of the bully target
         updateModel(ja, expected);
@@ -114,17 +114,17 @@ void ListenerExpert::extractJointAction(char *buf) {
     projectedPayoff[0] = g->M[0][ja[0]][ja[1]];
     projectedPayoff[1] = g->M[1][ja[0]][ja[1]];
     
-    //potential += projectedPayoff[me];
+    //potential += projectedPayoff[yo];
 }
 
 
 void ListenerExpert::updateModel(int observed[2], int expected[2]) {
-    if (observed[1-me] == expected[1-me]) {
+    if (observed[1-yo] == expected[1-yo]) {
         //    if he did what I expected him to do; do nothing
         printf("He acted as expected\n");
     }
     else {
-        if (observed[1-me] == backup->nbsExpectedActions[1-me]) {
+        if (observed[1-yo] == backup->nbsExpectedActions[1-yo]) {
             //    if he tried to play fair, but I thought he should exploit, increase bullyWeight
             if (targetDir == 1)
                 targetInc *= 1.1;
@@ -142,7 +142,7 @@ void ListenerExpert::updateModel(int observed[2], int expected[2]) {
             if (backup->bullyWeight > 1.0)
                 backup->bullyWeight = 1.0;
         }
-        if (observed[1-me] == backup->bullyExpectedActions[1-me]) {
+        if (observed[1-yo] == backup->bullyExpectedActions[1-yo]) {
             //    if he tried to exploit, but I thought he should play fair, decrease bullyWeight
             if (targetDir == -1)
                 targetInc *= 1.1;

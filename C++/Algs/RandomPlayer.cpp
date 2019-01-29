@@ -7,9 +7,19 @@ RandomPlayer::RandomPlayer() {
 RandomPlayer::RandomPlayer(int _me) {
     printf("RandomPlayer constructor\n");
     me = _me;
+    
+    for (int i = 0; i < 10; i++) {
+        c[i] = 0;
+    }
 }
 
 RandomPlayer::~RandomPlayer() {
+    printf("Counts: "); fflush(stdout);
+    for (int i = 0; i < 2; i++) {
+        printf("%i ", c[i]);
+    }
+    printf("\n");
+
     printf("RandomPlayer destructor\n");
 }
 
@@ -31,7 +41,7 @@ bool RandomPlayer::orient2Game(char *gameString) {
 
     games[currentTime] = new Game(gameString);
     
-    ignbs.updateWithGame(games[currentTime]);
+    //ignbs.updateWithGame(games[currentTime]);
 
     return true;
 }
@@ -51,7 +61,12 @@ void RandomPlayer::processEndCheapTalk(char buf[10000]) {
 }
 
 int RandomPlayer::Move() {
-	return rand() % games[currentTime]->A[me];
+	int a = rand() % games[currentTime]->A[me];
+    
+    printf("a = %i\n", a); fflush(stdout);
+    c[a] ++;
+    
+    return a;
 }
 
 void RandomPlayer::moveUpdate(int actions[2], double dollars[2]) {

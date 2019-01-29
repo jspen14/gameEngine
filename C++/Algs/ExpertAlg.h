@@ -9,6 +9,7 @@
 #include "TriggerStrat.h"
 #include "ListenerExpert.h"
 #include "ExploiterExpert.h"
+#include "GeneralizedFP.h"
 #include "SelectionMechanism.h"
 #include "RandomSelector.h"
 #include "PlusPlusSelector.h"
@@ -38,7 +39,7 @@ public:
     // expert selection mechanism
     SelectionMechanism *selMech;
     
-    igNBS ignbs;
+    //igNBS ignbs;
     int selectedAction;
 };
 

@@ -20,7 +20,7 @@ public:
     void resetInternalExpectation();
     virtual bool matchesPlan(int proposal[2]);
     
-    int me;
+    int yo;
     double potential;
     
     int selectedAction;

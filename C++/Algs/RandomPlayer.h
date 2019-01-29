@@ -9,7 +9,7 @@
 class RandomPlayer : public Player {
 public:
     RandomPlayer();
-    RandomPlayer(int me);
+    RandomPlayer(int _me);
     ~RandomPlayer();
 
 	void Reset();
@@ -21,7 +21,8 @@ public:
 	int Move();
 	void moveUpdate(int actions[2], double dineros[2]);
     
-    igNBS ignbs;    
+    int c[10];
+    //igNBS ignbs;
 };
 
 #endif

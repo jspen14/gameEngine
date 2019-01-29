@@ -88,6 +88,7 @@ export default new Vuex.Store({
       state.coachChatID = coachChatID;
     },
     setMatrix (state, matrix){
+      console.log(matrix);
       state.matrix = matrix;
     },
     setCoachChatID (state, coachChatID){
@@ -513,8 +514,6 @@ export default new Vuex.Store({
         console.log(response.data);
         let mx=data.payoffs;
 
-
-
         let type= data.type.substring(6);
         console.log("type: "+ type)
 
@@ -552,25 +551,27 @@ export default new Vuex.Store({
             temparray.push(k);
           }
         }
-        let matrix=[]
+
+        let matrix=mx;
         //Initialize matrix
-        let arrayIndex=0;
-        for(let y =0; y<rows;y++)
-        {
-          let row=[]
-          for(let x=0; x<cols;x++)
-          {
-            let option=[]
-            for(let i=0;i<2;i++)
-            {
-              option.push(temparray[arrayIndex]);
-              arrayIndex++;
-            }
-            row.push(option);
-          }
-          matrix.push(row);
-        }
-        console.log(matrix);
+        // let arrayIndex=0;
+        // for(let y =0; y<rows;y++)
+        // {
+        //   let row=[]
+        //   for(let x=0; x<cols;x++)
+        //   {
+        //     let option=[]
+        //     for(let i=0;i<2;i++)
+        //     {
+        //       option.push(temparray[arrayIndex]);
+        //       arrayIndex++;
+        //     }
+        //     row.push(option);
+        //   }
+        //   matrix.push(row);
+        // }
+        // console.log(matrix);
+
         context.commit('setMatrix', matrix);
       }).catch(err => {
         console.log("getMatrix Failed:", err);

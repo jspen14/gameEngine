@@ -6,7 +6,7 @@ MaxMinExpert::MaxMinExpert() {
 }
 
 MaxMinExpert::MaxMinExpert(int _me) {
-    me = _me;
+    yo = _me;
     t = 0;
     potential = 0.0;
 }
@@ -29,7 +29,7 @@ double MaxMinExpert::getPotential() {
 void MaxMinExpert::selectAction(Game *_g) {
     printf("maxmin selectAction\n"); fflush(stdout);
 
-    futuro = potential + _g->minmax[me]->mv;
+    futuro = potential + _g->minmax[yo]->mv;
     printf("potential sums = %lf\n", potential);
     selectedAction = implementProtection(_g);
     
@@ -41,13 +41,13 @@ int MaxMinExpert::implementProtection(Game *_g) {
     
     double num = rand() / (double)RAND_MAX;
     double sum = 0.0;
-    for (i = 0; i < _g->A[me]; i++) {
-        sum += _g->minmax[me]->ms[i];
+    for (i = 0; i < _g->A[yo]; i++) {
+        sum += _g->minmax[yo]->ms[i];
         if (num <= sum)
             return i;
     }
     
-    return _g->A[me]-1;
+    return _g->A[yo]-1;
 }
 
 

@@ -14,6 +14,7 @@
 #include "Player.h"
 #include "RandomPlayer.h"
 #include "ExpertAlg.h"
+#include "Human.h"
 
 
 using namespace std;
@@ -326,6 +327,12 @@ Player *createPlayer(char * playerString, int me) {
     else if (!strcmp("spp", playerString)) {
         return new ExpertAlg(me, playerString);
     }
+    else if (!strcmp("GeF", playerString) || !strncmp("maximizer", playerString, 8)) {
+        return new GeneralizedFP(playerString, me, false);
+    }
+    else if (!strcmp("human", playerString)) {
+        return new Human(me);
+    }
     else {
         printf("player type %s not found. Exiting\n", playerString);
         return NULL;
@@ -336,7 +343,7 @@ Player *createPlayer(char * playerString, int me) {
 int main(int argc,char *argv[])
 {
     // Error check
-    if (argc < 3) { puts("Parameters: <message>"); exit(0); }
+    if (argc != 3) { puts("Parameters: ./igPlayer {Personality}"); exit(0); }
 
     // Seed rand
     srand(time(NULL));

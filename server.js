@@ -7,15 +7,17 @@ const app = express();
 //   console.log('Connection IP Address: '+add);
 // })
 
-// app.use(express.static('dist')); // Add this line in to allow front end to be served over port 3000 in addition to backend
+app.use(express.static('dist')); // Add this line in to allow front end to be served over port 3000 in addition to backend
 
 app.use(bodyParser.json());
 app.use(bodyParser.urlencoded({extended: false}));
 
 var matrixFile = process.argv[2];
-var filePath = "./data/" + matrixFile;
+var filePath = matrixFile;
 var jsonVar = require(filePath);
-//
+
+
+console.log(jsonVar.G1.payoffs[0]);
 
 // Knex Setup
 const env = process.env.NODE_ENV || 'development';
@@ -273,13 +275,17 @@ class Game {
     this.currentRound+=1
     this.getMatrix();
   }
+
   setNumberOfRounds(){
-    return jsonVar.games.length;
+
+    return Object.keys(jsonVar).length-1;
   }
 
   getMatrix(){
-    let data=jsonVar.games[this.currentRound-1];
-    let mx=data.payoffs;
+    let str = "G" + this.currentRound.toString();
+
+    let data=jsonVar[str];
+    let mx=data.payoffs.toString();
     let type= data.type.substring(6);
     let dimensions= type.split('x');
     for(let i=0; i<dimensions.length;i++)
@@ -290,9 +296,11 @@ class Game {
     let cols=dimensions[1];
     let index=0;
     let temparray=[]
+
+
+
     while(index<mx.length)
     {
-
       if(isNaN(mx[index]))
         index++;
       else{
@@ -304,6 +312,7 @@ class Game {
         temparray.push(k);
       }
     }
+
     let matrix=[]
     //Initialize matrix
     let arrayIndex=0;
@@ -325,7 +334,11 @@ class Game {
 
     this.matrix=matrix;
 
+    console.log("heyo");
+    console.log(this.matrix);
   }
+
+
 }
 
 //--------------------------------------------
@@ -701,7 +714,14 @@ app.get('/api/matrix/:gameID', (req,res)=> {
   let gameID=parseInt(req.params.gameID);
   let index=getGameIndex(gameID);
 
-  res.status(200).json({matrix: jsonVar.games[gameModels[index]._currentRound -1]})
+
+    res.send("^^^{type:" + jsonVar[str].type + "," +
+                " payoffs: " + jsonVar[str].payoffs + "}");
+
+  let str = "G" + (gameModels[index]._currentRound).toString();
+
+  res.status(200).json({matrix: jsonVar[str]});
+
   return;
 });
 
@@ -901,10 +921,12 @@ app.delete('/api/game/:id', (req,res)=>
 
   res.status(200).send("deletedGame");
   return;
-})
+});
 
 // Login
 app.post('/api/login', (req, res) => {
+
+  console.log("# available users" + availableUsers.length);
 
   if (!req.body.name || !req.body.password)
     return res.status(400).send();
@@ -1082,10 +1104,10 @@ app.get('/api/AIround/:gameID', (req,res)=> {
 app.get('/api/AImatrix/:gameID', (req,res)=> {
   var gameID = parseInt(req.params.gameID);
   var index = getGameIndex(gameID);
+  var str = "G" + (gameModels[index]._currentRound).toString();
 
-  res.send("^^^{type:" + jsonVar.games[gameModels[index]._currentRound -1].type + "," +
-              " payoffs: " + jsonVar.games[gameModels[index]._currentRound -1].payoffs + "}");
-  //res.send("^^^" + jsonVar.games[gameModels[index]._currentRound -1].payoffs);
+  res.send("^^^{type:" + jsonVar[str].type + "," +
+              " payoffs: " + jsonVar[str].payoffs + "}");
 });
 
 app.post('/api/AIcheapTalk/:gameID/:userID/:message', (req,res)=>{

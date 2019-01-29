@@ -16,6 +16,10 @@ public:
     void printGame();
     void createString(char str[1024]);
     void computeRNEoffers();
+    void computePureNEs();
+    void computeMixedNEs();
+    void computeLowHighNE();
+    bool isBestResponse(int index, int a1, int a2);
     
     int A[2];
     double ***M;
@@ -39,6 +43,15 @@ public:
     //  - Risk adverse solutions
     //  - Dominant strategies
     //  - pure one-shot NE
+    
+    int pureNEs[20][2];
+    int numPureNEs;
+    
+    double mixedNEs[20][2];
+    double mixedVals[20][2];
+    int numMixedNEs;
+    
+    double lowne[2], highne[2];
 };
 
 

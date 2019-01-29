@@ -1,6 +1,4 @@
 #include "igNBS.h"
-#include <iostream>
-#include <fstream>
 
 igNBS::igNBS() {
     numPoints = numOldPoints = 0;
@@ -8,6 +6,14 @@ igNBS::igNBS() {
 }
 
 igNBS::~igNBS() {
+    printf("igNBS destructor\n");
+    
+    FILE *fp = fopen("PointDump.csv", "w");
+    fprintf(fp, "p1,p2\n");
+    for (int i = 0; i < numOldPoints; i++) {
+        fprintf(fp, "%lf,%lf\n", oldPoints[i][0], oldPoints[i][1]);
+    }
+    fclose(fp);
 }
     
 void igNBS::updateWithGame(Game *_g) {
@@ -48,11 +54,6 @@ void igNBS::updateWithGame(Game *_g) {
     printf("minimax: %.2lf, %.2lf\n", maxminSum[0], maxminSum[1]);
     computeNBS();
     printf("nbs: %.2lf, %.2lf\n", nbs[0], nbs[1]);
-
-    std::ofstream outfile;
-    outfile.open("nbs.csv", std::ios_base::app);
-    outfile << nbs[0] <<"," <<nbs[1] <<"\n"; 
-    outfile.close();
 }
 
 bool igNBS::isParetoOptimal(Game *_g, int a1, int a2) {
@@ -102,10 +103,10 @@ void igNBS::cleanPoints() {
         for (j = 0; j < numPoints; j++) {
             if (i == j)
                 continue;
-            if ((points[i][0] < points[j][0]) && (points[i][1] < points[j][1])) {
+            if ((points[i][0] <= points[j][0]) && (points[i][1] <= points[j][1])) {
                 removePoint(i);
             }
-            else if ((points[i][0] == points[j][0]) && (points[i][1] < points[j][1])) {
+/*            else if ((points[i][0] == points[j][0]) && (points[i][1] < points[j][1])) {
                 removePoint(i);
             }
             else if ((points[i][0] < points[j][0]) && (points[i][1] == points[j][1])) {
@@ -113,7 +114,7 @@ void igNBS::cleanPoints() {
             }
             else if ((points[i][0] == points[j][0]) && (points[i][1] == points[j][1])) {
                 removePoint(i);
-            }
+            }*/
         }
     }
 }

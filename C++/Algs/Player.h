@@ -3,6 +3,7 @@
 
 #include "defs.h"
 #include "Game.h"
+#include "igNBS.h"
 
 class Player {
 public:
@@ -21,6 +22,10 @@ public:
     Game **games;
     int currentTime;
     int me;
+    
+    bool asExpert;
+    
+    igNBS ignbs;
 };
 
 #endif
